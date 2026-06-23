@@ -1,0 +1,6 @@
+.home-tab { flex:1; text-align:center; padding:10px 0; font-size:12px; font-weight:600; color:var(--ink-3); cursor:pointer; border-bottom:2.5px solid transparent; transition:color .15s, border-color .15s; -webkit-tap-highlight-color:transparent; user-select:none; position:relative; z-index:1; }
+.home-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+.round-card-expand { max-height:0; overflow:hidden; transition:max-height .28s cubic-bezier(.32,.72,0,1); }
+.round-card-expand.open { max-height:260px; }
+.round-card-chevron { transition:transform .22s; }
+.round-card-chevron.open { transform:rotate(180deg); }

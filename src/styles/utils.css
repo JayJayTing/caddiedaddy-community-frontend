@@ -1,0 +1,7 @@
+.hscroll { display:flex; gap:12px; overflow-x:auto; padding:2px 20px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.hscroll::-webkit-scrollbar { display:none; }
+.mod-toast { position:absolute; top:16px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; font-size:12px; font-weight:600; padding:8px 18px; border-radius:var(--r-pill); white-space:nowrap; z-index:200; opacity:0; pointer-events:none; transition:opacity .2s; }
+.mod-toast.show { opacity:1; }
+.mod-row { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:pointer; -webkit-tap-highlight-color:transparent; border-bottom:1px solid var(--line-soft); transition:background .1s; }
+.mod-row:last-child { border-bottom:none; }
+.mod-row:active { background:var(--bg-alt); }

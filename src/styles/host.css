@@ -1,0 +1,4 @@
+.host-section { margin-bottom:20px; }
+.host-toggle-row { display:flex; gap:10px; }
+.host-toggle-btn { flex:1; padding:12px; border-radius:var(--r-md); border:1.5px solid var(--line); background:var(--surface); font-size:14px; font-weight:600; color:var(--ink-2); cursor:pointer; text-align:center; transition:all .15s; }
+.host-toggle-btn.active { border-color:var(--primary); color:var(--primary); background:var(--primary-soft); }

@@ -1,0 +1,7 @@
+.filter-pill { display:inline-flex; align-items:center; padding:6px 14px; border-radius:var(--r-pill); font-size:12px; font-weight:600; background:var(--surface); color:var(--ink-2); border:1px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .12s; -webkit-tap-highlight-color:transparent; }
+.filter-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.toggle-tabs { display:flex; background:var(--bg-alt); border-radius:var(--r-pill); padding:3px; width:100%; }
+.toggle-tab { flex:1; text-align:center; padding:7px 0; border-radius:var(--r-pill); font-size:13px; font-weight:600; color:var(--ink-3); cursor:pointer; transition:all .15s; }
+.toggle-tab.active { background:var(--surface); color:var(--ink); box-shadow:var(--shadow-sm); }
+.fchip { flex-shrink:0; padding:7px 14px; border-radius:var(--r-pill); border:1.5px solid var(--line); background:var(--surface); font-size:12px; font-weight:600; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background .15s, color .15s, border-color .15s; -webkit-tap-highlight-color:transparent; user-select:none; }
+.fchip.active { background:var(--primary); border-color:var(--primary); color:white; }

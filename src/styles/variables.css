@@ -1,0 +1,16 @@
+:root {
+  --bg:#F4F6F8; --bg-alt:#E8ECF0; --surface:#FAFBFC;
+  --ink:#1A2332; --ink-2:#4A5568; --ink-3:#8B99AA;
+  --line:#D5DCE4; --line-soft:#E8ECF0;
+  --sage:#B8CBE0; --sage-deep:#5C7A9A;
+  --peach:#C8D9E8; --peach-deep:#5C7A9A;
+  --rose:#D4DDE8; --rose-deep:#4A6080;
+  --butter:#D8E4F0; --butter-deep:#4A6888;
+  --sky:#B8CCE0; --sky-deep:#3A6080;
+  --lilac:#CCDAEB; --lilac-deep:#4A5E80;
+  --primary:#5C7A9A; --primary-ink:#1A2B3C; --primary-soft:#DCE8F2;
+  --serif:'Fraunces',Georgia,serif; --sans:'Manrope',-apple-system,sans-serif;
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-pill:9999px;
+  --shadow-sm:0 1px 2px rgba(26,35,50,.05),0 2px 8px rgba(26,35,50,.05);
+  --shadow-md:0 4px 16px rgba(26,35,50,.08),0 1px 3px rgba(26,35,50,.05);
+}

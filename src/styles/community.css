@@ -1,0 +1,3 @@
+.post-text-clamped { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.post-card-expand { max-height:0; overflow:hidden; transition:max-height .32s cubic-bezier(.32,.72,0,1); }
+.post-card-expand.open { max-height:380px; }

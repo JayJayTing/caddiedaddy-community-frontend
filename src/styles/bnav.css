@@ -1,0 +1,6 @@
+.bnav { height:74px; background:var(--surface); border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-around; padding-bottom:8px; flex-shrink:0; position:relative; z-index:10; }
+.bnav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; flex:1; -webkit-tap-highlight-color:transparent; }
+.bnav-label { font-size:10px; font-weight:600; letter-spacing:.04em; color:var(--ink-3); transition:color .15s; }
+.bnav-item.active .bnav-label { color:var(--primary); }
+.bnav-fab { width:48px; height:48px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(92,122,154,.4); cursor:pointer; flex-shrink:0; margin-bottom:4px; -webkit-tap-highlight-color:transparent; transition:transform .12s; }
+.bnav-fab:active { transform:scale(.94); }

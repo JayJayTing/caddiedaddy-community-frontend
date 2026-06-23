@@ -1,0 +1,138 @@
+'use client'
+import { useState } from 'react'
+import { useUI } from '@/contexts/UIContext'
+import { api } from '@/lib/api'
+import { CommunityType, CommunityPrivacy } from '@/types/community'
+
+export function CreateCommunityOverlay() {
+  const { openOverlay, closeOverlay } = useUI()
+  const isOpen = openOverlay === 'createCommunity'
+
+  const [name, setName] = useState('')
+  const [type, setType] = useState<CommunityType>('mixed')
+  const [privacy, setPrivacy] = useState<CommunityPrivacy>('public')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const TYPES: Array<{ key: CommunityType; label: string }> = [
+    { key: 'mixed', label: 'Mixed' },
+    { key: 'mens_club', label: "Men's Club" },
+    { key: 'ladies_club', label: "Ladies' Club" },
+    { key: 'corporate', label: 'Corporate' },
+    { key: 'beginner', label: 'Beginner Friendly' },
+  ]
+
+  const PRIVACIES: Array<{ key: CommunityPrivacy; label: string; desc: string }> = [
+    { key: 'public', label: 'Public', desc: 'Anyone can join' },
+    { key: 'invite_only', label: 'Invite Only', desc: 'Members can invite' },
+    { key: 'private', label: 'Private', desc: 'Hidden from search' },
+  ]
+
+  const handleSubmit = async () => {
+    if (!name.trim() || submitting) return
+    setError(null)
+    setSubmitting(true)
+    try {
+      await api.post('/communities', { name: name.trim(), type, privacy, description: description || null })
+      setName(''); setDescription(''); setType('mixed'); setPrivacy('public')
+      closeOverlay()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create community.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
+        <div style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={closeOverlay}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        <span style={{ marginLeft: 12, fontSize: 18, fontWeight: 600, fontFamily: 'var(--serif)', color: 'var(--ink)' }}>Create Community</span>
+      </div>
+
+      <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
+        {/* Name */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Community Name</div>
+          <input
+            type="text"
+            placeholder="e.g. Yangmei Weekend Golfers"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            style={{ width: '100%', padding: '14px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-lg)', fontSize: 15, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)', outline: 'none' }}
+          />
+        </div>
+
+        {/* Type */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Community Type</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {TYPES.map(t2 => (
+              <div key={t2.key} className={`filter-pill${type === t2.key ? ' active' : ''}`} onClick={() => setType(t2.key)}>
+                {t2.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Privacy */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Privacy</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {PRIVACIES.map(p => (
+              <div
+                key={p.key}
+                style={{ background: 'var(--surface)', border: `1.5px solid ${privacy === p.key ? 'var(--primary)' : 'var(--line)'}`, borderRadius: 'var(--r-md)', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: 'border-color .15s' }}
+                onClick={() => setPrivacy(p.key)}
+              >
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${privacy === p.key ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {privacy === p.key && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }} />}
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{p.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Description (optional)</div>
+          <textarea
+            placeholder="What is this community about?"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            rows={3}
+            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-lg)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)', outline: 'none', resize: 'none', lineHeight: 1.5 }}
+          />
+        </div>
+
+        {error && <div style={{ fontSize: 13, color: '#C0392B', textAlign: 'center', marginBottom: 12 }}>{error}</div>}
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'linear-gradient(transparent,var(--bg) 40%)' }}>
+        <div
+          onClick={handleSubmit}
+          style={{
+            background: name.trim() ? 'var(--primary)' : 'var(--bg-alt)',
+            borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center',
+            cursor: name.trim() && !submitting ? 'pointer' : 'default',
+            boxShadow: name.trim() ? '0 4px 20px rgba(92,122,154,.35)' : 'none',
+            transition: 'background .15s',
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 700, color: name.trim() ? 'white' : 'var(--ink-3)' }}>
+            {submitting ? 'Creating…' : 'Create Community'}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
