@@ -4,7 +4,7 @@ import { useLang } from '@/contexts/LanguageContext'
 
 interface Props {
   onBack: () => void
-  onLogin: (email: string, password: string) => void
+  onLogin: (email: string, password: string, rememberMe: boolean) => void
   onSignup: (email: string, password: string, displayName: string) => void
   isLoading: boolean
   error?: string
@@ -17,13 +17,14 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [rememberMe, setRememberMe] = useState(true)
 
   const isValid = email.includes('@') && password.length >= 6 && (mode === 'signin' || displayName.trim().length > 0)
 
   const handleSubmit = () => {
     if (!isValid || isLoading) return
     if (mode === 'signin') {
-      onLogin(email, password)
+      onLogin(email, password, rememberMe)
     } else {
       onSignup(email, password, displayName)
     }
@@ -107,6 +108,28 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
           />
         </div>
+
+        {mode === 'signin' && (
+          <div
+            onClick={() => setRememberMe(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer', userSelect: 'none' }}
+          >
+            <div style={{
+              width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+              border: `2px solid ${rememberMe ? 'var(--primary)' : 'var(--line)'}`,
+              background: rememberMe ? 'var(--primary)' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background .15s, border-color .15s',
+            }}>
+              {rememberMe && (
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                  <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+            <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>Remember me</span>
+          </div>
+        )}
 
         {error && (
           <div style={{ fontSize: 12, color: '#C0392B', textAlign: 'center', marginBottom: 12 }}>{error}</div>

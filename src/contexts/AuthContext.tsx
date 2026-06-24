@@ -6,7 +6,7 @@ import { api } from '@/lib/api'
 interface AuthContextType {
   user: AuthUser | null
   isLoading: boolean
-  loginWithEmail: (email: string, password: string) => Promise<void>
+  loginWithEmail: (email: string, password: string, rememberMe?: boolean) => Promise<void>
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<void>
   sendOtp: (phone: string) => Promise<void>
   verifyOtp: (phone: string, token: string) => Promise<void>
@@ -18,14 +18,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-function saveSession(session: { access_token: string; refresh_token: string }) {
-  localStorage.setItem('caddie_token', session.access_token)
-  localStorage.setItem('caddie_refresh', session.refresh_token)
+function saveSession(session: { access_token: string; refresh_token: string }, persist = true) {
+  const store = persist ? localStorage : sessionStorage
+  store.setItem('caddie_token', session.access_token)
+  store.setItem('caddie_refresh', session.refresh_token)
 }
 
 function clearSession() {
   localStorage.removeItem('caddie_token')
   localStorage.removeItem('caddie_refresh')
+  sessionStorage.removeItem('caddie_token')
+  sessionStorage.removeItem('caddie_refresh')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -33,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('caddie_token')
+    const token = localStorage.getItem('caddie_token') ?? sessionStorage.getItem('caddie_token')
     if (!token) { setIsLoading(false); return }
     api.get<{ user: AuthUser }>('/auth/me')
       .then(({ user }) => setUser(user))
@@ -47,9 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('caddie:session-expired', handler)
   }, [])
 
-  const loginWithEmail = useCallback(async (email: string, password: string) => {
+  const loginWithEmail = useCallback(async (email: string, password: string, rememberMe = true) => {
     const { session, user } = await api.post<AuthResponse>('/auth/login', { email, password })
-    saveSession(session)
+    saveSession(session, rememberMe)
     setUser(user)
   }, [])
 

@@ -83,11 +83,11 @@ export function AuthOverlay({ onComplete }: Props) {
     }
   }, [phone, sendOtp])
 
-  const handleLogin = useCallback(async (email: string, password: string) => {
+  const handleLogin = useCallback(async (email: string, password: string, rememberMe?: boolean) => {
     setError(undefined)
     setIsLoading(true)
     try {
-      await loginWithEmail(email, password)
+      await loginWithEmail(email, password, rememberMe)
       finish()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Sign in failed.')
