@@ -41,9 +41,11 @@ export function getInitial(name: string): string {
   return (name || '?')[0].toUpperCase()
 }
 
-export function formatHandicap(hcp: number | null | undefined): string {
+export function formatHandicap(hcp: number | string | null | undefined): string {
   if (hcp == null) return '—'
-  return hcp.toFixed(1)
+  // The API sends handicapIndex as a Prisma Decimal, which serializes to a string.
+  const n = typeof hcp === 'number' ? hcp : Number(hcp)
+  return Number.isFinite(n) ? n.toFixed(1) : '—'
 }
 
 export function formatHcpReq(req: string): string {
