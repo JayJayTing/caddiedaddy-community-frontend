@@ -89,7 +89,7 @@ function WeekDatePicker({
 
 // ─── Round card ───────────────────────────────────────────────────────────────
 
-function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail: () => void }) {
+export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail: () => void }) {
   const { t } = useLang()
   const { user } = useAuth()
   const [expanded, setExpanded] = useState(false)

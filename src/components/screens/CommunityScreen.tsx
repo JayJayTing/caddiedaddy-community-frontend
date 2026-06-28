@@ -27,7 +27,7 @@ const TYPE_COLORS: Record<string, [string, string]> = {
   announcement: ['var(--sky)', 'var(--sky-deep)'],
 }
 
-function PostCard({ post }: { post: Post }) {
+export function PostCard({ post }: { post: Post }) {
   const { openOverlayWith } = useUI()
   const [expanded, setExpanded] = useState(false)
   const [liked, setLiked] = useState(post.userHasLiked ?? false)
@@ -90,11 +90,11 @@ function PostCard({ post }: { post: Post }) {
   )
 }
 
-function CommunityThumb({ comm }: { comm: Community }) {
+function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void }) {
   const c1 = comm.color1 ?? '#B8CBE0'
   const c2 = comm.color2 ?? '#5C7A9A'
   return (
-    <div className="comm-thumb">
+    <div className="comm-thumb" onClick={onOpen} style={{ cursor: 'pointer' }}>
       <div className="comm-thumb-art" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
         <div style={{ position: 'absolute', bottom: 8, left: 10 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white' }}>
@@ -190,7 +190,7 @@ export function CommunityScreen() {
             </div>
             {loadingDiscover ? null : (
               <div className="hscroll" style={{ marginBottom: 20 }}>
-                {discoverCommunities.map(c => <CommunityThumb key={c.id} comm={c} />)}
+                {discoverCommunities.map(c => <CommunityThumb key={c.id} comm={c} onOpen={() => openOverlayWith('communityDetail', c)} />)}
                 <div style={{ width: 4, flexShrink: 0 }} />
               </div>
             )}
@@ -249,7 +249,7 @@ export function CommunityScreen() {
                 {myCommunities.map(c => {
                   const c1 = c.color1 ?? '#B8CBE0', c2 = c.color2 ?? '#5C7A9A'
                   return (
-                    <div key={c.id} className="comm-full-card">
+                    <div key={c.id} className="comm-full-card" onClick={() => openOverlayWith('communityDetail', c)} style={{ cursor: 'pointer' }}>
                       <div style={{ height: 60, background: `linear-gradient(135deg,${c1},${c2})`, position: 'relative' }}>
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
                           <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{c.name}</span>
