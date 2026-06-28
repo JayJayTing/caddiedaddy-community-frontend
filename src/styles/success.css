@@ -1,0 +1,85 @@
+/* Success confirmation — Apple App Store / Play Store style animated checkmark.
+   Driven by UIContext.success; rendered by SuccessOverlay, mounted in (app)/layout. */
+
+.success-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 35, 50, 0);
+  pointer-events: none;
+  transition: background .2s;
+}
+.success-layer.show {
+  background: rgba(26, 35, 50, .32);
+  pointer-events: all;
+}
+
+.success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 30px 34px;
+  min-width: 196px;
+  max-width: 78%;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+  transform: scale(.85);
+  opacity: 0;
+}
+.success-layer.show .success-card {
+  animation: successPop .42s cubic-bezier(.32, 1.5, .5, 1) forwards;
+}
+
+.success-badge {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E8F5E9;
+  border-radius: 50%;
+}
+/* radiating ring pulse on appear */
+.success-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #2E7D32;
+  opacity: 0;
+}
+.success-layer.show .success-badge::after {
+  animation: successRing .7s ease-out .18s forwards;
+}
+
+.success-ring {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+}
+.success-layer.show .success-ring {
+  animation: ringDraw .5s cubic-bezier(.32, .72, 0, 1) .05s forwards;
+}
+.success-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+}
+.success-layer.show .success-check {
+  animation: checkDraw .34s cubic-bezier(.65, 0, .45, 1) .4s forwards;
+}
+
+@keyframes successPop {
+  0%   { transform: scale(.85); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes ringDraw  { to { stroke-dashoffset: 0; } }
+@keyframes checkDraw { to { stroke-dashoffset: 0; } }
+@keyframes successRing {
+  0%   { transform: scale(1);   opacity: .5; }
+  100% { transform: scale(1.5); opacity: 0; }
+}

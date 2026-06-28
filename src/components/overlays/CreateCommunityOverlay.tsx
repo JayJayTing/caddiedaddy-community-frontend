@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { CommunityType, CommunityPrivacy } from '@/types/community'
 
 export function CreateCommunityOverlay() {
-  const { openOverlay, closeOverlay } = useUI()
+  const { openOverlay, closeOverlay, refreshData, showSuccess } = useUI()
+  const { t } = useLang()
   const isOpen = openOverlay === 'createCommunity'
 
   const [name, setName] = useState('')
@@ -36,7 +38,9 @@ export function CreateCommunityOverlay() {
     try {
       await api.post('/communities', { name: name.trim(), type, privacy, description: description || null })
       setName(''); setDescription(''); setType('mixed'); setPrivacy('public')
+      refreshData('communities')
       closeOverlay()
+      showSuccess(t('success.communityCreated'))
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to create community.')
     } finally {

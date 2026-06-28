@@ -16,6 +16,7 @@ import { ChatThreadOverlay } from '@/components/overlays/ChatThreadOverlay'
 import { PostDetailOverlay } from '@/components/overlays/PostDetailOverlay'
 import { CreateCommunityOverlay } from '@/components/overlays/CreateCommunityOverlay'
 import { CommunityDetailOverlay } from '@/components/overlays/CommunityDetailOverlay'
+import { SuccessOverlay } from '@/components/overlays/SuccessOverlay'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
 import { AccountSheet } from '@/components/sheets/AccountSheet'
 import { HandicapSheet } from '@/components/sheets/HandicapSheet'
@@ -43,6 +44,9 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <PostDetailOverlay />
       <CreateCommunityOverlay />
       <CommunityDetailOverlay />
+
+      {/* Global success confirmation (animated checkmark) */}
+      <SuccessOverlay />
 
       {/* Bottom Sheets */}
       <ComposeSheet />

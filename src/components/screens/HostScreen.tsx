@@ -8,7 +8,7 @@ import { Community } from '@/types/community'
 import { RoundFormat, HandicapRequirement } from '@/types/round'
 
 export function HostScreen() {
-  const { activeScreen, setActiveScreen } = useUI()
+  const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion } = useUI()
   const { t } = useLang()
 
   const [postTo, setPostTo] = useState<'public' | 'community'>('public')
@@ -34,7 +34,7 @@ export function HostScreen() {
     api.get<{ data: Community[] }>('/communities/mine')
       .then(r => setMyCommunities(r.data ?? []))
       .catch(() => {})
-  }, [])
+  }, [dataVersion.communities])
 
   const handleCourseSearch = (q: string) => {
     setCourseSearch(q)
@@ -87,6 +87,8 @@ export function HostScreen() {
         visibility: postTo,
         communityId: postTo === 'community' ? selectedCommunity || null : null,
       })
+      refreshData('rounds')
+      showSuccess(t('success.roundPosted'))
       setActiveScreen('rounds')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to publish round.')

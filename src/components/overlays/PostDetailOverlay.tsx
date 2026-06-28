@@ -4,7 +4,8 @@ import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { Post, Comment } from '@/types/post'
-import { avatarColor, getInitial, timeAgo } from '@/lib/utils'
+import { timeAgo } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 
 export function PostDetailOverlay() {
   const { openOverlay, closeOverlay, overlayData } = useUI()
@@ -78,9 +79,7 @@ export function PostDetailOverlay() {
         {/* Post */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div className="avatar" style={{ width: 40, height: 40, fontSize: 15, background: avatarColor(post.authorId) }}>
-              {getInitial(post.author.displayName)}
-            </div>
+            <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={40} fontSize={15} />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
@@ -94,6 +93,10 @@ export function PostDetailOverlay() {
             </div>
           </div>
           <div style={{ fontSize: 15, color: 'var(--ink)', lineHeight: 1.7 }}>{post.body}</div>
+          {post.photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={post.photoUrl} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 'var(--r-md)', marginTop: 12, display: 'block' }} />
+          )}
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line-soft)' }}>
@@ -124,9 +127,7 @@ export function PostDetailOverlay() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {comments.map(c => (
               <div key={c.id} style={{ display: 'flex', gap: 10 }}>
-                <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, background: avatarColor(c.authorId), flexShrink: 0 }}>
-                  {getInitial(c.author.displayName)}
-                </div>
+                <Avatar name={c.author.displayName} url={c.author.avatarUrl} seed={c.authorId} size={32} fontSize={12} />
                 <div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 2 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{c.author.displayName}</span>
@@ -144,9 +145,7 @@ export function PostDetailOverlay() {
       {user && (
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 16px 20px', background: 'var(--bg)', borderTop: '1px solid var(--line-soft)' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-            <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, background: avatarColor(user.id), flexShrink: 0 }}>
-              {getInitial(user.displayName)}
-            </div>
+            <Avatar name={user.displayName} url={user.avatarUrl} seed={user.id} size={32} fontSize={12} />
             <div style={{ flex: 1, background: 'var(--surface)', border: '1.5px solid var(--line)', borderRadius: 'var(--r-lg)', padding: '8px 14px', display: 'flex', gap: 8 }}>
               <textarea
                 value={commentText}

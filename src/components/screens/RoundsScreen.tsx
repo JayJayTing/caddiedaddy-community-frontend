@@ -92,6 +92,7 @@ function WeekDatePicker({
 export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail: () => void }) {
   const { t } = useLang()
   const { user } = useAuth()
+  const { refreshData, showSuccess } = useUI()
   const [expanded, setExpanded] = useState(false)
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
@@ -107,7 +108,12 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   const handleJoin = async () => {
     if (joining || hasRequested || isHost) return
     setJoining(true)
-    try { await api.post(`/rounds/${round.id}/join`); setJoined(true) } catch {}
+    try {
+      await api.post(`/rounds/${round.id}/join`)
+      setJoined(true)
+      refreshData('rounds')
+      showSuccess(t('success.requestSent'))
+    } catch {}
     setJoining(false)
   }
 
@@ -185,7 +191,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export function RoundsScreen() {
-  const { activeScreen, setActiveScreen, openOverlayWith } = useUI()
+  const { activeScreen, setActiveScreen, openOverlayWith, dataVersion } = useUI()
   const { t } = useLang()
   const [rounds, setRounds] = useState<Round[]>([])
   const [loading, setLoading] = useState(true)
@@ -198,7 +204,7 @@ export function RoundsScreen() {
       .then(r => setRounds(r.data ?? []))
       .catch(() => setRounds([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dataVersion.rounds])
 
   const roundDates = new Set(rounds.map(r => (r.date ?? '').slice(0, 10)))
 

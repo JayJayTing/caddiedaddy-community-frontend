@@ -239,6 +239,12 @@ const en = {
   'loading.rounds': 'Loading rounds...',
   'loading.posts': 'Loading posts...',
   'loading.communities': 'Loading communities...',
+  // success confirmations
+  'success.requestSent': 'Request sent!',
+  'success.roundPosted': 'Round posted!',
+  'success.communityCreated': 'Community created!',
+  'success.joined': 'Joined!',
+  'success.posted': 'Posted!',
 }
 
 const zh: typeof en = {
@@ -455,6 +461,12 @@ const zh: typeof en = {
   'loading.rounds': '載入球局中...',
   'loading.posts': '載入貼文中...',
   'loading.communities': '載入社群中...',
+  // success confirmations
+  'success.requestSent': '已送出申請！',
+  'success.roundPosted': '球局已發布！',
+  'success.communityCreated': '社群已建立！',
+  'success.joined': '已加入！',
+  'success.posted': '已發布！',
 }
 
 export type TranslationKey = keyof typeof en

@@ -6,7 +6,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { Post } from '@/types/post'
 import { Community } from '@/types/community'
-import { avatarColor, getInitial, timeAgo } from '@/lib/utils'
+import { timeAgo } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 
 type CommunityTab = 'discover' | 'following' | 'mine'
 type PostFilter = 'all' | 'round_report' | 'seeking' | 'tip'
@@ -46,9 +47,7 @@ export function PostCard({ post }: { post: Post }) {
     <div className="post-card">
       {/* Author row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <div className="avatar" style={{ width: 36, height: 36, fontSize: 13, background: avatarColor(post.authorId), flexShrink: 0 }}>
-          {getInitial(post.author.displayName)}
-        </div>
+        <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={36} fontSize={13} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
@@ -68,6 +67,10 @@ export function PostCard({ post }: { post: Post }) {
       >
         {post.body}
       </div>
+      {post.photoUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={post.photoUrl} alt="" style={{ width: '100%', maxHeight: 280, objectFit: 'cover', borderRadius: 'var(--r-md)', marginBottom: 10, display: 'block' }} />
+      )}
       {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={handleLike}>
@@ -95,7 +98,12 @@ function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void 
   const c2 = comm.color2 ?? '#5C7A9A'
   return (
     <div className="comm-thumb" onClick={onOpen} style={{ cursor: 'pointer' }}>
-      <div className="comm-thumb-art" style={{ background: `linear-gradient(135deg,${c1},${c2})` }}>
+      <div
+        className="comm-thumb-art"
+        style={comm.logoUrl
+          ? { backgroundImage: `url(${comm.logoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          : { background: `linear-gradient(135deg,${c1},${c2})` }}
+      >
         <div style={{ position: 'absolute', bottom: 8, left: 10 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white' }}>
             {comm.memberCount} members
@@ -111,7 +119,7 @@ function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void 
 }
 
 export function CommunityScreen() {
-  const { activeScreen, openOverlayWith, openSheetWith } = useUI()
+  const { activeScreen, openOverlayWith, openSheetWith, dataVersion } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const [tab, setTab] = useState<CommunityTab>('discover')
@@ -130,22 +138,24 @@ export function CommunityScreen() {
       api.get<{ data: Community[] }>('/communities').then(r => setDiscoverCommunities(r.data ?? [])).catch(() => {}),
       api.get<{ data: Post[] }>('/posts?scope=discover').then(r => setDiscoverPosts(r.data ?? [])).catch(() => {}),
     ]).finally(() => setLoadingDiscover(false))
-  }, [])
+  }, [dataVersion.communities, dataVersion.posts])
 
+  // Re-fetch the active tab's data whenever it's opened OR a relevant mutation bumps
+  // dataVersion (e.g. creating/joining a community must show up in "Mine" immediately).
   useEffect(() => {
-    if (tab === 'following' && followingPosts.length === 0) {
+    if (tab === 'following') {
       setLoadingFollowing(true)
       api.get<{ data: Post[] }>('/posts?scope=following')
         .then(r => setFollowingPosts(r.data ?? []))
         .catch(() => {})
         .finally(() => setLoadingFollowing(false))
     }
-    if (tab === 'mine' && myCommunities.length === 0) {
+    if (tab === 'mine') {
       api.get<{ data: Community[] }>('/communities/mine')
         .then(r => setMyCommunities(r.data ?? []))
         .catch(() => {})
     }
-  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, dataVersion.communities, dataVersion.posts]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredFollowing = followingPosts.filter(p => {
     if (postFilter === 'all') return true

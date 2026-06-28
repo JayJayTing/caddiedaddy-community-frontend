@@ -15,7 +15,7 @@ export interface ChatThread {
 export interface ThreadParticipant {
   threadId: string
   userId: string
-  user?: { id: string; displayName: string; avatarInitial: string | null }
+  user?: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   lastReadAt: string | null
   isMuted: boolean
 }
@@ -24,7 +24,7 @@ export interface Message {
   id: string
   threadId: string
   senderId: string
-  sender?: { id: string; displayName: string; avatarInitial: string | null }
+  sender?: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   text: string
   createdAt: string
   editedAt: string | null

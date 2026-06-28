@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { AuthUser } from '@/types/auth'
+import { Avatar } from '@/components/ui/Avatar'
 import { BottomSheet } from './BottomSheet'
 
 export function AccountSheet() {
@@ -19,6 +20,24 @@ export function AccountSheet() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file
+    if (!file) return
+    setError(null)
+    setUploading(true)
+    try {
+      const { data: updated } = await api.upload<{ data: AuthUser }>('/uploads/avatar', file)
+      updateUser(updated)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to upload photo.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   useEffect(() => {
     if (isOpen && user) {
@@ -63,6 +82,17 @@ export function AccountSheet() {
   return (
     <BottomSheet isOpen={isOpen} onClose={closeSheet} title={t('sheet.account.title')}>
       <div style={{ padding: '16px 20px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Avatar */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{ position: 'relative', cursor: uploading ? 'default' : 'pointer' }} onClick={() => !uploading && fileRef.current?.click()}>
+            <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={84} fontSize={32} style={{ opacity: uploading ? 0.5 : 1 }} />
+            <div style={{ position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: '50%', background: 'var(--primary)', border: '2px solid var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}>{uploading ? 'Uploading…' : 'Tap to change photo'}</span>
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleAvatarPick} style={{ display: 'none' }} />
+        </div>
         <div>
           <label style={labelStyle}>{t('sheet.account.displayName')}</label>
           <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} style={inputStyle} />

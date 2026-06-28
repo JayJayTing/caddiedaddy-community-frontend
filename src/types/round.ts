@@ -6,7 +6,7 @@ export type ParticipantRole = 'host' | 'accepted' | 'requested' | 'declined' | '
 export interface Round {
   id: string
   hostUserId: string
-  hostUser: { id: string; displayName: string; avatarInitial: string | null }
+  hostUser: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   courseId: string
   course: { id: string; name: string; locationText: string | null }
   date: string           // YYYY-MM-DD
@@ -32,7 +32,7 @@ export interface RoundParticipant {
   id: string
   roundId: string
   userId: string
-  user?: { id: string; displayName: string; avatarInitial: string | null }
+  user?: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   role: ParticipantRole
   joinedAt: string
 }

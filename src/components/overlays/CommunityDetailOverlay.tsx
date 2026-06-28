@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -7,7 +7,8 @@ import { api } from '@/lib/api'
 import { Community } from '@/types/community'
 import { Post } from '@/types/post'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatHandicap } from '@/lib/utils'
+import { formatHandicap } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 import { RoundCard } from '@/components/screens/RoundsScreen'
 import { PostCard } from '@/components/screens/CommunityScreen'
 
@@ -22,7 +23,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export function CommunityDetailOverlay() {
-  const { openOverlay, openOverlayWith, closeOverlay, openSheetWith, setActiveScreen, overlayData } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, openSheetWith, setActiveScreen, overlayData, refreshData, showSuccess } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
 
@@ -34,6 +35,8 @@ export function CommunityDetailOverlay() {
   const [rounds, setRounds] = useState<Round[]>([])
   const [tab, setTab] = useState<CommTab>('feed')
   const [busy, setBusy] = useState(false)
+  const [uploadingArt, setUploadingArt] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   // (Re)load whenever the overlay opens for a community.
   useEffect(() => {
@@ -62,6 +65,19 @@ export function CommunityDetailOverlay() {
   const isMember = !!user && members.some(m => m.user.id === user.id)
   const canJoin = detail.privacy !== 'private'
   const loaded = detail.members !== undefined // detail (vs seed) has been fetched
+  const isAdmin = !!user && (detail.creatorId === user.id || members.some(m => m.user.id === user.id && m.role === 'admin'))
+
+  const handleArtPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !detail) return
+    setUploadingArt(true)
+    try {
+      const { data } = await api.upload<{ data: Community }>(`/uploads/community/${detail.id}`, file)
+      if (data) setDetail(data)
+    } catch { /* ignore — keep existing art */ }
+    finally { setUploadingArt(false) }
+  }
 
   const toggleJoin = async () => {
     if (!detail || !user || busy || !canJoin) return
@@ -81,6 +97,8 @@ export function CommunityDetailOverlay() {
     try {
       const { data } = await api.post<{ data: Community }>(`/communities/${detail.id}/${willJoin ? 'join' : 'leave'}`)
       if (data) setDetail(data)
+      refreshData('communities')
+      if (willJoin) showSuccess(t('success.joined'))
     } catch {
       // Reconcile from the server on failure.
       try { const { data } = await api.get<{ data: Community }>(`/communities/${detail.id}`); if (data) setDetail(data) } catch {}
@@ -98,16 +116,34 @@ export function CommunityDetailOverlay() {
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Hero */}
-      <div style={{ height: 190, position: 'relative', overflow: 'hidden', flexShrink: 0, background: `linear-gradient(135deg,${c1},${c2})` }}>
-        <svg viewBox="0 0 390 190" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-          <path d="M-4 130 Q80 100 200 120 Q310 138 394 110 L394 194 L-4 194 Z" fill="rgba(255,255,255,.15)" />
-          <path d="M-4 155 Q60 140 160 152 Q260 164 394 144 L394 194 L-4 194 Z" fill="rgba(255,255,255,.1)" />
-          <line x1="290" y1="108" x2="290" y2="52" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round" />
-          <path d="M290 52 L312 62 L290 74 Z" fill="rgba(255,255,255,.8)" />
-        </svg>
+      <div style={{ height: 190, position: 'relative', overflow: 'hidden', flexShrink: 0, ...(detail.logoUrl ? { backgroundImage: `url(${detail.logoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
+        {!detail.logoUrl && (
+          <svg viewBox="0 0 390 190" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+            <path d="M-4 130 Q80 100 200 120 Q310 138 394 110 L394 194 L-4 194 Z" fill="rgba(255,255,255,.15)" />
+            <path d="M-4 155 Q60 140 160 152 Q260 164 394 144 L394 194 L-4 194 Z" fill="rgba(255,255,255,.1)" />
+            <line x1="290" y1="108" x2="290" y2="52" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M290 52 L312 62 L290 74 Z" fill="rgba(255,255,255,.8)" />
+          </svg>
+        )}
         <div className="detail-back" onClick={closeOverlay} style={{ top: 16, left: 16 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </div>
+        {isAdmin && (
+          <>
+            <div
+              onClick={() => !uploadingArt && fileRef.current?.click()}
+              style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploadingArt ? 'default' : 'pointer' }}
+              title="Change community art"
+            >
+              {uploadingArt ? (
+                <span style={{ fontSize: 10, color: 'white' }}>…</span>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleArtPick} style={{ display: 'none' }} />
+          </>
+        )}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(transparent,rgba(0,0,0,.52))' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -193,9 +229,7 @@ export function CommunityDetailOverlay() {
               const role = isCreator ? 'admin' : m.role
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
-                  <div className="avatar" style={{ width: 40, height: 40, fontSize: 15, background: avatarColor(m.user.id), flexShrink: 0 }}>
-                    {getInitial(m.user.displayName)}
-                  </div>
+                  <Avatar name={m.user.displayName} url={m.user.avatarUrl} seed={m.user.id} size={40} fontSize={15} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{m.user.displayName}{m.user.id === user?.id ? ' (You)' : ''}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>HCP {formatHandicap(m.user.handicapIndex)}</div>

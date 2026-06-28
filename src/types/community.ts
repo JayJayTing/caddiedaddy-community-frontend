@@ -7,13 +7,13 @@ export interface CommunityMemberEntry {
   role: CommunityMemberRole
   status: string
   joinedAt?: string
-  user: { id: string; displayName: string; avatarInitial: string | null; handicapIndex?: number | string | null }
+  user: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null; handicapIndex?: number | string | null }
 }
 
 export interface Community {
   id: string
   creatorId: string
-  creator?: { id: string; displayName: string; avatarInitial: string | null }
+  creator?: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   name: string
   type: CommunityType
   privacy: CommunityPrivacy

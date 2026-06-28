@@ -47,8 +47,16 @@ export function ProfileScreen() {
         {/* Hero */}
         <div style={{ background: gradient, padding: '48px 20px 24px', position: 'relative', flexShrink: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div className="avatar" style={{ width: 72, height: 72, fontSize: 28, background: 'rgba(255,255,255,.25)', color: 'white', border: '3px solid rgba(255,255,255,.4)' }}>
-              {user ? getInitial(user.displayName) : '?'}
+            <div
+              className="avatar"
+              style={{
+                width: 72, height: 72, fontSize: 28, color: 'white', border: '3px solid rgba(255,255,255,.4)',
+                ...(user?.avatarUrl
+                  ? { backgroundImage: `url(${user.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                  : { background: 'rgba(255,255,255,.25)' }),
+              }}
+            >
+              {user?.avatarUrl ? '' : (user ? getInitial(user.displayName) : '?')}
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? 'Loading…'}</div>

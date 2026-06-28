@@ -4,7 +4,7 @@ import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { ChatThread, Message } from '@/types/chat'
-import { avatarColor, getInitial } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 import { getRealtime } from '@/lib/supabaseRealtime'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -68,6 +68,7 @@ export function ChatThreadOverlay() {
   const other = thread.participants.find(p => p.userId !== user?.id)
   const title = thread.type === 'group' ? (thread.name ?? 'Group chat') : (other?.user?.displayName ?? thread.name ?? 'Chat')
   const avatarSeed = thread.type === 'group' ? thread.id : (other?.userId ?? thread.id)
+  const avatarUrl = thread.type === 'group' ? null : (other?.user?.avatarUrl ?? null)
   const subtitle = thread.type === 'group' ? `${thread.participants.length} members` : ''
 
   const send = async () => {
@@ -93,7 +94,7 @@ export function ChatThreadOverlay() {
         <div style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }} onClick={closeOverlay}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </div>
-        <div className="avatar" style={{ width: 38, height: 38, fontSize: 14, background: avatarColor(avatarSeed), flexShrink: 0 }}>{getInitial(title)}</div>
+        <Avatar name={title} url={avatarUrl} seed={avatarSeed} size={38} fontSize={14} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
           {subtitle && <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{subtitle}</div>}

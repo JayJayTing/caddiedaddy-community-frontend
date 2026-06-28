@@ -6,10 +6,9 @@ import { api } from '@/lib/api'
 import { Round, RoundParticipant, RoundFormat, HandicapRequirement, RoundStatus } from '@/types/round'
 import { avatarColor, getInitial, formatDate } from '@/lib/utils'
 
-// NOTE: This is a FRONTEND-ONLY mockup. Accept/decline/edit/cancel mutate local
-// React state only. The backend write endpoints are deferred to a later pass — see
-// the `TODO(backend)` markers for exactly where each call will plug in. (We DO read
-// the existing GET /rounds/:id to load participant names.)
+// Accept/decline/edit/cancel call the real backend endpoints (PATCH/DELETE /rounds/:id…)
+// with optimistic local updates that revert on failure. Participant names are loaded
+// from GET /rounds/:id on open.
 export function ManageRoundOverlay() {
   const { openOverlay, openOverlayWith, overlayData } = useUI()
   const { t } = useLang()

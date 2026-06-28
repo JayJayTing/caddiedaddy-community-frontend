@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
@@ -8,20 +8,36 @@ import { Round } from '@/types/round'
 import { avatarColor, getInitial, formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
 
 export function RoundDetailOverlay() {
-  const { openOverlay, openOverlayWith, closeOverlay, overlayData } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
-  const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
+  // Fresh detail (incl. the viewer's own participant row) fetched from GET /rounds/:id.
+  // The list data in overlayData can be stale and omit the viewer's pending request,
+  // which would otherwise make the button show "Request to Join" after already requesting.
+  const [detail, setDetail] = useState<Round | null>(null)
 
-  const round = overlayData as Round | null
-  const isOpen = openOverlay === 'roundDetail' && round != null
+  const seed = overlayData as Round | null
+  const isOpen = openOverlay === 'roundDetail' && seed != null
+  // Prefer freshly fetched detail; fall back to the list seed for instant render.
+  const round = detail?.id === seed?.id ? detail ?? seed : seed
+
+  // Re-fetch each time the overlay opens so request/host state reflects the server.
+  useEffect(() => {
+    if (!seed || !isOpen) return
+    setJoining(false)
+    let stale = false
+    api.get<{ data: Round }>(`/rounds/${seed.id}`)
+      .then(({ data }) => { if (!stale && data) setDetail(data) })
+      .catch(() => {})
+    return () => { stale = true }
+  }, [isOpen, seed?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const accepted = round?.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
   const openSpots = round ? Math.max(0, round.totalSpots - accepted) : 0
 
   const userP = user && round?.participants?.find(p => p.userId === user.id)
-  const hasRequested = userP?.role === 'requested' || joined
+  const hasRequested = userP?.role === 'requested'
   const isHost = userP?.role === 'host'
 
   const c1 = round?.color1 ?? '#B8CBE0'
@@ -30,7 +46,14 @@ export function RoundDetailOverlay() {
   const handleJoin = async () => {
     if (!round || joining || hasRequested || isHost) return
     setJoining(true)
-    try { await api.post(`/rounds/${round.id}/join`); setJoined(true) } catch {}
+    try {
+      await api.post(`/rounds/${round.id}/join`)
+      // Re-fetch so the players list and button reflect the new pending request.
+      const { data } = await api.get<{ data: Round }>(`/rounds/${round.id}`)
+      if (data) setDetail(data)
+      refreshData('rounds')
+      showSuccess(t('success.requestSent'))
+    } catch {}
     setJoining(false)
   }
 
@@ -112,12 +135,14 @@ export function RoundDetailOverlay() {
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>Players ({accepted}/{round.totalSpots})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {round.participants.map(p => (
-                <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              {round.participants
+                .filter(p => p.role === 'host' || p.role === 'accepted')
+                .map(p => (
+                <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: avatarColor(p.userId) }}>
                     {p.user ? getInitial(p.user.displayName) : '?'}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : p.role}</div>
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
                 </div>
               ))}
               {Array.from({ length: openSpots }).map((_, i) => (

@@ -3,7 +3,7 @@ export type PostType = 'round_report' | 'seeking' | 'tip' | 'general' | 'announc
 export interface Post {
   id: string
   authorId: string
-  author: { id: string; displayName: string; avatarInitial: string | null; locationText: string | null }
+  author: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null; locationText: string | null }
   type: PostType
   body: string
   locationText: string | null
@@ -22,7 +22,7 @@ export interface Comment {
   id: string
   postId: string
   authorId: string
-  author: { id: string; displayName: string; avatarInitial: string | null }
+  author: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   text: string
   createdAt: string
 }

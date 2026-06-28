@@ -40,6 +40,29 @@ export async function apiFetch<T>(
   return res.json() as Promise<T>
 }
 
+// Multipart upload — sends a File as form-data. Does NOT set Content-Type so the
+// browser adds the multipart boundary itself.
+export async function apiUpload<T>(path: string, file: File, field = 'file'): Promise<T> {
+  const token = getToken()
+  const fd = new FormData()
+  fd.append(field, file)
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: fd,
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    let msg = body
+    try { msg = JSON.parse(body).error ?? body } catch {}
+    if (res.status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('caddie:session-expired'))
+    }
+    throw new ApiError(res.status, msg)
+  }
+  return res.json() as Promise<T>
+}
+
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path),
   post: <T>(path: string, body?: unknown) =>
@@ -47,4 +70,5 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: 'DELETE' }),
+  upload: <T>(path: string, file: File, field?: string) => apiUpload<T>(path, file, field),
 }

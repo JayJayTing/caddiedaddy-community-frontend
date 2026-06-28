@@ -22,7 +22,7 @@ interface Announcement {
 type HomeTab = 'rounds' | 'teetimes' | 'community'
 
 export function HomeScreen() {
-  const { activeScreen, setActiveScreen, openOverlayWith } = useUI()
+  const { activeScreen, setActiveScreen, openOverlayWith, dataVersion } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const mounted = useMounted()
@@ -67,7 +67,7 @@ export function HomeScreen() {
     api.get<{ data: Post[] }>('/posts?scope=discover&limit=3')
       .then(r => setPosts(r.data ?? []))
       .catch(() => setPosts([]))
-  }, [])
+  }, [dataVersion.rounds, dataVersion.posts])
 
   const acceptedCount = (r: Round) =>
     r.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
@@ -249,7 +249,7 @@ export function HomeScreen() {
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 1 }}>{round.course.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)} · {formatMoney(round.greenFeeCents)}</div>
                   </div>
-                  <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }}>
+                  <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('roundDetail', round)}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)' }}>Join</span>
                   </div>
                 </div>
@@ -275,6 +275,7 @@ export function HomeScreen() {
 function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; expanded: boolean; onToggle: () => void; onOpenDetail: () => void }) {
   const { t } = useLang()
   const { user } = useAuth()
+  const { refreshData, showSuccess } = useUI()
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
 
@@ -292,6 +293,8 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
     try {
       await api.post(`/rounds/${round.id}/join`)
       setJoined(true)
+      refreshData('rounds')
+      showSuccess(t('success.requestSent'))
     } catch {}
     setJoining(false)
   }

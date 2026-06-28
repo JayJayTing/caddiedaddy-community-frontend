@@ -5,15 +5,16 @@ import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { ChatThread } from '@/types/chat'
-import { avatarColor, getInitial, timeAgo } from '@/lib/utils'
+import { timeAgo } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 
 type ChatTab = 'friends' | 'communities'
 
 function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; currentUserId: string; onOpen: () => void }) {
   const otherParticipant = thread.participants.find(p => p.userId !== currentUserId)
   const name = thread.type === 'group' ? (thread.name ?? 'Group chat') : (otherParticipant?.user?.displayName ?? thread.name ?? 'Unknown')
-  const initial = getInitial(name)
-  const color = avatarColor(thread.type === 'group' ? thread.id : (otherParticipant?.userId ?? thread.id))
+  const avatarSeed = thread.type === 'group' ? thread.id : (otherParticipant?.userId ?? thread.id)
+  const avatarUrl = thread.type === 'group' ? null : (otherParticipant?.user?.avatarUrl ?? null)
   const lastMsg = thread.lastMessage ?? thread.messages?.[0] ?? null
   const myLastRead = thread.participants.find(p => p.userId === currentUserId)?.lastReadAt
   const unread = !!lastMsg && lastMsg.senderId !== currentUserId && (!myLastRead || new Date(myLastRead) < new Date(lastMsg.createdAt))
@@ -21,9 +22,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
   return (
     <div className="mod-row" onClick={onOpen} style={{ cursor: 'pointer' }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
-        <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: color }}>
-          {initial}
-        </div>
+        <Avatar name={name} url={avatarUrl} seed={avatarSeed} size={44} fontSize={16} />
         {/* Online dot (visual) */}
         <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#4CAF50', border: '2px solid var(--bg)' }} />
       </div>
