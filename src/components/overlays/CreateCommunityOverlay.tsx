@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
@@ -18,7 +18,6 @@ export function CreateCommunityOverlay() {
   const [error, setError] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -84,25 +83,25 @@ export function CreateCommunityOverlay() {
         {/* Cover photo */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Cover Photo (optional)</div>
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pickPhoto} style={{ display: 'none' }} />
+          <input id="create-cover-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pickPhoto} style={{ display: 'none' }} />
           {photoPreview ? (
-            <div
-              onClick={() => fileRef.current?.click()}
-              style={{ position: 'relative', height: 130, borderRadius: 'var(--r-lg)', overflow: 'hidden', cursor: 'pointer', backgroundImage: `url("${photoPreview}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            <label
+              htmlFor="create-cover-input"
+              style={{ display: 'block', position: 'relative', height: 130, borderRadius: 'var(--r-lg)', overflow: 'hidden', cursor: 'pointer', backgroundImage: `url("${photoPreview}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             >
-              <div onClick={(e) => { e.stopPropagation(); clearPhoto() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); clearPhoto() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </div>
               <div style={{ position: 'absolute', bottom: 8, left: 10, fontSize: 11, fontWeight: 700, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,.5)' }}>Tap to change</div>
-            </div>
+            </label>
           ) : (
-            <div
-              onClick={() => fileRef.current?.click()}
+            <label
+              htmlFor="create-cover-input"
               style={{ height: 130, border: '1.5px dashed var(--line)', borderRadius: 'var(--r-lg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: 'var(--ink-3)' }}
             >
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <span style={{ fontSize: 13, fontWeight: 600 }}>Add a cover photo</span>
-            </div>
+            </label>
           )}
         </div>
 

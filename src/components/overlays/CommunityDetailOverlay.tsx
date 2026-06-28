@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
@@ -36,7 +36,6 @@ export function CommunityDetailOverlay() {
   const [tab, setTab] = useState<CommTab>('feed')
   const [busy, setBusy] = useState(false)
   const [uploadingArt, setUploadingArt] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   // (Re)load whenever the overlay opens for a community.
   useEffect(() => {
@@ -130,9 +129,9 @@ export function CommunityDetailOverlay() {
         </div>
         {isAdmin && (
           <>
-            <div
-              onClick={() => !uploadingArt && fileRef.current?.click()}
-              style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploadingArt ? 'default' : 'pointer' }}
+            <label
+              htmlFor="community-art-input"
+              style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploadingArt ? 'default' : 'pointer', pointerEvents: uploadingArt ? 'none' : 'auto' }}
               title="Change community art"
             >
               {uploadingArt ? (
@@ -140,8 +139,8 @@ export function CommunityDetailOverlay() {
               ) : (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               )}
-            </div>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleArtPick} style={{ display: 'none' }} />
+            </label>
+            <input id="community-art-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleArtPick} style={{ display: 'none' }} />
           </>
         )}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(transparent,rgba(0,0,0,.52))' }}>
