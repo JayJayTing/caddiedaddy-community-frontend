@@ -12,11 +12,20 @@ export function ProfileScreen() {
   const { user, logout } = useAuth()
   const { t } = useLang()
   const [recentRounds, setRecentRounds] = useState<Round[]>([])
+  const [stats, setStats] = useState<{ roundsCount: number; followingCount: number } | null>(null)
 
   useEffect(() => {
     if (!user) return
-    api.get<{ data: Round[] }>('/rounds/upcoming?limit=2')
-      .then(r => setRecentRounds(r.data ?? []))
+    api.get<{ data: { roundsCount: number; followingCount: number } }>(`/users/${user.id}/stats`)
+      .then(r => setStats(r.data ?? null))
+      .catch(() => setStats(null))
+    // Show finished rounds (history) when there are any; otherwise the upcoming schedule.
+    api.get<{ data: Round[] }>(`/users/${user.id}/rounds?when=past&limit=3`)
+      .then(r => {
+        if (r.data && r.data.length) { setRecentRounds(r.data); return }
+        return api.get<{ data: Round[] }>(`/users/${user.id}/rounds?when=upcoming&limit=3`)
+          .then(r2 => setRecentRounds(r2.data ?? []))
+      })
       .catch(() => setRecentRounds([]))
   }, [user])
 
@@ -65,7 +74,7 @@ export function ProfileScreen() {
         {/* Stats */}
         <div style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--line-soft)' }}>
           <div className="profile-stat">
-            <div className="profile-stat-num">—</div>
+            <div className="profile-stat-num">{stats ? stats.roundsCount : '—'}</div>
             <div className="profile-stat-label">{t('profile.stat.rounds')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
@@ -75,7 +84,7 @@ export function ProfileScreen() {
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
           <div className="profile-stat">
-            <div className="profile-stat-num">0</div>
+            <div className="profile-stat-num">{stats ? stats.followingCount : '—'}</div>
             <div className="profile-stat-label">{t('profile.stat.following')}</div>
           </div>
         </div>
