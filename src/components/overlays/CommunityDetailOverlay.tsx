@@ -188,7 +188,7 @@ export function CommunityDetailOverlay() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span className="label-xs">{feed.length} {feed.length === 1 ? 'Post' : 'Posts'}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openSheetWith('compose')}>+ {t('community.newPost')}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openSheetWith('compose', { communityId: detail.id, communityName: detail.name })}>+ {t('community.newPost')}</span>
             </div>
             {feed.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-3)', fontSize: 13 }}>No posts yet — be the first!</div>

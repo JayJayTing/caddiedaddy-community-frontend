@@ -16,7 +16,7 @@ const POST_TYPES: Array<{ key: PostType; label: string; emoji: string }> = [
 ]
 
 export function ComposeSheet() {
-  const { openSheet, closeSheet, refreshData, showSuccess } = useUI()
+  const { openSheet, closeSheet, refreshData, showSuccess, sheetData } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const isOpen = openSheet === 'compose'
@@ -31,12 +31,22 @@ export function ComposeSheet() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // When opened from inside a community ("+ New Post"), pre-select that community.
   useEffect(() => {
     if (!isOpen) { setPhotoUrl(null); return }
+    const target = sheetData as { communityId?: string; communityName?: string } | null
+    setCommunityId(target?.communityId ?? '')
     api.get<{ data: Community[] }>('/communities/mine')
-      .then(r => setCommunities(r.data ?? []))
+      .then(r => {
+        let list = r.data ?? []
+        // Ensure the target community is selectable even if it's not in "mine".
+        if (target?.communityId && !list.some(c => c.id === target.communityId)) {
+          list = [{ id: target.communityId, name: target.communityName ?? 'This community' } as Community, ...list]
+        }
+        setCommunities(list)
+      })
       .catch(() => {})
-  }, [isOpen])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePhotoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -63,7 +73,7 @@ export function ComposeSheet() {
         type: postType,
         body: body.trim(),
         photoUrl: photoUrl || undefined,
-        communityId: communityId || null,
+        communityIds: communityId ? [communityId] : undefined,
         visibility: communityId ? 'community' : 'public',
       })
       setBody(''); setCommunityId(''); setPostType('general'); setPhotoUrl(null)
@@ -104,17 +114,7 @@ export function ComposeSheet() {
           </div>
         )}
 
-        {/* Textarea */}
-        <textarea
-          className="compose-textarea"
-          placeholder={t('community.sharePrompt')}
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          rows={5}
-          style={{ marginBottom: 14 }}
-        />
-
-        {/* Photo */}
+        {/* Photo (prominent, above the text) */}
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handlePhotoPick} style={{ display: 'none' }} />
         {photoUrl ? (
           <div style={{ position: 'relative', marginBottom: 14, borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
@@ -127,12 +127,22 @@ export function ComposeSheet() {
         ) : (
           <div
             onClick={() => !uploadingPhoto && fileRef.current?.click()}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: '1.5px dashed var(--line)', borderRadius: 'var(--r-md)', marginBottom: 14, cursor: uploadingPhoto ? 'default' : 'pointer', color: 'var(--ink-3)' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 14px', border: '1.5px solid var(--primary)', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)', marginBottom: 14, cursor: uploadingPhoto ? 'default' : 'pointer', color: 'var(--primary-ink)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{uploadingPhoto ? 'Uploading…' : 'Add a photo'}</span>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{uploadingPhoto ? 'Uploading…' : 'Add a Photo'}</span>
           </div>
         )}
+
+        {/* Textarea */}
+        <textarea
+          className="compose-textarea"
+          placeholder={t('community.sharePrompt')}
+          value={body}
+          onChange={e => setBody(e.target.value)}
+          rows={5}
+          style={{ marginBottom: 14 }}
+        />
 
         {error && <div style={{ fontSize: 13, color: '#C0392B', marginBottom: 10 }}>{error}</div>}
 
