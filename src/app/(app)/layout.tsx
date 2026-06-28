@@ -12,6 +12,7 @@ import { ProfileScreen } from '@/components/screens/ProfileScreen'
 import { HostScreen } from '@/components/screens/HostScreen'
 import { RoundDetailOverlay } from '@/components/overlays/RoundDetailOverlay'
 import { ManageRoundOverlay } from '@/components/overlays/ManageRoundOverlay'
+import { ChatThreadOverlay } from '@/components/overlays/ChatThreadOverlay'
 import { PostDetailOverlay } from '@/components/overlays/PostDetailOverlay'
 import { CreateCommunityOverlay } from '@/components/overlays/CreateCommunityOverlay'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
@@ -37,6 +38,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       {/* Overlays */}
       <RoundDetailOverlay />
       <ManageRoundOverlay />
+      <ChatThreadOverlay />
       <PostDetailOverlay />
       <CreateCommunityOverlay />
 

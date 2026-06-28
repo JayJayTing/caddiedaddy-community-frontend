@@ -9,15 +9,17 @@ import { avatarColor, getInitial, timeAgo } from '@/lib/utils'
 
 type ChatTab = 'friends' | 'communities'
 
-function ThreadRow({ thread, currentUserId }: { thread: ChatThread; currentUserId: string }) {
+function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; currentUserId: string; onOpen: () => void }) {
   const otherParticipant = thread.participants.find(p => p.userId !== currentUserId)
-  const name = thread.name ?? otherParticipant?.user?.displayName ?? 'Unknown'
+  const name = thread.type === 'group' ? (thread.name ?? 'Group chat') : (otherParticipant?.user?.displayName ?? thread.name ?? 'Unknown')
   const initial = getInitial(name)
-  const color = avatarColor(otherParticipant?.userId ?? thread.id)
-  const unread = thread.lastMessage && !thread.participants.find(p => p.userId === currentUserId)?.lastReadAt
+  const color = avatarColor(thread.type === 'group' ? thread.id : (otherParticipant?.userId ?? thread.id))
+  const lastMsg = thread.lastMessage ?? thread.messages?.[0] ?? null
+  const myLastRead = thread.participants.find(p => p.userId === currentUserId)?.lastReadAt
+  const unread = !!lastMsg && lastMsg.senderId !== currentUserId && (!myLastRead || new Date(myLastRead) < new Date(lastMsg.createdAt))
 
   return (
-    <div className="mod-row">
+    <div className="mod-row" onClick={onOpen} style={{ cursor: 'pointer' }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: color }}>
           {initial}
@@ -38,7 +40,7 @@ function ThreadRow({ thread, currentUserId }: { thread: ChatThread; currentUserI
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             fontWeight: unread ? 600 : 400,
           }}>
-            {thread.lastMessage ? thread.lastMessage.text : 'No messages yet'}
+            {lastMsg ? lastMsg.text : 'No messages yet'}
           </span>
           {unread && (
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }} />
@@ -50,7 +52,7 @@ function ThreadRow({ thread, currentUserId }: { thread: ChatThread; currentUserI
 }
 
 export function ChatScreen() {
-  const { activeScreen } = useUI()
+  const { activeScreen, openOverlayWith } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const [tab, setTab] = useState<ChatTab>('friends')
@@ -114,7 +116,7 @@ export function ChatScreen() {
           ) : (
             <div style={{ marginTop: 8 }}>
               {dmThreads.map(thread => (
-                <ThreadRow key={thread.id} thread={thread} currentUserId={user?.id ?? ''} />
+                <ThreadRow key={thread.id} thread={thread} currentUserId={user?.id ?? ''} onOpen={() => openOverlayWith('chatThread', thread)} />
               ))}
             </div>
           )
@@ -126,7 +128,7 @@ export function ChatScreen() {
           ) : (
             <div style={{ marginTop: 8 }}>
               {groupThreads.map(thread => (
-                <ThreadRow key={thread.id} thread={thread} currentUserId={user?.id ?? ''} />
+                <ThreadRow key={thread.id} thread={thread} currentUserId={user?.id ?? ''} onOpen={() => openOverlayWith('chatThread', thread)} />
               ))}
             </div>
           )

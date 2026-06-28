@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
-export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'map' | null
+export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'chatThread' | 'map' | null
 export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | null
 
 interface UIContextType {

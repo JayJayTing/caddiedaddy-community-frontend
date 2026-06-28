@@ -9,6 +9,7 @@ export interface ChatThread {
   createdAt: string
   participants: ThreadParticipant[]
   lastMessage?: Message | null
+  messages?: Message[] // GET /threads includes the latest message here (take 1)
 }
 
 export interface ThreadParticipant {
