@@ -75,3 +75,19 @@ export function formatFormat(fmt: string): string {
   }
   return map[fmt] ?? fmt
 }
+
+// Google Static Maps satellite tile for a course, built from its lat/lng.
+// Returns null when there's no API key or no coords — callers fall back to the
+// gradient art. Key is provided via NEXT_PUBLIC_MAPS_KEY (build key-ready).
+export function courseMapImage(
+  course: { lat?: number | string | null; lng?: number | string | null } | null | undefined,
+  opts: { w?: number; h?: number; zoom?: number } = {},
+): string | null {
+  const key = process.env.NEXT_PUBLIC_MAPS_KEY
+  if (!key || !course) return null
+  const lat = course.lat != null ? Number(course.lat) : NaN
+  const lng = course.lng != null ? Number(course.lng) : NaN
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return null
+  const { w = 640, h = 320, zoom = 15 } = opts
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${w}x${h}&scale=2&maptype=satellite&key=${key}`
+}

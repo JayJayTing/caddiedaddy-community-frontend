@@ -21,11 +21,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
 
   return (
     <div className="mod-row" onClick={onOpen} style={{ cursor: 'pointer' }}>
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <Avatar name={name} url={avatarUrl} seed={avatarSeed} size={44} fontSize={16} />
-        {/* Online dot (visual) */}
-        <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#4CAF50', border: '2px solid var(--bg)' }} />
-      </div>
+      <Avatar name={name} url={avatarUrl} seed={avatarSeed} size={44} fontSize={16} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{name}</span>

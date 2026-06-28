@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
+import { formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 
 export function RoundDetailOverlay() {
   const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess } = useUI()
@@ -42,6 +43,7 @@ export function RoundDetailOverlay() {
 
   const c1 = round?.color1 ?? '#B8CBE0'
   const c2 = round?.color2 ?? '#5C7A9A'
+  const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
     if (!round || joining || hasRequested || isHost) return
@@ -62,13 +64,17 @@ export function RoundDetailOverlay() {
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Hero */}
-      <div className="detail-hero" style={{ background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }}>
-        <svg viewBox="0 0 390 200" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-          <path d="M-10 130 Q100 100 200 120 Q300 140 410 110 L410 210 L-10 210 Z" fill="rgba(255,255,255,.12)"/>
-          <path d="M-10 160 Q80 145 200 155 Q320 165 410 148 L410 210 L-10 210 Z" fill="rgba(255,255,255,.08)"/>
-          <line x1="290" y1="100" x2="290" y2="40" stroke="rgba(255,255,255,.7)" strokeWidth="2.5" strokeLinecap="round"/>
-          <path d="M290 40 L318 52 L290 64 Z" fill="rgba(255,255,255,.85)"/>
-        </svg>
+      <div className="detail-hero" style={heroImg ? { backgroundImage: `url(${heroImg})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 } : { background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }}>
+        {!heroImg && (
+          <svg viewBox="0 0 390 200" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+            <path d="M-10 130 Q100 100 200 120 Q300 140 410 110 L410 210 L-10 210 Z" fill="rgba(255,255,255,.12)"/>
+            <path d="M-10 160 Q80 145 200 155 Q320 165 410 148 L410 210 L-10 210 Z" fill="rgba(255,255,255,.08)"/>
+            <line x1="290" y1="100" x2="290" y2="40" stroke="rgba(255,255,255,.7)" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M290 40 L318 52 L290 64 Z" fill="rgba(255,255,255,.85)"/>
+          </svg>
+        )}
+        {/* Scrim so the title stays legible over satellite imagery */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 45%, rgba(0,0,0,.5))' }} />
         <div className="detail-back" onClick={closeOverlay}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
@@ -96,9 +102,7 @@ export function RoundDetailOverlay() {
 
         {/* Host */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '14px', background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)' }}>
-          <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: avatarColor(round.hostUserId) }}>
-            {getInitial(round.hostUser?.displayName)}
-          </div>
+          <Avatar name={round.hostUser?.displayName} url={round.hostUser?.avatarUrl} seed={round.hostUserId} size={44} fontSize={16} />
           <div>
             <div style={{ fontSize: '11px', color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' } as React.CSSProperties}>Host</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{round.hostUser?.displayName ?? 'Host'}</div>
@@ -139,9 +143,7 @@ export function RoundDetailOverlay() {
                 .filter(p => p.role === 'host' || p.role === 'accepted')
                 .map(p => (
                 <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: avatarColor(p.userId) }}>
-                    {p.user ? getInitial(p.user.displayName) : '?'}
-                  </div>
+                  <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
                   <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
                 </div>
               ))}

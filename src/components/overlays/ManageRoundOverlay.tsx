@@ -4,7 +4,9 @@ import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round, RoundParticipant, RoundFormat, HandicapRequirement, RoundStatus } from '@/types/round'
-import { avatarColor, getInitial, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
+import { DateField } from '@/components/ui/DateField'
 
 // Accept/decline/edit/cancel call the real backend endpoints (PATCH/DELETE /rounds/:id…)
 // with optimistic local updates that revert on failure. Participant names are loaded
@@ -157,9 +159,7 @@ export function ManageRoundOverlay() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {requests.map(p => (
                 <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div className="avatar" style={{ width: 40, height: 40, fontSize: 15, background: avatarColor(p.userId), flexShrink: 0 }}>
-                    {p.user ? getInitial(p.user.displayName) : '?'}
-                  </div>
+                  <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={40} fontSize={15} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.user?.displayName ?? 'Player'}</div>
                     <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t('manage.requests')}</div>
@@ -186,9 +186,7 @@ export function ManageRoundOverlay() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {players.map(p => (
               <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: avatarColor(p.userId) }}>
-                  {p.user ? getInitial(p.user.displayName) : '?'}
-                </div>
+                <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
                 <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
               </div>
             ))}
@@ -210,7 +208,7 @@ export function ManageRoundOverlay() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.date')}</div>
-              <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={e => setDate(e.target.value)} style={inputStyle} />
+              <DateField value={date} onChange={setDate} />
             </div>
             <div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.teeTime')}</div>

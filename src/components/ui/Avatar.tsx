@@ -11,6 +11,8 @@ export function Avatar({
   fontSize,
   style,
   className,
+  onClick,
+  title,
 }: {
   name?: string | null
   url?: string | null
@@ -19,8 +21,10 @@ export function Avatar({
   fontSize?: number
   style?: CSSProperties
   className?: string
+  onClick?: () => void
+  title?: string
 }) {
-  const base: CSSProperties = { width: size, height: size, flexShrink: 0, ...style }
+  const base: CSSProperties = { width: size, height: size, flexShrink: 0, ...(onClick ? { cursor: 'pointer' } : {}), ...style }
 
   if (url) {
     return (
@@ -28,7 +32,9 @@ export function Avatar({
         className={`avatar${className ? ' ' + className : ''}`}
         style={{ ...base, backgroundImage: `url("${url.replace(/"/g, '%22')}")`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
         role="img"
-        aria-label={name ?? 'avatar'}
+        aria-label={title ?? name ?? 'avatar'}
+        title={title}
+        onClick={onClick}
       />
     )
   }
@@ -37,6 +43,9 @@ export function Avatar({
     <div
       className={`avatar${className ? ' ' + className : ''}`}
       style={{ ...base, fontSize: fontSize ?? Math.round(size * 0.4), background: avatarColor(seed ?? name) }}
+      onClick={onClick}
+      title={title}
+      aria-label={title}
     >
       {getInitial(name)}
     </div>

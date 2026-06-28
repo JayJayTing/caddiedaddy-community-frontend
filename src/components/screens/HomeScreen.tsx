@@ -7,7 +7,8 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { avatarColor, getInitial, formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo, courseMapImage } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 import { useMounted } from '@/lib/useMounted'
 import { useNotifications } from '@/contexts/NotificationsContext'
 
@@ -103,13 +104,7 @@ export function HomeScreen() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </div>
-          <div
-            className="avatar"
-            style={{ width: 38, height: 38, fontSize: 14, background: user ? avatarColor(user.id) : 'var(--peach)', cursor: 'pointer' }}
-            onClick={() => setActiveScreen('profile')}
-          >
-            {user ? getInitial(user.displayName) : '?'}
-          </div>
+          <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={38} fontSize={14} onClick={() => setActiveScreen('profile')} title="Profile" />
         </div>
       </div>
 
@@ -139,10 +134,8 @@ export function HomeScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div className="ava-stack">
-                      {upcoming.participants.slice(0, 3).map((p, i) => (
-                        <div key={p.id} className="avatar" style={{ width: 30, height: 30, fontSize: 11, background: avatarColor(p.userId), border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }}>
-                          {p.user ? getInitial(p.user.displayName) : '?'}
-                        </div>
+                      {upcoming.participants?.slice(0, 3).map((p, i) => (
+                        <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={30} fontSize={11} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
                       ))}
                     </div>
                     <span style={{ fontSize: 12, color: 'var(--ink-2)', fontWeight: 600 }}>
@@ -290,6 +283,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
   const openSpots = Math.max(0, round.totalSpots - (round.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0))
   const c1 = round.color1 ?? '#B8CBE0'
   const c2 = round.color2 ?? '#5C7A9A'
+  const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
 
   const userParticipant = user && round.participants?.find(p => p.userId === user.id)
   const hasRequested = userParticipant?.role === 'requested' || joined
@@ -310,12 +304,14 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', cursor: 'pointer' }} onClick={onToggle}>
-        <div style={{ width: 80, flexShrink: 0, background: `linear-gradient(135deg,${c1},${c2})`, position: 'relative', overflow: 'hidden', minHeight: 80 }}>
-          <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-            <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
-            <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
-          </svg>
+        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
+          {!art && (
+            <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+              <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
+              <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
+            </svg>
+          )}
         </div>
         <div style={{ flex: 1, padding: '13px 13px 13px 11px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
@@ -335,9 +331,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
               {round.participants?.slice(0, 3).map((p, i) => (
-                <div key={p.id} className="avatar" style={{ width: 24, height: 24, fontSize: 9, background: avatarColor(p.userId), border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }}>
-                  {p.user ? getInitial(p.user.displayName) : '?'}
-                </div>
+                <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={24} fontSize={9} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
               ))}
             </div>
             <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} {t('home.hosting')}</span>
@@ -405,9 +399,7 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
         {post.communities[0] && <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>{post.communities[0].community.name}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <div className="avatar" style={{ width: 28, height: 28, fontSize: 11, background: avatarColor(post.authorId), flexShrink: 0 }}>
-          {getInitial(post.author.displayName)}
-        </div>
+        <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={28} fontSize={11} />
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</div>
           <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{timeAgo(post.createdAt)}</div>

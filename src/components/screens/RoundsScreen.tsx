@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
+import { formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 import { useMounted } from '@/lib/useMounted'
 
 type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
@@ -101,6 +102,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   const openSpots = Math.max(0, round.totalSpots - accepted)
   const c1 = round.color1 ?? '#B8CBE0'
   const c2 = round.color2 ?? '#5C7A9A'
+  const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
   const userP = user && round.participants?.find(p => p.userId === user.id)
   const hasRequested = userP?.role === 'requested' || joined
   const isHost = userP?.role === 'host'
@@ -120,12 +122,14 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
-        <div style={{ width: 80, flexShrink: 0, background: `linear-gradient(135deg,${c1},${c2})`, position: 'relative', overflow: 'hidden', minHeight: 80 }}>
-          <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-            <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
-            <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
-          </svg>
+        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
+          {!art && (
+            <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+              <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
+              <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
+            </svg>
+          )}
         </div>
         <div style={{ flex: 1, padding: '13px 13px 13px 11px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
@@ -145,9 +149,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
               {round.participants?.slice(0, 3).map((p, i) => (
-                <div key={p.id} className="avatar" style={{ width: 24, height: 24, fontSize: 9, background: avatarColor(p.userId), border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }}>
-                  {p.user ? getInitial(p.user.displayName) : '?'}
-                </div>
+                <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={24} fontSize={9} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
               ))}
             </div>
             <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} hosting</span>

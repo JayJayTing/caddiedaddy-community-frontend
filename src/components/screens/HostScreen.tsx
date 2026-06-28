@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { Course } from '@/types/round'
 import { Community } from '@/types/community'
 import { RoundFormat, HandicapRequirement } from '@/types/round'
+import { DateField } from '@/components/ui/DateField'
 
 export function HostScreen() {
   const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion } = useUI()
@@ -176,13 +177,7 @@ export function HostScreen() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
           <div>
             <div style={labelStyle}>{t('host.date')}</div>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
-              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: date ? 'var(--ink)' : 'var(--ink-3)', fontFamily: 'var(--sans)' }}
-            />
+            <DateField value={date} onChange={setDate} />
           </div>
           <div>
             <div style={labelStyle}>{t('host.teeTime')}</div>
