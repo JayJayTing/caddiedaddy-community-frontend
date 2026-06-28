@@ -29,6 +29,7 @@ export function ChatThreadOverlay() {
   // sole mechanism if Realtime env isn't configured).
   useEffect(() => {
     if (!isOpen || !thread) return
+    setMessages([]) // clear the previous thread's messages so they don't flash under this one
     let stale = false
     const load = () =>
       api.get<{ data: Message[] }>(`/threads/${thread.id}/messages`)

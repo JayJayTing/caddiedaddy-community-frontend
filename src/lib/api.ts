@@ -2,7 +2,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('caddie_token')
+  // "Remember me = off" stores the token in sessionStorage; fall back to it so auth
+  // works in that case (matches AuthContext's init check + clearSession).
+  return localStorage.getItem('caddie_token') ?? sessionStorage.getItem('caddie_token')
 }
 
 export class ApiError extends Error {
@@ -69,6 +71,8 @@ export const api = {
     apiFetch<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   patch: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
+  put: <T>(path: string, body?: unknown) =>
+    apiFetch<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: 'DELETE' }),
   upload: <T>(path: string, file: File, field?: string) => apiUpload<T>(path, file, field),
 }

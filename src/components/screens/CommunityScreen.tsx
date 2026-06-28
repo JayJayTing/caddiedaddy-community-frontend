@@ -124,6 +124,7 @@ export function CommunityScreen() {
   const { user } = useAuth()
   const [tab, setTab] = useState<CommunityTab>('discover')
   const [postFilter, setPostFilter] = useState<PostFilter>('all')
+  const [showAllComms, setShowAllComms] = useState(false)
 
   const [discoverCommunities, setDiscoverCommunities] = useState<Community[]>([])
   const [discoverPosts, setDiscoverPosts] = useState<Post[]>([])
@@ -196,9 +197,17 @@ export function CommunityScreen() {
           <>
             <div className="section-row" style={{ marginTop: 16 }}>
               <span className="label-xs">{t('community.golfCommunities')}</span>
-              <span className="see-all">{t('community.seeAll')}</span>
+              {discoverCommunities.length > 0 && (
+                <span className="see-all" style={{ cursor: 'pointer' }} onClick={() => setShowAllComms(v => !v)}>
+                  {showAllComms ? t('community.showLess') : t('community.seeAll')}
+                </span>
+              )}
             </div>
-            {loadingDiscover ? null : (
+            {loadingDiscover ? null : showAllComms ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, padding: '0 16px', marginBottom: 20 }}>
+                {discoverCommunities.map(c => <CommunityThumb key={c.id} comm={c} onOpen={() => openOverlayWith('communityDetail', c)} />)}
+              </div>
+            ) : (
               <div className="hscroll" style={{ marginBottom: 20 }}>
                 {discoverCommunities.map(c => <CommunityThumb key={c.id} comm={c} onOpen={() => openOverlayWith('communityDetail', c)} />)}
                 <div style={{ width: 4, flexShrink: 0 }} />

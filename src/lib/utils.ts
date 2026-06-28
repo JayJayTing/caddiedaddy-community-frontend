@@ -1,6 +1,7 @@
 export function timeAgo(date: string): string {
-  const now = Date.now()
   const then = new Date(date).getTime()
+  if (Number.isNaN(then)) return ''
+  const now = Date.now()
   const diff = Math.max(0, now - then)
   const mins = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
@@ -19,12 +20,16 @@ export function formatMoney(cents: number | null | undefined): string {
 }
 
 export function formatTeeTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
 export function formatDate(dateStr: string): string {
+  if (!dateStr) return '—'
   // Accept both 'YYYY-MM-DD' and full ISO datetimes from the API.
-  const d = new Date(dateStr?.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
+  const d = new Date(dateStr.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
+  if (Number.isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 

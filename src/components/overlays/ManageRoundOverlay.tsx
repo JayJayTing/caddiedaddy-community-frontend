@@ -10,7 +10,7 @@ import { avatarColor, getInitial, formatDate } from '@/lib/utils'
 // with optimistic local updates that revert on failure. Participant names are loaded
 // from GET /rounds/:id on open.
 export function ManageRoundOverlay() {
-  const { openOverlay, openOverlayWith, overlayData } = useUI()
+  const { openOverlay, openOverlayWith, overlayData, refreshData } = useUI()
   const { t } = useLang()
 
   const round = overlayData as Round | null
@@ -74,12 +74,12 @@ export function ManageRoundOverlay() {
 
   const acceptRequest = async (userId: string) => {
     setRole(userId, 'accepted')
-    try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'accepted' }) }
+    try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'accepted' }); refreshData('rounds') }
     catch { setRole(userId, 'requested') }
   }
   const declineRequest = async (userId: string) => {
     setRole(userId, 'declined')
-    try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'declined' }) }
+    try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'declined' }); refreshData('rounds') }
     catch { setRole(userId, 'requested') }
   }
   const saveChanges = async () => {
@@ -94,13 +94,14 @@ export function ManageRoundOverlay() {
         greenFeeCents: greenFee ? Math.round(parseFloat(greenFee) * 100) : null,
         notes: notes || null,
       })
+      refreshData('rounds')
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch { /* leave form values so the host can retry */ }
   }
   const confirmCancel = async () => {
     setConfirmingCancel(false)
-    try { await api.delete(`/rounds/${round.id}`); setStatus('cancelled') }
+    try { await api.delete(`/rounds/${round.id}`); setStatus('cancelled'); refreshData('rounds') }
     catch { /* no-op */ }
   }
 

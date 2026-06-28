@@ -39,6 +39,8 @@ export function AccountSheet() {
     }
   }
 
+  // Seed the form only on the open transition. Depending on `user` would re-seed
+  // (clobbering in-progress edits) whenever an avatar upload calls updateUser.
   useEffect(() => {
     if (isOpen && user) {
       setDisplayName(user.displayName || '')
@@ -47,7 +49,7 @@ export function AccountSheet() {
       setError(null)
       setSuccess(false)
     }
-  }, [isOpen, user])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     if (!displayName.trim() || saving) return

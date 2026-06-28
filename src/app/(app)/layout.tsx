@@ -21,6 +21,7 @@ import { ComposeSheet } from '@/components/sheets/ComposeSheet'
 import { AccountSheet } from '@/components/sheets/AccountSheet'
 import { HandicapSheet } from '@/components/sheets/HandicapSheet'
 import { NotificationsSheet } from '@/components/sheets/NotificationsSheet'
+import { NewsDetailSheet } from '@/components/sheets/NewsDetailSheet'
 
 export default function AppLayout({ children: _children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -53,6 +54,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <AccountSheet />
       <HandicapSheet />
       <NotificationsSheet />
+      <NewsDetailSheet />
 
       {/* Backdrop */}
       <div

@@ -14,9 +14,10 @@ interface UIContextType {
   openOverlayWith: (o: Overlay, data?: unknown) => void
   closeOverlay: () => void
   openSheet: Sheet
-  openSheetWith: (s: Sheet) => void
+  openSheetWith: (s: Sheet, data?: unknown) => void
   closeSheet: () => void
   overlayData: unknown
+  sheetData: unknown
   backdropActive: boolean
   // Keyed refresh signal: a mutation calls refreshData('rounds') to invalidate a list;
   // list screens include dataVersion[key] in their fetch effect deps to re-pull.
@@ -35,6 +36,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [openOverlay, setOpenOverlay] = useState<Overlay>(null)
   const [overlayData, setOverlayData] = useState<unknown>(null)
   const [openSheet, setOpenSheet] = useState<Sheet>(null)
+  const [sheetData, setSheetData] = useState<unknown>(null)
   const [dataVersion, setDataVersion] = useState<Record<string, number>>({})
   const [success, setSuccess] = useState<SuccessInfo | null>(null)
 
@@ -50,8 +52,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setOverlayData(null)
   }, [])
 
-  const openSheetWith = useCallback((s: Sheet) => setOpenSheet(s), [])
-  const closeSheet = useCallback(() => setOpenSheet(null), [])
+  const openSheetWith = useCallback((s: Sheet, data?: unknown) => {
+    setSheetData(data ?? null)
+    setOpenSheet(s)
+  }, [])
+  const closeSheet = useCallback(() => {
+    setOpenSheet(null)
+    setSheetData(null)
+  }, [])
 
   const refreshData = useCallback((key: string) =>
     setDataVersion(v => ({ ...v, [key]: (v[key] ?? 0) + 1 })), [])
@@ -61,7 +69,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const hideSuccess = useCallback(() => setSuccess(null), [])
 
   return (
-    <UIContext.Provider value={{ activeScreen, setActiveScreen, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess }}>
+    <UIContext.Provider value={{ activeScreen, setActiveScreen, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess }}>
       {children}
     </UIContext.Provider>
   )

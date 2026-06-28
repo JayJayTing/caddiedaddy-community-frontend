@@ -4,6 +4,7 @@ import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { UIProvider } from '@/contexts/UIContext'
+import { NotificationsProvider } from '@/contexts/NotificationsContext'
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider>
           <AuthProvider>
             <UIProvider>
-              {children}
+              <NotificationsProvider>
+                {children}
+              </NotificationsProvider>
             </UIProvider>
           </AuthProvider>
         </LanguageProvider>

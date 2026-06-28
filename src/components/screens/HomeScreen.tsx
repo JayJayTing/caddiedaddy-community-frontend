@@ -6,23 +6,16 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
+import { Announcement } from '@/types/announcement'
 import { avatarColor, getInitial, formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo } from '@/lib/utils'
 import { useMounted } from '@/lib/useMounted'
-
-interface Announcement {
-  id: string
-  title: string
-  body: string
-  badge: string
-  createdAt: string
-  color1: string
-  color2: string
-}
+import { useNotifications } from '@/contexts/NotificationsContext'
 
 type HomeTab = 'rounds' | 'teetimes' | 'community'
 
 export function HomeScreen() {
-  const { activeScreen, setActiveScreen, openOverlayWith, dataVersion } = useUI()
+  const { activeScreen, setActiveScreen, openOverlayWith, openSheetWith, dataVersion } = useUI()
+  const { unreadCount } = useNotifications()
   const { user } = useAuth()
   const { t } = useLang()
   const mounted = useMounted()
@@ -87,6 +80,21 @@ export function HomeScreen() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Notifications bell */}
+          <div
+            style={{ position: 'relative', width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            onClick={() => openSheetWith('notifications')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            {unreadCount > 0 && (
+              <div style={{ position: 'absolute', top: -3, right: -3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 9, background: 'var(--primary)', border: '2px solid var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: 'white', lineHeight: 1 }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+              </div>
+            )}
+          </div>
+          {/* Search */}
           <div
             style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             onClick={() => setActiveScreen('rounds')}
@@ -179,7 +187,7 @@ export function HomeScreen() {
         {loadingAnnouncements ? null : (
           <div className="hscroll" style={{ marginBottom: 20 }}>
             {(announcements.length > 0 ? announcements : MOCK_ANNOUNCEMENTS).map(ann => (
-              <div key={ann.id} style={{ width: 220, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
+              <div key={ann.id} onClick={() => openSheetWith('newsDetail', ann)} style={{ width: 220, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
                 <div style={{ height: 110, background: `linear-gradient(135deg,${ann.color1} 0%,${ann.color2} 100%)`, position: 'relative', overflow: 'hidden' }}>
                   <svg viewBox="0 0 220 110" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
                     <path d="M0 75 Q55 55 110 68 Q165 80 224 62 L224 114 L0 114 Z" fill="rgba(255,255,255,.12)"/>
@@ -208,7 +216,7 @@ export function HomeScreen() {
         {/* Tab bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 10 }}>
           <span className="label-xs">{t('home.discover')}</span>
-          <span className="see-all">{t('home.seeAll')}</span>
+          <span className="see-all" style={{ cursor: 'pointer' }} onClick={() => setActiveScreen(activeTab === 'community' ? 'community' : 'rounds')}>{t('home.seeAll')}</span>
         </div>
         <div style={{ display: 'flex', borderBottom: '1px solid var(--line-soft)', margin: '0 20px 14px' }}>
           {(['rounds', 'teetimes', 'community'] as HomeTab[]).map(tab => (

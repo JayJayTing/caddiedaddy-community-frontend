@@ -26,7 +26,7 @@ export function Avatar({
     return (
       <div
         className={`avatar${className ? ' ' + className : ''}`}
-        style={{ ...base, backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
+        style={{ ...base, backgroundImage: `url("${url.replace(/"/g, '%22')}")`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
         role="img"
         aria-label={name ?? 'avatar'}
       />
