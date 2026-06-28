@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
+import { avatarColor, getInitial, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
 
 type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
 
@@ -14,64 +14,54 @@ type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'commun
 function WeekDatePicker({
   selectedDate, onSelect, roundDates,
 }: { selectedDate: string | null; onSelect: (d: string | null) => void; roundDates: Set<string> }) {
-  const [weekIndex, setWeekIndex] = useState(0)
-  const trackRef = useRef<HTMLDivElement>(null)
-  const startXRef = useRef<number | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const getWeek = (idx: number) => {
-    const days: Date[] = []
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - today.getDay() + 1 + idx * 7)
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday)
-      d.setDate(monday.getDate() + i)
-      days.push(d)
-    }
-    return days
-  }
-
-  const currentWeek = getWeek(weekIndex)
-  const monthLabel = currentWeek[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const WEEKS = 13
   const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-  const toDateStr = (d: Date) => d.toISOString().slice(0, 10)
+  // Monday of the current week (weeks run Mon → Sun).
+  const startMonday = new Date(today)
+  startMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
 
-  const handleTouchStart = (e: React.TouchEvent) => { startXRef.current = e.touches[0].clientX }
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (startXRef.current === null) return
-    const dx = e.changedTouches[0].clientX - startXRef.current
-    if (Math.abs(dx) > 40) setWeekIndex(prev => prev + (dx < 0 ? 1 : -1))
-    startXRef.current = null
+  const weeks = Array.from({ length: WEEKS }, (_, w) =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startMonday)
+      d.setDate(startMonday.getDate() + w * 7 + i)
+      return d
+    }),
+  )
+  const toDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+  const [monthLabel, setMonthLabel] = useState(
+    weeks[0][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+  )
+
+  // Snaps one whole week at a time; the month header follows the visible week.
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el || el.clientWidth === 0) return
+    const wIdx = Math.min(weeks.length - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth)))
+    setMonthLabel(weeks[wIdx][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
   }
 
   return (
     <div className="dp-wrap">
-      <div className="dp-month-row">
-        <div className="dp-arrow" onClick={() => setWeekIndex(w => w - 1)}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </div>
+      <div className="dp-month-row dp-month-center">
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{monthLabel}</span>
-        <div className="dp-arrow" onClick={() => setWeekIndex(w => w + 1)}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
       </div>
       <div className="dp-day-labels">
         {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{d}</div>)}
       </div>
-      <div
-        className="dp-swipe"
-        ref={trackRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="dp-track">
-          <div className="dp-week">
-            {currentWeek.map((d) => {
+      <div className="dp-weeks" ref={scrollRef} onScroll={handleScroll}>
+        {weeks.map((week, wi) => (
+          <div key={wi} className="dp-week-page">
+            {week.map((d) => {
               const ds = toDateStr(d)
               const isSelected = selectedDate === ds
-              const isToday = ds === toDateStr(today)
+              const isToday = d.getTime() === today.getTime()
               const isPast = d < today
               const hasDot = roundDates.has(ds)
               return (
@@ -80,18 +70,16 @@ function WeekDatePicker({
                     background: isSelected ? 'var(--primary)' : isToday ? 'var(--primary-soft)' : 'transparent',
                     color: isSelected ? 'white' : isPast ? 'var(--ink-3)' : 'var(--ink)',
                     fontWeight: isToday || isSelected ? 700 : 400,
-                    opacity: isPast && !isSelected ? 0.5 : 1,
+                    opacity: isPast && !isSelected ? 0.45 : 1,
                   }}>
                     {d.getDate()}
                   </div>
-                  {hasDot && !isSelected && (
-                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--primary)', marginTop: 2 }} />
-                  )}
+                  <div className="dp-dot" style={{ visibility: hasDot && !isSelected ? 'visible' : 'hidden' }} />
                 </div>
               )
             })}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   )
@@ -204,17 +192,17 @@ export function RoundsScreen() {
   const [activeFilter, setActiveFilter] = useState<Filter>('all')
 
   useEffect(() => {
-    api.get<{ rounds: Round[] }>('/rounds')
-      .then(r => setRounds(r.rounds ?? []))
+    api.get<{ data: Round[] }>('/rounds')
+      .then(r => setRounds(r.data ?? []))
       .catch(() => setRounds([]))
       .finally(() => setLoading(false))
   }, [])
 
-  const roundDates = new Set(rounds.map(r => r.date))
+  const roundDates = new Set(rounds.map(r => (r.date ?? '').slice(0, 10)))
 
   const filtered = rounds.filter(r => {
     if (search && !r.course.name.toLowerCase().includes(search.toLowerCase())) return false
-    if (selectedDate && r.date !== selectedDate) return false
+    if (selectedDate && (r.date ?? '').slice(0, 10) !== selectedDate) return false
     if (activeFilter === 'morning') {
       const h = new Date(r.teeTime).getHours()
       if (h >= 12) return false
@@ -292,7 +280,7 @@ export function RoundsScreen() {
               onClick={() => setSelectedDate(null)}
               style={{ fontSize: 11 }}
             >
-              {formatDate(selectedDate)} {t('rounds.clearDate')}
+              {t('rounds.clearDate')}
             </span>
           </div>
         )}

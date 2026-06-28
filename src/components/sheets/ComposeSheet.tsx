@@ -30,8 +30,8 @@ export function ComposeSheet() {
 
   useEffect(() => {
     if (!isOpen) return
-    api.get<{ communities: Community[] }>('/communities/mine')
-      .then(r => setCommunities(r.communities ?? []))
+    api.get<{ data: Community[] }>('/communities/mine')
+      .then(r => setCommunities(r.data ?? []))
       .catch(() => {})
   }, [isOpen])
 

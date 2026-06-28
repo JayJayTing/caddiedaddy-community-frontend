@@ -24,8 +24,8 @@ export function PostDetailOverlay() {
     setLiked(post.userHasLiked ?? false)
     setLikeCount(post.likesCount)
     setLoadingComments(true)
-    api.get<{ comments: Comment[] }>(`/posts/${post.id}/comments`)
-      .then(r => setComments(r.comments ?? []))
+    api.get<{ data: Comment[] }>(`/posts/${post.id}/comments`)
+      .then(r => setComments(r.data ?? []))
       .catch(() => setComments([]))
       .finally(() => setLoadingComments(false))
   }, [isOpen, post?.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -40,14 +40,14 @@ export function PostDetailOverlay() {
     if (!post || !commentText.trim() || submitting) return
     setSubmitting(true)
     try {
-      const { comment } = await api.post<{ comment: Comment }>(`/posts/${post.id}/comments`, { text: commentText })
+      const { data: comment } = await api.post<{ data: Comment }>(`/posts/${post.id}/comments`, { text: commentText })
       setComments(prev => [...prev, comment])
       setCommentText('')
     } catch {}
     setSubmitting(false)
   }
 
-  if (!post) return null
+  if (!isOpen || !post) return null
 
   const [bg, fg] = ({
     round_report: ['var(--primary-soft)', 'var(--primary-ink)'],

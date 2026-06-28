@@ -35,7 +35,7 @@ export function AccountSheet() {
     setError(null)
     setSaving(true)
     try {
-      const { user: updated } = await api.patch<{ user: AuthUser }>('/users/me', {
+      const { data: updated } = await api.patch<{ data: AuthUser }>('/users/me', {
         displayName: displayName.trim(),
         locationText: locationText.trim() || null,
         bio: bio.trim() || null,

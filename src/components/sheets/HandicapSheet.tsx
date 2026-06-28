@@ -33,7 +33,7 @@ export function HandicapSheet() {
     setError(null)
     setSaving(true)
     try {
-      const { user: updated } = await api.patch<{ user: AuthUser }>('/users/me', { handicapIndex: val })
+      const { data: updated } = await api.patch<{ data: AuthUser }>('/users/me', { handicapIndex: val })
       updateUser(updated)
       setSuccess(true)
       setTimeout(closeSheet, 800)

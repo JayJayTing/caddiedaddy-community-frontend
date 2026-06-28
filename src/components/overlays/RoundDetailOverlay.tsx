@@ -2,13 +2,15 @@
 import { useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { avatarColor, getInitial, formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
 
 export function RoundDetailOverlay() {
-  const { openOverlay, closeOverlay, overlayData } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, overlayData } = useUI()
   const { user } = useAuth()
+  const { t } = useLang()
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
 
@@ -32,7 +34,7 @@ export function RoundDetailOverlay() {
     setJoining(false)
   }
 
-  if (!round) return null
+  if (!isOpen || !round) return null
 
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
@@ -72,11 +74,11 @@ export function RoundDetailOverlay() {
         {/* Host */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '14px', background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)' }}>
           <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, background: avatarColor(round.hostUserId) }}>
-            {getInitial(round.hostUser.displayName)}
+            {getInitial(round.hostUser?.displayName)}
           </div>
           <div>
             <div style={{ fontSize: '11px', color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' } as React.CSSProperties}>Host</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{round.hostUser.displayName}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{round.hostUser?.displayName ?? 'Host'}</div>
           </div>
         </div>
 
@@ -131,23 +133,39 @@ export function RoundDetailOverlay() {
         )}
       </div>
 
-      {/* Join button */}
+      {/* Action button */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'linear-gradient(transparent,var(--bg) 40%)' }}>
-        <div
-          onClick={handleJoin}
-          style={{
-            background: hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)',
-            borderRadius: 'var(--r-lg)',
-            padding: 18,
-            textAlign: 'center',
-            cursor: hasRequested || isHost ? 'default' : 'pointer',
-            boxShadow: hasRequested || isHost ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-            {isHost ? 'Your Round' : hasRequested ? 'Requested ✓' : joining ? '…' : 'Request to Join'}
-          </span>
-        </div>
+        {isHost ? (
+          <div
+            onClick={() => openOverlayWith('manageRound', round)}
+            style={{
+              background: 'var(--primary)',
+              borderRadius: 'var(--r-lg)',
+              padding: 18,
+              textAlign: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(92,122,154,.35)',
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{t('manage.title')}</span>
+          </div>
+        ) : (
+          <div
+            onClick={handleJoin}
+            style={{
+              background: hasRequested ? 'var(--bg-alt)' : 'var(--primary)',
+              borderRadius: 'var(--r-lg)',
+              padding: 18,
+              textAlign: 'center',
+              cursor: hasRequested ? 'default' : 'pointer',
+              boxShadow: hasRequested ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white' }}>
+              {hasRequested ? 'Requested ✓' : joining ? '…' : 'Request to Join'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

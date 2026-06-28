@@ -58,8 +58,8 @@ export function ChatScreen() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<{ threads: ChatThread[] }>('/threads')
-      .then(r => setThreads(r.threads ?? []))
+    api.get<{ data: ChatThread[] }>('/threads')
+      .then(r => setThreads(r.data ?? []))
       .catch(() => setThreads([]))
       .finally(() => setLoading(false))
   }, [])

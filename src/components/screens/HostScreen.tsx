@@ -31,8 +31,8 @@ export function HostScreen() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    api.get<{ communities: Community[] }>('/communities/mine')
-      .then(r => setMyCommunities(r.communities ?? []))
+    api.get<{ data: Community[] }>('/communities/mine')
+      .then(r => setMyCommunities(r.data ?? []))
       .catch(() => {})
   }, [])
 
@@ -43,8 +43,8 @@ export function HostScreen() {
     if (q.length < 2) { setCourseResults([]); return }
     searchTimeout.current = setTimeout(async () => {
       try {
-        const r = await api.get<{ courses: Course[] }>(`/courses?q=${encodeURIComponent(q)}`)
-        setCourseResults(r.courses ?? [])
+        const r = await api.get<{ data: Course[] }>(`/courses?q=${encodeURIComponent(q)}`)
+        setCourseResults(r.data ?? [])
       } catch { setCourseResults([]) }
     }, 300)
   }

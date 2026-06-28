@@ -47,23 +47,23 @@ export function HomeScreen() {
   }
 
   useEffect(() => {
-    api.get<{ round: Round | null }>('/rounds/upcoming')
-      .then(r => setUpcoming(r.round))
+    api.get<{ data: Round[] }>('/rounds/upcoming')
+      .then(r => setUpcoming(r.data?.[0] ?? null))
       .catch(() => setUpcoming(null))
       .finally(() => setLoadingUpcoming(false))
 
-    api.get<{ announcements: Announcement[] }>('/announcements')
-      .then(r => setAnnouncements(r.announcements ?? []))
+    api.get<{ data: Announcement[] }>('/announcements')
+      .then(r => setAnnouncements(r.data ?? []))
       .catch(() => setAnnouncements([]))
       .finally(() => setLoadingAnnouncements(false))
 
-    api.get<{ rounds: Round[] }>('/rounds?limit=4')
-      .then(r => setRounds(r.rounds ?? []))
+    api.get<{ data: Round[] }>('/rounds?limit=4')
+      .then(r => setRounds(r.data ?? []))
       .catch(() => setRounds([]))
       .finally(() => setLoadingRounds(false))
 
-    api.get<{ posts: Post[] }>('/posts?scope=discover&limit=3')
-      .then(r => setPosts(r.posts ?? []))
+    api.get<{ data: Post[] }>('/posts?scope=discover&limit=3')
+      .then(r => setPosts(r.data ?? []))
       .catch(() => setPosts([]))
   }, [])
 

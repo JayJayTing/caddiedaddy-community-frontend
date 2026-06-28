@@ -15,8 +15,8 @@ export function ProfileScreen() {
 
   useEffect(() => {
     if (!user) return
-    api.get<{ rounds: Round[] }>('/rounds/upcoming?limit=2')
-      .then(r => setRecentRounds(r.rounds ?? []))
+    api.get<{ data: Round[] }>('/rounds/upcoming?limit=2')
+      .then(r => setRecentRounds(r.data ?? []))
       .catch(() => setRecentRounds([]))
   }, [user])
 

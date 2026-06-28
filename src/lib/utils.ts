@@ -23,22 +23,24 @@ export function formatTeeTime(iso: string): string {
 }
 
 export function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
+  // Accept both 'YYYY-MM-DD' and full ISO datetimes from the API.
+  const d = new Date(dateStr?.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
 const AVATAR_COLORS = ['var(--peach)', 'var(--sky)', 'var(--lilac)', 'var(--sage)', 'var(--butter)', 'var(--rose)']
 
-export function avatarColor(seed: string): string {
+export function avatarColor(seed: string | null | undefined): string {
+  const s = seed ?? ''
   let hash = 0
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) | 0
+  for (let i = 0; i < s.length; i++) {
+    hash = (hash * 31 + s.charCodeAt(i)) | 0
   }
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
-export function getInitial(name: string): string {
-  return (name || '?')[0].toUpperCase()
+export function getInitial(name: string | null | undefined): string {
+  return ((name || '?')[0] || '?').toUpperCase()
 }
 
 export function formatHandicap(hcp: number | string | null | undefined): string {

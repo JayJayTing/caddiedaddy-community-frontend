@@ -127,22 +127,22 @@ export function CommunityScreen() {
 
   useEffect(() => {
     Promise.all([
-      api.get<{ communities: Community[] }>('/communities').then(r => setDiscoverCommunities(r.communities ?? [])).catch(() => {}),
-      api.get<{ posts: Post[] }>('/posts?scope=discover').then(r => setDiscoverPosts(r.posts ?? [])).catch(() => {}),
+      api.get<{ data: Community[] }>('/communities').then(r => setDiscoverCommunities(r.data ?? [])).catch(() => {}),
+      api.get<{ data: Post[] }>('/posts?scope=discover').then(r => setDiscoverPosts(r.data ?? [])).catch(() => {}),
     ]).finally(() => setLoadingDiscover(false))
   }, [])
 
   useEffect(() => {
     if (tab === 'following' && followingPosts.length === 0) {
       setLoadingFollowing(true)
-      api.get<{ posts: Post[] }>('/posts?scope=following')
-        .then(r => setFollowingPosts(r.posts ?? []))
+      api.get<{ data: Post[] }>('/posts?scope=following')
+        .then(r => setFollowingPosts(r.data ?? []))
         .catch(() => {})
         .finally(() => setLoadingFollowing(false))
     }
     if (tab === 'mine' && myCommunities.length === 0) {
-      api.get<{ communities: Community[] }>('/communities/mine')
-        .then(r => setMyCommunities(r.communities ?? []))
+      api.get<{ data: Community[] }>('/communities/mine')
+        .then(r => setMyCommunities(r.data ?? []))
         .catch(() => {})
     }
   }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
