@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations, Language, TranslationKey } from '@/lib/translations'
 
 interface LanguageContextType {
@@ -11,13 +11,14 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Language>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('caddie_lang') as Language
-      if (saved === 'en' || saved === 'zh') return saved
-    }
-    return 'en'
-  })
+  // Always start at 'en' so server and first client render match; adopt the saved
+  // language after mount to avoid a hydration mismatch.
+  const [lang, setLang] = useState<Language>('en')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('caddie_lang')
+    if (saved === 'en' || saved === 'zh') setLang(saved)
+  }, [])
 
   const t = (key: TranslationKey) => translations[lang][key] ?? key
 

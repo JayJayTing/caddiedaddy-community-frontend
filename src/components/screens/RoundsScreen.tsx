@@ -6,6 +6,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { avatarColor, getInitial, formatTeeTime, formatMoney, formatFormat, formatHcpReq } from '@/lib/utils'
+import { useMounted } from '@/lib/useMounted'
 
 type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
 
@@ -15,6 +16,7 @@ function WeekDatePicker({
   selectedDate, onSelect, roundDates,
 }: { selectedDate: string | null; onSelect: (d: string | null) => void; roundDates: Set<string> }) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const mounted = useMounted()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -50,13 +52,13 @@ function WeekDatePicker({
   return (
     <div className="dp-wrap">
       <div className="dp-month-row dp-month-center">
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{monthLabel}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{mounted ? monthLabel : ''}</span>
       </div>
       <div className="dp-day-labels">
         {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{d}</div>)}
       </div>
       <div className="dp-weeks" ref={scrollRef} onScroll={handleScroll}>
-        {weeks.map((week, wi) => (
+        {mounted && weeks.map((week, wi) => (
           <div key={wi} className="dp-week-page">
             {week.map((d) => {
               const ds = toDateStr(d)

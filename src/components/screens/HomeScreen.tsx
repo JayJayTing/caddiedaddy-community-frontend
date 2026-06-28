@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { avatarColor, getInitial, formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo } from '@/lib/utils'
+import { useMounted } from '@/lib/useMounted'
 
 interface Announcement {
   id: string
@@ -24,6 +25,7 @@ export function HomeScreen() {
   const { activeScreen, setActiveScreen, openOverlayWith } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
+  const mounted = useMounted()
 
   const [upcoming, setUpcoming] = useState<Round | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
@@ -78,10 +80,10 @@ export function HomeScreen() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 10px', flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 2 }}>
-            {dateLabel()}
+            {mounted ? dateLabel() : ''}
           </div>
           <div className="serif" style={{ fontSize: 21, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.1 }}>
-            {greeting()}{user ? `, ${user.displayName.split(' ')[0]}` : ''}
+            {mounted ? greeting() : ''}{user ? `, ${user.displayName.split(' ')[0]}` : ''}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
