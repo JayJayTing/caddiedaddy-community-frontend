@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
-import { CommunityType, CommunityPrivacy } from '@/types/community'
+import { Community, CommunityType, CommunityPrivacy } from '@/types/community'
 
 export function CreateCommunityOverlay() {
   const { openOverlay, closeOverlay, refreshData, showSuccess } = useUI()
@@ -16,6 +16,23 @@ export function CreateCommunityOverlay() {
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+  const clearPhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhotoFile(null)
+    setPhotoPreview(null)
+  }
 
   const TYPES: Array<{ key: CommunityType; label: string }> = [
     { key: 'mixed', label: 'Mixed' },
@@ -36,8 +53,12 @@ export function CreateCommunityOverlay() {
     setError(null)
     setSubmitting(true)
     try {
-      await api.post('/communities', { name: name.trim(), type, privacy, description: description || null })
-      setName(''); setDescription(''); setType('mixed'); setPrivacy('public')
+      const { data: created } = await api.post<{ data: Community }>('/communities', { name: name.trim(), type, privacy, description: description || null })
+      // Community exists now (creator = admin), so attach the cover photo to it.
+      if (photoFile && created?.id) {
+        try { await api.upload(`/uploads/community/${created.id}`, photoFile) } catch { /* community created; art can be added later */ }
+      }
+      setName(''); setDescription(''); setType('mixed'); setPrivacy('public'); clearPhoto()
       refreshData('communities')
       closeOverlay()
       showSuccess(t('success.communityCreated'))
@@ -60,6 +81,31 @@ export function CreateCommunityOverlay() {
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
+        {/* Cover photo */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Cover Photo (optional)</div>
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pickPhoto} style={{ display: 'none' }} />
+          {photoPreview ? (
+            <div
+              onClick={() => fileRef.current?.click()}
+              style={{ position: 'relative', height: 130, borderRadius: 'var(--r-lg)', overflow: 'hidden', cursor: 'pointer', backgroundImage: `url("${photoPreview}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            >
+              <div onClick={(e) => { e.stopPropagation(); clearPhoto() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div style={{ position: 'absolute', bottom: 8, left: 10, fontSize: 11, fontWeight: 700, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,.5)' }}>Tap to change</div>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileRef.current?.click()}
+              style={{ height: 130, border: '1.5px dashed var(--line)', borderRadius: 'var(--r-lg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: 'var(--ink-3)' }}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Add a cover photo</span>
+            </div>
+          )}
+        </div>
+
         {/* Name */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Community Name</div>
