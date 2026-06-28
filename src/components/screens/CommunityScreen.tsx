@@ -269,9 +269,10 @@ export function CommunityScreen() {
                   const c1 = c.color1 ?? '#B8CBE0', c2 = c.color2 ?? '#5C7A9A'
                   return (
                     <div key={c.id} className="comm-full-card" onClick={() => openOverlayWith('communityDetail', c)} style={{ cursor: 'pointer' }}>
-                      <div style={{ height: 60, background: `linear-gradient(135deg,${c1},${c2})`, position: 'relative' }}>
+                      <div style={{ height: 70, position: 'relative', ...(c.logoUrl ? { backgroundImage: `url("${c.logoUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
+                        {c.logoUrl && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,.15))' }} />}
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{c.name}</span>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: 'white', textShadow: c.logoUrl ? '0 1px 4px rgba(0,0,0,.6)' : 'none' }}>{c.name}</span>
                         </div>
                       </div>
                       <div style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

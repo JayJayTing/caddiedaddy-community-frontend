@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
@@ -29,7 +29,6 @@ export function ComposeSheet() {
   const [error, setError] = useState<string | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   // When opened from inside a community ("+ New Post"), pre-select that community.
   useEffect(() => {
@@ -114,8 +113,10 @@ export function ComposeSheet() {
           </div>
         )}
 
-        {/* Photo (prominent, above the text) */}
-        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handlePhotoPick} style={{ display: 'none' }} />
+        {/* Photo (prominent, above the text). A <label> opens the native picker
+            reliably on mobile — a JS-triggered click on a hidden input is blocked
+            by some mobile browsers. */}
+        <input id="compose-photo-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handlePhotoPick} style={{ display: 'none' }} />
         {photoUrl ? (
           <div style={{ position: 'relative', marginBottom: 14, borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -125,13 +126,13 @@ export function ComposeSheet() {
             </div>
           </div>
         ) : (
-          <div
-            onClick={() => !uploadingPhoto && fileRef.current?.click()}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 14px', border: '1.5px solid var(--primary)', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)', marginBottom: 14, cursor: uploadingPhoto ? 'default' : 'pointer', color: 'var(--primary-ink)' }}
+          <label
+            htmlFor="compose-photo-input"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 14px', border: '1.5px solid var(--primary)', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)', marginBottom: 14, cursor: uploadingPhoto ? 'default' : 'pointer', color: 'var(--primary-ink)', pointerEvents: uploadingPhoto ? 'none' : 'auto' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span style={{ fontSize: 14, fontWeight: 700 }}>{uploadingPhoto ? 'Uploading…' : 'Add a Photo'}</span>
-          </div>
+          </label>
         )}
 
         {/* Textarea */}
