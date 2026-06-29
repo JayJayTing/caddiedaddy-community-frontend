@@ -7,9 +7,10 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
 
 export function RoundDetailOverlay() {
-  const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess, showError } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const [joining, setJoining] = useState(false)
@@ -55,7 +56,9 @@ export function RoundDetailOverlay() {
       if (data) setDetail(data)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {}
+    } catch {
+      showError(t('error.join'))
+    }
     setJoining(false)
   }
 
@@ -75,13 +78,13 @@ export function RoundDetailOverlay() {
         )}
         {/* Scrim so the title stays legible over satellite imagery */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 45%, rgba(0,0,0,.5))' }} />
-        <div className="detail-back" onClick={closeOverlay}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable className="detail-back" onClick={closeOverlay} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
+        </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
-          <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</div>
+          <h2 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</h2>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)}</div>
         </div>
       </div>
@@ -90,10 +93,10 @@ export function RoundDetailOverlay() {
         {/* Status badges */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-            {openSpots > 0 ? `${openSpots} spots open` : 'Full'}
+            {openSpots > 0 ? `${openSpots} ${t('home.spotsOpen')}` : t('common.full')}
           </span>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>
-            {round.holes}h · {formatFormat(round.format)}
+            {round.holes} {t('common.holesSuffix')} · {formatFormat(round.format)}
           </span>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--bg-alt)', color: 'var(--ink-2)' }}>
             {formatHcpReq(round.handicapRequirement)}
@@ -104,20 +107,20 @@ export function RoundDetailOverlay() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '14px', background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)' }}>
           <Avatar name={round.hostUser?.displayName} url={round.hostUser?.avatarUrl} seed={round.hostUserId} size={44} fontSize={16} />
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' } as React.CSSProperties}>Host</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{round.hostUser?.displayName ?? 'Host'}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' } as React.CSSProperties}>{t('common.host')}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{round.hostUser?.displayName ?? t('common.host')}</div>
           </div>
         </div>
 
         {/* Details grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           {[
-            ['Tee Time', formatTeeTime(round.teeTime)],
-            ['Date', formatDate(round.date)],
-            ['Format', formatFormat(round.format)],
-            ['Holes', `${round.holes} holes`],
-            ['Handicap', formatHcpReq(round.handicapRequirement)],
-            ['Green Fee', formatMoney(round.greenFeeCents)],
+            [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
+            [t('host.date'), formatDate(round.date)],
+            [t('host.format'), formatFormat(round.format)],
+            [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
+            [t('host.handicap'), formatHcpReq(round.handicapRequirement)],
+            [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
           ].map(([label, val]) => (
             <div key={label} style={{ background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>{label}</div>
@@ -129,7 +132,7 @@ export function RoundDetailOverlay() {
         {/* Notes */}
         {round.notes && (
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '14px', marginBottom: 20, boxShadow: 'var(--shadow-sm)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Notes from Host</div>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>{t('round.hostNotes')}</div>
             <div style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.6 }}>{round.notes}</div>
           </div>
         )}
@@ -137,14 +140,14 @@ export function RoundDetailOverlay() {
         {/* Participants */}
         {round.participants?.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>Players ({accepted}/{round.totalSpots})</div>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>{t('round.playersLabel')} ({accepted}/{round.totalSpots})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {round.participants
                 .filter(p => p.role === 'host' || p.role === 'accepted')
                 .map(p => (
                 <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
-                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
                 </div>
               ))}
               {Array.from({ length: openSpots }).map((_, i) => (
@@ -152,7 +155,7 @@ export function RoundDetailOverlay() {
                   <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>Open</div>
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{t('round.openSpot')}</div>
                 </div>
               ))}
             </div>
@@ -163,9 +166,11 @@ export function RoundDetailOverlay() {
       {/* Action button */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'linear-gradient(transparent,var(--bg) 40%)' }}>
         {isHost ? (
-          <div
+          <Pressable
             onClick={() => openOverlayWith('manageRound', round)}
             style={{
+              display: 'block',
+              width: '100%',
               background: 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
@@ -175,24 +180,25 @@ export function RoundDetailOverlay() {
             }}
           >
             <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{t('manage.title')}</span>
-          </div>
+          </Pressable>
         ) : (
-          <div
+          <Pressable
             onClick={handleJoin}
             style={{
+              display: 'block',
+              width: '100%',
               background: hasRequested ? 'var(--bg-alt)' : 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
               textAlign: 'center',
               cursor: hasRequested ? 'default' : 'pointer',
-              boxShadow: hasRequested ? '0 4px 20px rgba(92,122,154,0)' : '0 4px 20px rgba(92,122,154,.35)',
-              transition: 'background .15s, box-shadow .15s',
+              boxShadow: hasRequested ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white', transition: 'color .15s' }}>
-              {hasRequested ? 'Requested ✓' : joining ? '…' : 'Request to Join'}
+            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white' }}>
+              {hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
             </span>
-          </div>
+          </Pressable>
         )}
       </div>
     </div>

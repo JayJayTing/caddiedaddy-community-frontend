@@ -1,3 +1,10 @@
+import { translations, type Language, type TranslationKey } from '@/lib/translations'
+
+// These formatting helpers run outside React, so they can't read LanguageContext.
+// LanguageProvider keeps this in sync via setFormatLang() on mount and on toggle.
+let _lang: Language = 'zh'
+export function setFormatLang(l: Language) { _lang = l }
+
 export function timeAgo(date: string): string {
   const then = new Date(date).getTime()
   if (Number.isNaN(then)) return ''
@@ -7,6 +14,13 @@ export function timeAgo(date: string): string {
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
   const weeks = Math.floor(days / 7)
+  if (_lang === 'zh') {
+    if (mins < 1) return '剛剛'
+    if (mins < 60) return `${mins} 分鐘前`
+    if (hours < 24) return `${hours} 小時前`
+    if (days < 7) return `${days} 天前`
+    return `${weeks} 週前`
+  }
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
   if (hours < 24) return `${hours}h ago`
@@ -15,14 +29,14 @@ export function timeAgo(date: string): string {
 }
 
 export function formatMoney(cents: number | null | undefined): string {
-  if (cents == null) return 'Free'
+  if (cents == null) return _lang === 'zh' ? '免費' : 'Free'
   return `NT$${Math.round(cents / 100).toLocaleString()}`
 }
 
 export function formatTeeTime(iso: string): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  return d.toLocaleTimeString(_lang === 'zh' ? 'zh-TW' : 'en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
 export function formatDate(dateStr: string): string {
@@ -30,7 +44,36 @@ export function formatDate(dateStr: string): string {
   // Accept both 'YYYY-MM-DD' and full ISO datetimes from the API.
   const d = new Date(dateStr.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
   if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return d.toLocaleDateString(_lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+const _locale = () => (_lang === 'zh' ? 'zh-TW' : 'en-US')
+
+// Clock time (e.g. chat message timestamps). Language-aware; pass an ISO string.
+export function formatTime(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString(_locale(), { hour: 'numeric', minute: '2-digit' })
+}
+
+// Long, written-out date (e.g. news detail, "member since"): "June 30, 2026".
+export function formatDateLong(dateStr: string): string {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(_locale(), { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+// Month + year header (date pickers). Takes a Date.
+export function formatMonthYear(d: Date): string {
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString(_locale(), { month: 'long', year: 'numeric' })
+}
+
+// Weekday + short date (home greeting header): "Monday, Jun 30".
+export function formatWeekdayShort(d: Date): string {
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString(_locale(), { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
 const AVATAR_COLORS = ['var(--peach)', 'var(--sky)', 'var(--lilac)', 'var(--sage)', 'var(--butter)', 'var(--rose)']
@@ -56,24 +99,13 @@ export function formatHandicap(hcp: number | string | null | undefined): string 
 }
 
 export function formatHcpReq(req: string): string {
-  const map: Record<string, string> = {
-    all: 'All HCP',
-    u10: 'HCP <10',
-    u15: 'HCP <15',
-    u20: 'HCP <20',
-    u28: 'HCP <28',
-  }
-  return map[req] ?? req
+  const key = `hcp.${req}` as TranslationKey
+  return translations[_lang][key] ?? req
 }
 
 export function formatFormat(fmt: string): string {
-  const map: Record<string, string> = {
-    stroke_play: 'Stroke Play',
-    stableford: 'Stableford',
-    best_ball: 'Best Ball',
-    scramble: 'Scramble',
-  }
-  return map[fmt] ?? fmt
+  const key = `format.${fmt}` as TranslationKey
+  return translations[_lang][key] ?? fmt
 }
 
 // Google Static Maps satellite tile for a course, built from its lat/lng.

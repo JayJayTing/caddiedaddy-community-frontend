@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 
 interface Props {
   onBack: () => void
@@ -19,17 +20,21 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
 
   const handleSubmit = () => {
     if (!isValid || isLoading) return
-    onSendCode('+886' + phone.replace(/\D/g, ''))
+    // Normalise to E.164: strip non-digits and any leading 0 (the TW national
+    // prefix) before the +886 country code — so "0912 345 678" and "912345678"
+    // both become +886912345678 instead of an invalid +8860912345678.
+    const national = phone.replace(/\D/g, '').replace(/^0+/, '')
+    onSendCode('+886' + national)
   }
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
-        <div onClick={onBack} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable onClick={onBack} aria-label={t('a11y.back')} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
+        </Pressable>
       </div>
 
       <div style={{ padding: '4px 28px 0', flex: 1, overflowY: 'auto' }}>
@@ -49,7 +54,7 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
           <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 10, borderBottom: '1px solid var(--line-soft)' }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>🇹🇼</span>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>+886</span>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Taiwan</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('auth.phone.country')}</span>
             <svg style={{ marginLeft: 'auto' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -81,9 +86,10 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
 
         <div style={{ fontSize: 12, color: 'var(--ink-3)', textAlign: 'center', marginBottom: 28 }}>{t('auth.phone.smsNote')}</div>
 
-        <div
+        <Pressable
           onClick={handleSubmit}
           style={{
+            display: 'block',
             background: 'var(--primary)',
             borderRadius: 'var(--r-lg)',
             padding: 18,
@@ -99,12 +105,12 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
           <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
             {isLoading ? '…' : t('auth.phone.sendCode')}
           </span>
-        </div>
+        </Pressable>
 
         <div style={{ textAlign: 'center' }}>
-          <span onClick={onUseEmail} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
+          <Pressable className="link" onClick={onUseEmail} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
             {t('auth.phone.useEmail')}
-          </span>
+          </Pressable>
         </div>
       </div>
     </div>

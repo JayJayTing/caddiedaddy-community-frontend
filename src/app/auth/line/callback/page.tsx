@@ -5,17 +5,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { Pressable } from '@/components/ui/Pressable'
 
-// Return target for Google AND Apple OAuth. The browser completes the PKCE
-// exchange here (the verifier lives in this origin's storage), then we provision
-// the DB user via /auth/oauth/sync and land on /home.
-export default function OAuthCallbackPage() {
+// Return target for LINE login. Validates state, then the backend verifies the
+// id_token + mints a session.
+export default function LineCallbackPage() {
   const router = useRouter()
-  const { completeOAuth } = useAuth()
+  const { completeLine } = useAuth()
   const { t } = useLang()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    completeOAuth()
+    completeLine()
       .then(() => router.replace('/home'))
       .catch((e) => setError(e instanceof Error ? e.message : t('auth.error.signInFailed')))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

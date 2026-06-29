@@ -2,14 +2,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Post, Comment } from '@/types/post'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
+import type { TranslationKey } from '@/lib/translations'
 
 export function PostDetailOverlay() {
-  const { openOverlay, closeOverlay, overlayData } = useUI()
+  const { openOverlay, closeOverlay, overlayData, showError } = useUI()
   const { user } = useAuth()
+  const { t } = useLang()
   const post = overlayData as Post | null
   const isOpen = openOverlay === 'postDetail' && post != null
 
@@ -19,6 +23,7 @@ export function PostDetailOverlay() {
   const [submitting, setSubmitting] = useState(false)
   const [liked, setLiked] = useState(post?.userHasLiked ?? false)
   const [likeCount, setLikeCount] = useState(post?.likesCount ?? 0)
+  const [liking, setLiking] = useState(false)
 
   useEffect(() => {
     if (!isOpen || !post) return
@@ -32,9 +37,19 @@ export function PostDetailOverlay() {
   }, [isOpen, post?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLike = async () => {
-    if (!post || liked) return
-    setLiked(true); setLikeCount(c => c + 1)
-    try { await api.post(`/posts/${post.id}/like`) } catch { setLiked(false); setLikeCount(c => c - 1) }
+    if (!post || liking) return
+    setLiking(true)
+    const next = !liked
+    setLiked(next); setLikeCount(c => c + (next ? 1 : -1))
+    try {
+      const res = await api.post<{ liked: boolean; likesCount: number }>(`/posts/${post.id}/like`)
+      setLiked(res.liked); setLikeCount(res.likesCount)
+    } catch {
+      setLiked(!next); setLikeCount(c => c + (next ? -1 : 1))
+      showError(t('error.like'))
+    } finally {
+      setLiking(false)
+    }
   }
 
   const handleComment = async () => {
@@ -44,7 +59,9 @@ export function PostDetailOverlay() {
       const { data: comment } = await api.post<{ data: Comment }>(`/posts/${post.id}/comments`, { text: commentText })
       setComments(prev => [...prev, comment])
       setCommentText('')
-    } catch {}
+    } catch {
+      showError(t('error.comment'))
+    }
     setSubmitting(false)
   }
 
@@ -58,24 +75,36 @@ export function PostDetailOverlay() {
     announcement: ['var(--sky)', 'var(--sky-deep)'],
   } as Record<string, [string, string]>)[post.type] ?? ['var(--bg-alt)', 'var(--ink-2)']
 
-  const TYPE_LABELS: Record<string, string> = {
-    round_report: 'Round Report', seeking: 'Looking for Players',
-    tip: 'Tip', general: 'General', announcement: 'Announcement',
+  const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+    round_report: 'post.type.roundReport', seeking: 'post.type.seeking',
+    tip: 'post.type.tip', general: 'post.type.general', announcement: 'post.type.announcement',
   }
 
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Back button */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
-        <div className="detail-back" style={{ position: 'static', background: 'var(--bg-alt)' }} onClick={closeOverlay}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable className="detail-back" style={{ position: 'static', background: 'var(--bg-alt)' }} onClick={closeOverlay} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
-        <span style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Post</span>
+        </Pressable>
+        <h2 style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>{t('post.detail.title')}</h2>
       </div>
 
       <div className="scroll-body" style={{ padding: '16px 20px 80px' }}>
+        {/* Looking-for-Players banner */}
+        {(post.isLfp || post.type === 'seeking') && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16, padding: '10px 14px', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-ink)' }}>🏌️ {t('lfp.lookingForPlayers')}</span>
+            {post.lfpPlayersNeeded ? (
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '3px 10px', borderRadius: 'var(--r-pill)' }}>{post.lfpPlayersNeeded} {t('lfp.playersNeededSuffix')}</span>
+            ) : null}
+            {post.locationText ? (
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-ink)', marginLeft: 'auto' }}>📍 {post.locationText}</span>
+            ) : null}
+          </div>
+        )}
         {/* Post */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -84,7 +113,7 @@ export function PostDetailOverlay() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
                 <span style={{ padding: '2px 8px', borderRadius: 'var(--r-pill)', fontSize: 10, fontWeight: 600, background: bg, color: fg }}>
-                  {TYPE_LABELS[post.type]}
+                  {t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>
@@ -100,29 +129,29 @@ export function PostDetailOverlay() {
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line-soft)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={handleLike}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" fillOpacity={liked ? 1 : 0} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'fill-opacity .15s, stroke .15s' }}>
+            <Pressable style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={handleLike} aria-label={t('a11y.like')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? 'var(--primary)' : 'none'} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
-              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600, transition: 'color .15s' }}>{likeCount} Likes</span>
-            </div>
+              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600 }}>{likeCount} {t('post.detail.likesSuffix')}</span>
+            </Pressable>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 600 }}>{comments.length} Comments</span>
+              <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 600 }}>{comments.length} {t('post.detail.commentsSuffix')}</span>
             </div>
           </div>
         </div>
 
         {/* Comments */}
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>
-          Comments
+          {t('post.detail.commentsLabel')}
         </div>
         {loadingComments ? (
-          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>{t('loading')}</div>
         ) : comments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>No comments yet. Be the first!</div>
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>{t('post.detail.noComments')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {comments.map(c => (
@@ -150,18 +179,19 @@ export function PostDetailOverlay() {
               <textarea
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
-                placeholder="Add a comment…"
+                placeholder={t('post.detail.commentPlaceholder')}
                 rows={1}
                 style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)', resize: 'none', lineHeight: 1.5 }}
               />
-              <div
+              <Pressable
+                aria-label={t('a11y.send')}
                 onClick={handleComment}
-                style={{ cursor: commentText.trim() ? 'pointer' : 'default', opacity: commentText.trim() ? 1 : 0.4, transition: 'opacity .15s' }}
+                style={{ cursor: commentText.trim() ? 'pointer' : 'default', opacity: commentText.trim() ? 1 : 0.4 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
-              </div>
+              </Pressable>
             </div>
           </div>
         </div>

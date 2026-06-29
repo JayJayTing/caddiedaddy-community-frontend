@@ -5,31 +5,41 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, formatMoney } from '@/lib/utils'
+import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, formatMoney, formatMonthYear } from '@/lib/utils'
 import { creditsApi } from '@/lib/credits'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { Pressable } from '@/components/ui/Pressable'
+import { useActivated } from '@/hooks/useActivated'
 
 export function ProfileScreen() {
   const { activeScreen, openSheetWith, dataVersion } = useUI()
   const { user, logout } = useAuth()
   const { t, lang, toggleLang } = useLang()
+  const activated = useActivated('profile')
   const [recentRounds, setRecentRounds] = useState<Round[]>([])
   const [stats, setStats] = useState<{ roundsCount: number; followingCount: number } | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [recentLoading, setRecentLoading] = useState(true)
   const [creditBalance, setCreditBalance] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !activated) return
+    let alive = true
     api.get<{ data: { roundsCount: number; followingCount: number } }>(`/users/${user.id}/stats`)
-      .then(r => setStats(r.data ?? null))
-      .catch(() => setStats(null))
+      .then(r => { if (alive) setStats(r.data ?? null) })
+      .catch(() => { if (alive) setStats(null) })
+      .finally(() => { if (alive) setStatsLoading(false) })
     // Show finished rounds (history) when there are any; otherwise the upcoming schedule.
     api.get<{ data: Round[] }>(`/users/${user.id}/rounds?when=past&limit=3`)
       .then(r => {
-        if (r.data && r.data.length) { setRecentRounds(r.data); return }
+        if (r.data && r.data.length) { if (alive) setRecentRounds(r.data); return }
         return api.get<{ data: Round[] }>(`/users/${user.id}/rounds?when=upcoming&limit=3`)
-          .then(r2 => setRecentRounds(r2.data ?? []))
+          .then(r2 => { if (alive) setRecentRounds(r2.data ?? []) })
       })
-      .catch(() => setRecentRounds([]))
-  }, [user])
+      .catch(() => { if (alive) setRecentRounds([]) })
+      .finally(() => { if (alive) setRecentLoading(false) })
+    return () => { alive = false }
+  }, [user, activated])
 
   // Credit balance — re-pull when credits change (purchase, booking, refund).
   useEffect(() => {
@@ -69,7 +79,7 @@ export function ProfileScreen() {
               {user?.avatarUrl ? '' : (user ? getInitial(user.displayName) : '?')}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? 'Loading…'}</div>
+              <h1 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? t('loading')}</h1>
               {user?.locationText && (
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>📍 {user.locationText}</div>
               )}
@@ -77,22 +87,22 @@ export function ProfileScreen() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', maxWidth: 240, lineHeight: 1.5, margin: '4px auto 0' }}>{user.bio}</div>
               )}
               {user?.memberSince && (
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 4 }}>{t('profile.memberSince')} {new Date(user.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 4 }}>{t('profile.memberSince')} {formatMonthYear(new Date(user.memberSince))}</div>
               )}
             </div>
-            <div
+            <Pressable
               style={{ background: 'rgba(255,255,255,.18)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 'var(--r-pill)', padding: '8px 18px', cursor: 'pointer' }}
               onClick={() => openSheetWith('account')}
             >
               <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{t('profile.editProfile')}</span>
-            </div>
+            </Pressable>
           </div>
         </div>
 
         {/* Stats */}
         <div style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--line-soft)' }}>
           <div className="profile-stat">
-            <div className="profile-stat-num">{stats ? stats.roundsCount : '—'}</div>
+            <div className="profile-stat-num">{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.roundsCount : '—')}</div>
             <div className="profile-stat-label">{t('profile.stat.rounds')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
@@ -102,7 +112,7 @@ export function ProfileScreen() {
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
           <div className="profile-stat">
-            <div className="profile-stat-num">{stats ? stats.followingCount : '—'}</div>
+            <div className="profile-stat-num">{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.followingCount : '—')}</div>
             <div className="profile-stat-label">{t('profile.stat.following')}</div>
           </div>
         </div>
@@ -130,9 +140,21 @@ export function ProfileScreen() {
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>
             {t('profile.recentRounds')}
           </div>
-          {recentRounds.length === 0 ? (
+          {recentLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[0, 1].map(i => (
+                <div key={i} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Skeleton w={40} h={40} r="var(--r-md)" />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <Skeleton w="55%" h={13} />
+                    <Skeleton w="40%" h={11} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentRounds.length === 0 ? (
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', border: '1px solid var(--line-soft)' }}>
-              <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>No recent rounds yet</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('profile.noRecentRounds')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -156,7 +178,7 @@ export function ProfileScreen() {
           </div>
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             {settingsRows.map((row, i) => (
-              <div
+              <Pressable
                 key={row.label}
                 className="mod-row"
                 onClick={row.action}
@@ -164,10 +186,10 @@ export function ProfileScreen() {
               >
                 <span style={{ fontSize: 18 }}>{row.icon}</span>
                 <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>{row.label}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
-              </div>
+              </Pressable>
             ))}
             {/* Language — toggles inline (moved here from the floating button) */}
             <div className="mod-row" onClick={toggleLang} style={{ borderTop: '1px solid var(--line-soft)' }}>
@@ -180,12 +202,12 @@ export function ProfileScreen() {
 
         {/* Sign out */}
         <div style={{ margin: '14px 20px 32px' }}>
-          <div
-            style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--line-soft)' }}
+          <Pressable
+            style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--line-soft)', display: 'block', width: '100%' }}
             onClick={handleSignOut}
           >
             <span style={{ fontSize: 14, fontWeight: 600, color: '#C0392B' }}>{t('profile.signOut')}</span>
-          </div>
+          </Pressable>
         </div>
       </div>
     </div>

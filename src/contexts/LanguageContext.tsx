@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations, Language, TranslationKey } from '@/lib/translations'
+import { setFormatLang } from '@/lib/utils'
 
 interface LanguageContextType {
   lang: Language
@@ -11,14 +12,17 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Always start at 'en' so server and first client render match; adopt the saved
-  // language after mount to avoid a hydration mismatch.
-  const [lang, setLang] = useState<Language>('en')
+  // Default to Chinese ('zh') so server and first client render match; adopt the
+  // saved language after mount to avoid a hydration mismatch.
+  const [lang, setLang] = useState<Language>('zh')
 
   useEffect(() => {
     const saved = localStorage.getItem('caddie_lang')
     if (saved === 'en' || saved === 'zh') setLang(saved)
   }, [])
+
+  // Keep the non-React formatting helpers (utils.ts) in sync with the language.
+  useEffect(() => { setFormatLang(lang) }, [lang])
 
   const t = (key: TranslationKey) => translations[lang][key] ?? key
 

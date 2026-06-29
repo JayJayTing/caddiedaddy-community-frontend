@@ -6,13 +6,14 @@ import { api } from '@/lib/api'
 import { Round, RoundParticipant, RoundFormat, HandicapRequirement, RoundStatus } from '@/types/round'
 import { formatDate } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
 import { DateField } from '@/components/ui/DateField'
 
 // Accept/decline/edit/cancel call the real backend endpoints (PATCH/DELETE /rounds/:id…)
 // with optimistic local updates that revert on failure. Participant names are loaded
 // from GET /rounds/:id on open.
 export function ManageRoundOverlay() {
-  const { openOverlay, openOverlayWith, overlayData, refreshData } = useUI()
+  const { openOverlay, openOverlayWith, overlayData, refreshData, showError } = useUI()
   const { t } = useLang()
 
   const round = overlayData as Round | null
@@ -77,12 +78,12 @@ export function ManageRoundOverlay() {
   const acceptRequest = async (userId: string) => {
     setRole(userId, 'accepted')
     try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'accepted' }); refreshData('rounds') }
-    catch { setRole(userId, 'requested') }
+    catch { setRole(userId, 'requested'); showError(t('error.generic')) }
   }
   const declineRequest = async (userId: string) => {
     setRole(userId, 'declined')
     try { await api.patch(`/rounds/${round.id}/participants/${userId}`, { role: 'declined' }); refreshData('rounds') }
-    catch { setRole(userId, 'requested') }
+    catch { setRole(userId, 'requested'); showError(t('error.generic')) }
   }
   const saveChanges = async () => {
     try {
@@ -99,12 +100,12 @@ export function ManageRoundOverlay() {
       refreshData('rounds')
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch { /* leave form values so the host can retry */ }
+    } catch { showError(t('error.saveProfile')) /* leave form values so the host can retry */ }
   }
   const confirmCancel = async () => {
     setConfirmingCancel(false)
     try { await api.delete(`/rounds/${round.id}`); setStatus('cancelled'); refreshData('rounds') }
-    catch { /* no-op */ }
+    catch { showError(t('error.generic')) }
   }
 
   const FORMATS: Array<{ key: RoundFormat; label: string }> = [
@@ -129,13 +130,13 @@ export function ManageRoundOverlay() {
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Hero */}
       <div className="detail-hero" style={{ background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }}>
-        <div className="detail-back" onClick={() => openOverlayWith('roundDetail', round)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable className="detail-back" onClick={() => openOverlayWith('roundDetail', round)} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6" />
           </svg>
-        </div>
+        </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t('manage.title')}</div>
+          <h2 style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t('manage.title')}</h2>
           <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2, marginTop: 2 }}>{round.course.name}</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(date)}</div>
         </div>
@@ -161,7 +162,7 @@ export function ManageRoundOverlay() {
                 <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-sm)' }}>
                   <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={40} fontSize={15} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.user?.displayName ?? 'Player'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.user?.displayName ?? t('common.player')}</div>
                     <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t('manage.requests')}</div>
                   </div>
                   {!cancelled && (
@@ -187,7 +188,7 @@ export function ManageRoundOverlay() {
             {players.map(p => (
               <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
-                <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
+                <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
               </div>
             ))}
             {Array.from({ length: openSpots }).map((_, i) => (
@@ -195,7 +196,7 @@ export function ManageRoundOverlay() {
                 <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>Open</div>
+                <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{t('round.openSpot')}</div>
               </div>
             ))}
           </div>
@@ -220,7 +221,7 @@ export function ManageRoundOverlay() {
             <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.format')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {FORMATS.map(f => (
-                <div key={f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)}>{f.label}</div>
+                <Pressable key={f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)} aria-pressed={format === f.key}>{f.label}</Pressable>
               ))}
             </div>
           </div>
@@ -229,16 +230,16 @@ export function ManageRoundOverlay() {
             <div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.holes')}</div>
               <div className="host-toggle-row">
-                <div className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</div>
-                <div className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</div>
+                <Pressable className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)} aria-pressed={holes === 9}>{t('holes.9')}</Pressable>
+                <Pressable className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)} aria-pressed={holes === 18}>{t('holes.18')}</Pressable>
               </div>
             </div>
             <div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.spots')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(Math.max(1, players.length), spots - 1))}>−</div>
+                <Pressable style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(Math.max(1, players.length), spots - 1))}>−</Pressable>
                 <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', minWidth: 24, textAlign: 'center' }}>{spots}</span>
-                <div style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</div>
+                <Pressable style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</Pressable>
               </div>
             </div>
           </div>
@@ -263,24 +264,24 @@ export function ManageRoundOverlay() {
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder={t('host.notesPlaceholder')} style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} />
           </div>
 
-          <div onClick={saveChanges} style={{ background: saved ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 15, textAlign: 'center', cursor: 'pointer', boxShadow: saved ? 'none' : '0 4px 16px rgba(92,122,154,.3)' }}>
+          <Pressable onClick={saveChanges} style={{ display: 'block', width: '100%', background: saved ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 15, textAlign: 'center', cursor: 'pointer', boxShadow: saved ? 'none' : '0 4px 16px rgba(92,122,154,.3)' }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: saved ? 'var(--primary-ink)' : 'white' }}>{saved ? t('manage.saved') : t('manage.save')}</span>
-          </div>
+          </Pressable>
         </div>
 
         {/* Cancel Round */}
         {!cancelled && (
           <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 20 }}>
             {!confirmingCancel ? (
-              <div onClick={() => setConfirmingCancel(true)} style={{ border: '1.5px solid #E8A99E', borderRadius: 'var(--r-lg)', padding: 14, textAlign: 'center', cursor: 'pointer' }}>
+              <Pressable onClick={() => setConfirmingCancel(true)} style={{ display: 'block', width: '100%', border: '1.5px solid #E8A99E', borderRadius: 'var(--r-lg)', padding: 14, textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#C0392B' }}>{t('manage.cancel')}</span>
-              </div>
+              </Pressable>
             ) : (
               <div style={{ background: '#FDECEA', borderRadius: 'var(--r-lg)', padding: 16 }}>
                 <div style={{ fontSize: 14, color: '#C0392B', textAlign: 'center', marginBottom: 14, fontWeight: 600 }}>{t('manage.cancelConfirm')}</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <div onClick={() => setConfirmingCancel(false)} style={{ flex: 1, border: '1.5px solid var(--line)', background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: 12, textAlign: 'center', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: 'var(--ink-2)' }}>{t('manage.cancelKeep')}</div>
-                  <div onClick={confirmCancel} style={{ flex: 1, background: '#C0392B', borderRadius: 'var(--r-md)', padding: 12, textAlign: 'center', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'white' }}>{t('manage.cancelYes')}</div>
+                  <Pressable onClick={() => setConfirmingCancel(false)} style={{ flex: 1, border: '1.5px solid var(--line)', background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: 12, textAlign: 'center', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: 'var(--ink-2)' }}>{t('manage.cancelKeep')}</Pressable>
+                  <Pressable onClick={confirmCancel} style={{ flex: 1, background: '#C0392B', borderRadius: 'var(--r-md)', padding: 12, textAlign: 'center', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'white' }}>{t('manage.cancelYes')}</Pressable>
                 </div>
               </div>
             )}

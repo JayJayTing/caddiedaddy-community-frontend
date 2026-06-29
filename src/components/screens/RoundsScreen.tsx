@@ -5,9 +5,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
+import { formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage, formatMonthYear } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
+import { RoundCardSkeleton } from '@/components/ui/Skeleton'
 import { useMounted } from '@/lib/useMounted'
+import { useActivated } from '@/hooks/useActivated'
+import type { TranslationKey } from '@/lib/translations'
 
 type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
 
@@ -18,11 +22,12 @@ function WeekDatePicker({
 }: { selectedDate: string | null; onSelect: (d: string | null) => void; roundDates: Set<string> }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const mounted = useMounted()
+  const { t } = useLang()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
   const WEEKS = 13
-  const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const DAY_LABELS: TranslationKey[] = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri', 'day.sat', 'day.sun']
 
   // Monday of the current week (weeks run Mon → Sun).
   const startMonday = new Date(today)
@@ -38,16 +43,14 @@ function WeekDatePicker({
   const toDateStr = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  const [monthLabel, setMonthLabel] = useState(
-    weeks[0][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-  )
+  const [monthLabel, setMonthLabel] = useState(() => formatMonthYear(weeks[0][3]))
 
   // Snaps one whole week at a time; the month header follows the visible week.
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el || el.clientWidth === 0) return
     const wIdx = Math.min(weeks.length - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth)))
-    setMonthLabel(weeks[wIdx][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
+    setMonthLabel(formatMonthYear(weeks[wIdx][3]))
   }
 
   return (
@@ -56,7 +59,7 @@ function WeekDatePicker({
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{mounted ? monthLabel : ''}</span>
       </div>
       <div className="dp-day-labels">
-        {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{d}</div>)}
+        {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{t(d)}</div>)}
       </div>
       <div className="dp-weeks" ref={scrollRef} onScroll={handleScroll}>
         {mounted && weeks.map((week, wi) => (
@@ -68,7 +71,7 @@ function WeekDatePicker({
               const isPast = d < today
               const hasDot = roundDates.has(ds)
               return (
-                <div key={ds} className="dp-cell" onClick={() => onSelect(isSelected ? null : ds)}>
+                <Pressable key={ds} className="dp-cell" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : ds)}>
                   <div className="dp-circle" style={{
                     background: isSelected ? 'var(--primary)' : isToday ? 'var(--primary-soft)' : 'transparent',
                     color: isSelected ? 'white' : isPast ? 'var(--ink-3)' : 'var(--ink)',
@@ -78,7 +81,7 @@ function WeekDatePicker({
                     {d.getDate()}
                   </div>
                   <div className="dp-dot" style={{ visibility: hasDot && !isSelected ? 'visible' : 'hidden' }} />
-                </div>
+                </Pressable>
               )
             })}
           </div>
@@ -93,7 +96,7 @@ function WeekDatePicker({
 export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail: () => void }) {
   const { t } = useLang()
   const { user } = useAuth()
-  const { refreshData, showSuccess } = useUI()
+  const { refreshData, showSuccess, showError } = useUI()
   const [expanded, setExpanded] = useState(false)
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
@@ -115,13 +118,15 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
       setJoined(true)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {}
+    } catch {
+      showError(t('error.join'))
+    }
     setJoining(false)
   }
 
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
+      <div role="button" tabIndex={0} style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded) } }}>
         <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
           {!art && (
             <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -136,7 +141,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
               <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : 'Full'}
+                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
               </span>
               <svg className={`round-card-chevron${expanded ? ' open' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
@@ -152,7 +157,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
                 <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={24} fontSize={9} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
               ))}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} hosting</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} {t('home.hosting')}</span>
           </div>
         </div>
       </div>
@@ -162,7 +167,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
               [t('rounds.format'), formatFormat(round.format)],
-              [t('rounds.holes'), `${round.holes} holes`],
+              [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val]) => (
               <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
@@ -172,17 +177,17 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <div
+            <Pressable
               style={{ flex: 1, background: hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: hasRequested || isHost ? 'default' : 'pointer' }}
               onClick={handleJoin}
             >
               <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {isHost ? 'Your Round' : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+                {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
-            </div>
-            <div style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>Full Page →</span>
-            </div>
+            </Pressable>
+            <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('common.fullPage')}</span>
+            </Pressable>
           </div>
         </div>
       </div>
@@ -195,6 +200,8 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
 export function RoundsScreen() {
   const { activeScreen, setActiveScreen, openOverlayWith, dataVersion } = useUI()
   const { t } = useLang()
+  const { user } = useAuth()
+  const activated = useActivated('rounds')
   const [rounds, setRounds] = useState<Round[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -202,11 +209,14 @@ export function RoundsScreen() {
   const [activeFilter, setActiveFilter] = useState<Filter>('all')
 
   useEffect(() => {
+    if (!user || !activated) return
+    let alive = true
     api.get<{ data: Round[] }>('/rounds')
-      .then(r => setRounds(r.data ?? []))
-      .catch(() => setRounds([]))
-      .finally(() => setLoading(false))
-  }, [dataVersion.rounds])
+      .then(r => { if (alive) setRounds(r.data ?? []) })
+      .catch(() => { if (alive) setRounds([]) })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [user, activated, dataVersion.rounds])
 
   const roundDates = new Set(rounds.map(r => (r.date ?? '').slice(0, 10)))
 
@@ -246,13 +256,13 @@ export function RoundsScreen() {
     <div className={`screen${activeScreen === 'rounds' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', flexShrink: 0 }}>
-        <div className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('rounds.title')}</div>
-        <div
+        <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('rounds.title')}</h1>
+        <Pressable
           style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 16px', cursor: 'pointer' }}
           onClick={() => setActiveScreen('host')}
         >
           <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('rounds.host')}</span>
-        </div>
+        </Pressable>
       </div>
 
       {/* Search */}
@@ -278,20 +288,20 @@ export function RoundsScreen() {
       <div style={{ flexShrink: 0 }}>
         <div className="hscroll" style={{ padding: '8px 20px', gap: 8 }}>
           {FILTERS.map(f => (
-            <div key={f.key} className={`filter-pill${activeFilter === f.key ? ' active' : ''}`} onClick={() => setActiveFilter(f.key)}>
+            <Pressable key={f.key} className={`filter-pill${activeFilter === f.key ? ' active' : ''}`} aria-pressed={activeFilter === f.key} onClick={() => setActiveFilter(f.key)}>
               {f.label}
-            </div>
+            </Pressable>
           ))}
         </div>
         {selectedDate && (
           <div style={{ padding: '0 20px 8px' }}>
-            <span
-              className="filter-pill active"
+            <Pressable
+              className="filter-pill active link"
               onClick={() => setSelectedDate(null)}
               style={{ fontSize: 11 }}
             >
               {t('rounds.clearDate')}
-            </span>
+            </Pressable>
           </div>
         )}
       </div>
@@ -299,7 +309,7 @@ export function RoundsScreen() {
       {/* List */}
       <div className="scroll-body" style={{ padding: '8px 20px 24px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40 }}><span style={{ color: 'var(--ink-3)', fontSize: 13 }}>{t('loading.rounds')}</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{[0, 1, 2, 3].map(i => <RoundCardSkeleton key={i} />)}</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40 }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>⛳️</div>

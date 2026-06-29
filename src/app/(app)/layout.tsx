@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUI } from '@/contexts/UIContext'
 import { PhoneFrame } from '@/components/layout/PhoneFrame'
@@ -18,7 +19,9 @@ import { CreateCommunityOverlay } from '@/components/overlays/CreateCommunityOve
 import { CommunityDetailOverlay } from '@/components/overlays/CommunityDetailOverlay'
 import { BookVenueOverlay } from '@/components/overlays/BookVenueOverlay'
 import { MyBookingsOverlay } from '@/components/overlays/MyBookingsOverlay'
+import { FindPlayersOverlay } from '@/components/overlays/FindPlayersOverlay'
 import { SuccessOverlay } from '@/components/overlays/SuccessOverlay'
+import { Toaster } from '@/components/ui/Toaster'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
 import { AccountSheet } from '@/components/sheets/AccountSheet'
 import { HandicapSheet } from '@/components/sheets/HandicapSheet'
@@ -29,6 +32,19 @@ import { WalletSheet } from '@/components/sheets/WalletSheet'
 export default function AppLayout({ children: _children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
   const { backdropActive, closeSheet, closeOverlay, openOverlay, openSheet } = useUI()
+
+  // Esc closes the topmost layer (sheet before overlay) — keyboard parity with the
+  // backdrop tap. Previously there was no keyboard way to dismiss either.
+  useEffect(() => {
+    if (!openSheet && !openOverlay) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (openSheet) closeSheet()
+      else if (openOverlay) closeOverlay()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openSheet, openOverlay, closeSheet, closeOverlay])
 
   return (
     <PhoneFrame>
@@ -50,9 +66,13 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <CommunityDetailOverlay />
       <BookVenueOverlay />
       <MyBookingsOverlay />
+      <FindPlayersOverlay />
 
       {/* Global success confirmation (animated checkmark) */}
       <SuccessOverlay />
+
+      {/* Global transient toast (failures + info) */}
+      <Toaster />
 
       {/* Bottom Sheets */}
       <ComposeSheet />

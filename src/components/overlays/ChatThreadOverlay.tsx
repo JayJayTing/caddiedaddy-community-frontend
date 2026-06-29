@@ -2,18 +2,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { ChatThread, Message } from '@/types/chat'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
+import { formatTime } from '@/lib/utils'
 import { getRealtime } from '@/lib/supabaseRealtime'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
-const timeFmt = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-
 export function ChatThreadOverlay() {
-  const { openOverlay, closeOverlay, overlayData } = useUI()
+  const { openOverlay, closeOverlay, overlayData, showError } = useUI()
   const { user } = useAuth()
+  const { t } = useLang()
 
   const thread = overlayData as ChatThread | null
   const isOpen = openOverlay === 'chatThread' && thread != null
@@ -67,10 +68,10 @@ export function ChatThreadOverlay() {
   if (!isOpen || !thread) return null
 
   const other = thread.participants.find(p => p.userId !== user?.id)
-  const title = thread.type === 'group' ? (thread.name ?? 'Group chat') : (other?.user?.displayName ?? thread.name ?? 'Chat')
+  const title = thread.type === 'group' ? (thread.name ?? t('chat.groupChat')) : (other?.user?.displayName ?? thread.name ?? t('chat.title'))
   const avatarSeed = thread.type === 'group' ? thread.id : (other?.userId ?? thread.id)
   const avatarUrl = thread.type === 'group' ? null : (other?.user?.avatarUrl ?? null)
-  const subtitle = thread.type === 'group' ? `${thread.participants.length} members` : ''
+  const subtitle = thread.type === 'group' ? `${thread.participants.length} ${t('community.members')}` : ''
 
   const send = async () => {
     const text = input.trim()
@@ -83,6 +84,7 @@ export function ChatThreadOverlay() {
       channelRef.current?.send({ type: 'broadcast', event: 'message', payload: data })
     } catch {
       setInput(text) // restore on failure so the user can retry
+      showError(t('error.sendMessage'))
     } finally {
       setSending(false)
     }
@@ -92,9 +94,9 @@ export function ChatThreadOverlay() {
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 12px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
-        <div style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }} onClick={closeOverlay}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-        </div>
+        <Pressable style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }} onClick={closeOverlay} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="15 18 9 12 15 6" /></svg>
+        </Pressable>
         <Avatar name={title} url={avatarUrl} seed={avatarSeed} size={38} fontSize={14} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
@@ -105,7 +107,7 @@ export function ChatThreadOverlay() {
       {/* Messages */}
       <div ref={scrollRef} className="scroll-body" style={{ padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 13, marginTop: 40 }}>No messages yet — say hi 👋</div>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 13, marginTop: 40 }}>{t('chat.threadNoMessages')}</div>
         ) : messages.map((m, i) => {
           const own = m.senderId === user?.id
           const showSender = thread.type === 'group' && !own && (i === 0 || messages[i - 1].senderId !== m.senderId)
@@ -124,7 +126,7 @@ export function ChatThreadOverlay() {
               }}>
                 {m.text}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--ink-3)', margin: '2px 6px 0' }}>{timeFmt(m.createdAt)}</div>
+              <div style={{ fontSize: 10, color: 'var(--ink-3)', margin: '2px 6px 0' }}>{formatTime(m.createdAt)}</div>
             </div>
           )
         })}
@@ -136,13 +138,13 @@ export function ChatThreadOverlay() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-          placeholder="Message…"
+          placeholder={t('chat.messagePlaceholder')}
           rows={1}
           style={{ flex: 1, resize: 'none', maxHeight: 100, padding: '10px 14px', border: '1.5px solid var(--line)', borderRadius: 20, fontSize: 14, fontFamily: 'var(--sans)', background: 'var(--surface)', color: 'var(--ink)', outline: 'none' }}
         />
-        <div onClick={send} style={{ width: 40, height: 40, borderRadius: '50%', background: input.trim() ? 'var(--primary)' : 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background .15s' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={input.trim() ? 'white' : 'var(--ink-3)'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke .15s' }}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-        </div>
+        <Pressable aria-label={t('a11y.send')} onClick={send} style={{ width: 40, height: 40, borderRadius: '50%', background: input.trim() ? 'var(--primary)' : 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={input.trim() ? 'white' : 'var(--ink-3)'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+        </Pressable>
       </div>
     </div>
   )

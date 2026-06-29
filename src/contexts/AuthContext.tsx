@@ -1,17 +1,24 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { AuthUser, AuthResponse } from '@/types/auth'
+import { AuthUser, AuthResponse, AuthSession } from '@/types/auth'
 import { api } from '@/lib/api'
+import { getSupabaseAuth } from '@/lib/supabaseAuth'
 
 interface AuthContextType {
   user: AuthUser | null
   isLoading: boolean
   loginWithEmail: (email: string, password: string, rememberMe?: boolean) => Promise<void>
-  signupWithEmail: (email: string, password: string, displayName: string) => Promise<void>
+  signupWithEmail: (email: string, password: string, displayName: string) => Promise<{ pendingVerification: boolean }>
   sendOtp: (phone: string) => Promise<void>
   verifyOtp: (phone: string, token: string) => Promise<void>
-  getGoogleUrl: () => Promise<string>
-  handleGoogleCallback: (code: string) => Promise<void>
+  verifyEmailOtp: (email: string, token: string) => Promise<void>
+  resendEmailOtp: (email: string) => Promise<void>
+  forgotPassword: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
+  loginWithProvider: (provider: 'google' | 'apple') => Promise<void>
+  completeOAuth: () => Promise<void>
+  loginWithLine: () => Promise<void>
+  completeLine: () => Promise<void>
   logout: () => Promise<void>
   updateUser: (updates: Partial<AuthUser>) => void
 }
@@ -56,10 +63,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user)
   }, [])
 
-  const signupWithEmail = useCallback(async (email: string, password: string, displayName: string) => {
-    const { session, user } = await api.post<AuthResponse>('/auth/signup', { email, password, displayName })
+  const signupWithEmail = useCallback(async (email: string, password: string, displayName: string): Promise<{ pendingVerification: boolean }> => {
+    // With email verification OFF the backend returns a session (instant signup);
+    // with it ON it returns { pendingVerification } and emails a 6-digit code.
+    const res = await api.post<{ session?: AuthSession; user?: AuthUser; pendingVerification?: boolean }>(
+      '/auth/signup',
+      { email, password, displayName },
+    )
+    if (res.session && res.user) {
+      saveSession(res.session)
+      setUser(res.user)
+      return { pendingVerification: false }
+    }
+    return { pendingVerification: true }
+  }, [])
+
+  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
+    const { session, user } = await api.post<AuthResponse>('/auth/verify-email', { email, token })
     saveSession(session)
     setUser(user)
+  }, [])
+
+  const resendEmailOtp = useCallback(async (email: string) => {
+    await api.post('/auth/email/resend-otp', { email })
+  }, [])
+
+  // Password reset: send a code, verify it via verifyEmailOtp (which signs the
+  // user in), then set the new password.
+  const forgotPassword = useCallback(async (email: string) => {
+    await api.post('/auth/password/forgot', { email })
+  }, [])
+
+  const updatePassword = useCallback(async (password: string) => {
+    await api.post('/auth/password/update', { password })
   }, [])
 
   const sendOtp = useCallback(async (phone: string) => {
@@ -72,14 +108,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user)
   }, [])
 
-  const getGoogleUrl = useCallback(async (): Promise<string> => {
-    const callbackUrl = `${window.location.origin}/auth/google/callback`
-    const { url } = await api.get<{ url: string }>(`/auth/google/url?redirectTo=${encodeURIComponent(callbackUrl)}`)
-    return url
+  // OAuth (Google/Apple) runs in the browser via supabase-js so the PKCE verifier
+  // is per-user. signInWithOAuth redirects away; the /auth/google/callback page
+  // calls completeOAuth() on return.
+  const loginWithProvider = useCallback(async (provider: 'google' | 'apple') => {
+    const supabase = getSupabaseAuth()
+    if (!supabase) throw new Error('OAuth is not configured')
+    const redirectTo = `${window.location.origin}/auth/google/callback`
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })
+    if (error) throw error
+    // The browser now redirects to the provider; control leaves the page.
   }, [])
 
-  const handleGoogleCallback = useCallback(async (code: string) => {
-    const { session, user } = await api.post<AuthResponse>('/auth/google/callback', { code })
+  const completeOAuth = useCallback(async () => {
+    const supabase = getSupabaseAuth()
+    if (!supabase) throw new Error('OAuth is not configured')
+    const url = new URL(window.location.href)
+    const oauthErr = url.searchParams.get('error_description') ?? url.searchParams.get('error')
+    if (oauthErr) throw new Error(oauthErr)
+    const code = url.searchParams.get('code')
+    if (!code) throw new Error('Missing authorization code')
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error || !data.session) throw error ?? new Error('OAuth exchange failed')
+
+    // Hand the session to the app's own token store + provision the DB user.
+    saveSession(
+      { access_token: data.session.access_token, refresh_token: data.session.refresh_token },
+      true,
+    )
+    const { user } = await api.post<{ user: AuthUser }>('/auth/oauth/sync')
+    setUser(user)
+    // Clear supabase-js's local copy WITHOUT revoking (we reuse those tokens).
+    await supabase.auth.signOut({ scope: 'local' })
+  }, [])
+
+  // LINE login — not a Supabase provider, so OAuth runs in the browser (state +
+  // nonce in sessionStorage) and the backend verifies the id_token + mints a session.
+  const loginWithLine = useCallback(async () => {
+    const channelId = process.env.NEXT_PUBLIC_LINE_CHANNEL_ID
+    if (!channelId) throw new Error('LINE is not configured')
+    const state = crypto.randomUUID()
+    const nonce = crypto.randomUUID()
+    sessionStorage.setItem('caddie_line_state', state)
+    sessionStorage.setItem('caddie_line_nonce', nonce)
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: channelId,
+      redirect_uri: `${window.location.origin}/auth/line/callback`,
+      state,
+      scope: 'openid profile email',
+      nonce,
+    })
+    window.location.href = `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`
+  }, [])
+
+  const completeLine = useCallback(async () => {
+    const url = new URL(window.location.href)
+    const oauthErr = url.searchParams.get('error_description') ?? url.searchParams.get('error')
+    if (oauthErr) throw new Error(oauthErr)
+    const code = url.searchParams.get('code')
+    const state = url.searchParams.get('state')
+    const savedState = sessionStorage.getItem('caddie_line_state')
+    const nonce = sessionStorage.getItem('caddie_line_nonce')
+    sessionStorage.removeItem('caddie_line_state')
+    sessionStorage.removeItem('caddie_line_nonce')
+    if (!code || !state || state !== savedState || !nonce) throw new Error('LINE sign-in failed')
+    const { session, user } = await api.post<AuthResponse>('/auth/line/callback', {
+      code,
+      redirectUri: `${window.location.origin}/auth/line/callback`,
+      nonce,
+    })
     saveSession(session)
     setUser(user)
   }, [])
@@ -95,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, loginWithEmail, signupWithEmail, sendOtp, verifyOtp, getGoogleUrl, handleGoogleCallback, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isLoading, loginWithEmail, signupWithEmail, sendOtp, verifyOtp, verifyEmailOtp, resendEmailOtp, forgotPassword, updatePassword, loginWithProvider, completeOAuth, loginWithLine, completeLine, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

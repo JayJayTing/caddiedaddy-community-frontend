@@ -1,16 +1,18 @@
 'use client'
 import { useState } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 
 interface Props {
   onBack: () => void
   onLogin: (email: string, password: string, rememberMe: boolean) => void
   onSignup: (email: string, password: string, displayName: string) => void
+  onForgot: (email: string) => void
   isLoading: boolean
   error?: string
 }
 
-export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props) {
+export function EmailStep({ onBack, onLogin, onSignup, onForgot, isLoading, error }: Props) {
   const { t } = useLang()
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
@@ -52,11 +54,11 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
-        <div onClick={onBack} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable onClick={onBack} aria-label={t('a11y.back')} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
+        </Pressable>
       </div>
 
       <div style={{ padding: '4px 28px 0', flex: 1, overflowY: 'auto' }}>
@@ -110,7 +112,9 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
         </div>
 
         {mode === 'signin' && (
-          <div
+          <Pressable
+            role="checkbox"
+            aria-checked={rememberMe}
             onClick={() => setRememberMe(v => !v)}
             style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer', userSelect: 'none' }}
           >
@@ -122,12 +126,20 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
               transition: 'background .15s, border-color .15s',
             }}>
               {rememberMe && (
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                <svg aria-hidden width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </div>
-            <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>Remember me</span>
+            <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>{t('auth.email.rememberMe')}</span>
+          </Pressable>
+        )}
+
+        {mode === 'signin' && (
+          <div style={{ textAlign: 'right', marginBottom: 16, marginTop: -4 }}>
+            <Pressable className="link" onClick={() => onForgot(email)} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
+              {t('auth.email.forgot')}
+            </Pressable>
           </div>
         )}
 
@@ -135,9 +147,10 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
           <div style={{ fontSize: 12, color: '#C0392B', textAlign: 'center', marginBottom: 12 }}>{error}</div>
         )}
 
-        <div
+        <Pressable
           onClick={handleSubmit}
           style={{
+            display: 'block',
             background: 'var(--primary)',
             borderRadius: 'var(--r-lg)',
             padding: 18,
@@ -154,21 +167,22 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
           <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
             {isLoading ? '…' : mode === 'signin' ? t('auth.email.signIn') : t('auth.email.createAccount')}
           </span>
-        </div>
+        </Pressable>
 
         <div style={{ textAlign: 'center', marginBottom: 12 }}>
-          <span
+          <Pressable
+            className="link"
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
             style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}
           >
             {mode === 'signin' ? t('auth.email.switchToSignup') : t('auth.email.switchToSignin')}
-          </span>
+          </Pressable>
         </div>
 
         <div style={{ textAlign: 'center' }}>
-          <span onClick={onBack} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
+          <Pressable className="link" onClick={onBack} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
             {t('auth.email.usePhone')}
-          </span>
+          </Pressable>
         </div>
       </div>
     </div>
