@@ -112,6 +112,16 @@ export function HomeScreen() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </Pressable>
+          {/* Explore map */}
+          <Pressable
+            aria-label={t('a11y.map')}
+            style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            onClick={() => openOverlayWith('map')}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden stroke="var(--ink-2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+            </svg>
+          </Pressable>
           <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={38} fontSize={14} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
       </div>
