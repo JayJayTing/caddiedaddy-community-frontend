@@ -402,6 +402,29 @@ const en = {
   // ui
   'ui.avatar.alt': 'avatar',
   'ui.date.selectDate': 'Select date',
+  // errors / toasts (error.generic, error.network, auth.error.signInFailed already exist above)
+  'error.join': "Couldn't send your request. Please try again.",
+  'error.cancelJoin': "Couldn't cancel your request.",
+  'error.like': "Couldn't update your like.",
+  'error.comment': "Couldn't post your comment.",
+  'error.sendMessage': "Couldn't send your message.",
+  'error.saveProfile': "Couldn't save your changes.",
+  'error.createPost': "Couldn't publish your post.",
+  'error.createCommunity': "Couldn't create the community.",
+  'error.createRound': "Couldn't publish your round.",
+  'error.load': "Couldn't load. Tap to retry.",
+  'toast.dismiss': 'Dismiss',
+  'common.retry': 'Retry',
+  'a11y.notifications': 'Notifications',
+  'a11y.search': 'Search',
+  'a11y.close': 'Close',
+  'a11y.back': 'Back',
+  'a11y.openProfile': 'Open profile',
+  'a11y.like': 'Like',
+  'a11y.comment': 'Comment',
+  'a11y.prevMonth': 'Previous month',
+  'a11y.nextMonth': 'Next month',
+  'a11y.send': 'Send',
 }
 
 const zh: typeof en = {
@@ -781,6 +804,29 @@ const zh: typeof en = {
   // ui
   'ui.avatar.alt': '頭像',
   'ui.date.selectDate': '選擇日期',
+  // errors / toasts (error.generic, error.network, auth.error.signInFailed already exist above)
+  'error.join': '無法送出申請，請再試一次。',
+  'error.cancelJoin': '無法取消申請。',
+  'error.like': '無法更新按讚狀態。',
+  'error.comment': '無法發送留言。',
+  'error.sendMessage': '無法發送訊息。',
+  'error.saveProfile': '無法儲存變更。',
+  'error.createPost': '無法發佈貼文。',
+  'error.createCommunity': '無法建立社群。',
+  'error.createRound': '無法發佈球局。',
+  'error.load': '載入失敗，請點擊重試。',
+  'toast.dismiss': '關閉',
+  'common.retry': '重試',
+  'a11y.notifications': '通知',
+  'a11y.search': '搜尋',
+  'a11y.close': '關閉',
+  'a11y.back': '返回',
+  'a11y.openProfile': '開啟個人檔案',
+  'a11y.like': '按讚',
+  'a11y.comment': '留言',
+  'a11y.prevMonth': '上個月',
+  'a11y.nextMonth': '下個月',
+  'a11y.send': '傳送',
 }
 
 export type TranslationKey = keyof typeof en

@@ -1,11 +1,13 @@
 'use client'
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
 export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'findPlayers' | 'map' | null
 export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | null
 
 export interface SuccessInfo { title: string; subtitle?: string }
+export type ToastVariant = 'error' | 'info'
+export interface ToastInfo { id: number; message: string; variant: ToastVariant }
 
 interface UIContextType {
   activeScreen: Screen
@@ -27,6 +29,12 @@ interface UIContextType {
   success: SuccessInfo | null
   showSuccess: (title: string, subtitle?: string) => void
   hideSuccess: () => void
+  // Global transient message (esp. failures). showError() is the shorthand that
+  // replaces the app's previously-silent catch blocks.
+  toast: ToastInfo | null
+  showToast: (message: string, variant?: ToastVariant) => void
+  showError: (message: string) => void
+  hideToast: () => void
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined)
@@ -39,6 +47,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sheetData, setSheetData] = useState<unknown>(null)
   const [dataVersion, setDataVersion] = useState<Record<string, number>>({})
   const [success, setSuccess] = useState<SuccessInfo | null>(null)
+  const [toast, setToast] = useState<ToastInfo | null>(null)
+  const toastSeq = useRef(0)
 
   const backdropActive = openSheet !== null || openOverlay !== null
 
@@ -68,8 +78,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setSuccess({ title, subtitle }), [])
   const hideSuccess = useCallback(() => setSuccess(null), [])
 
+  const showToast = useCallback((message: string, variant: ToastVariant = 'info') =>
+    setToast({ id: (toastSeq.current += 1), message, variant }), [])
+  const showError = useCallback((message: string) =>
+    setToast({ id: (toastSeq.current += 1), message, variant: 'error' }), [])
+  const hideToast = useCallback(() => setToast(null), [])
+
   return (
-    <UIContext.Provider value={{ activeScreen, setActiveScreen, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess }}>
+    <UIContext.Provider value={{ activeScreen, setActiveScreen, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess, toast, showToast, showError, hideToast }}>
       {children}
     </UIContext.Provider>
   )

@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { AuthUser } from '@/types/auth'
 import { Avatar } from '@/components/ui/Avatar'
 import { BottomSheet } from './BottomSheet'
+import { Pressable } from '@/components/ui/Pressable'
 
 export function AccountSheet() {
   const { openSheet, closeSheet } = useUI()
@@ -114,7 +115,7 @@ export function AccountSheet() {
         </div>
         {error && <div style={{ fontSize: 13, color: '#C0392B' }}>{error}</div>}
         {success && <div style={{ fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>{t('success.saved')}</div>}
-        <div
+        <Pressable
           onClick={handleSave}
           style={{
             background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16,
@@ -125,7 +126,7 @@ export function AccountSheet() {
           <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>
             {saving ? t('loading.saving') : t('sheet.account.save')}
           </span>
-        </div>
+        </Pressable>
       </div>
     </BottomSheet>
   )

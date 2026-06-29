@@ -6,6 +6,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { AuthUser } from '@/types/auth'
 import { BottomSheet } from './BottomSheet'
+import { Pressable } from '@/components/ui/Pressable'
 
 export function HandicapSheet() {
   const { openSheet, closeSheet } = useUI()
@@ -70,12 +71,12 @@ export function HandicapSheet() {
         {error && <div style={{ fontSize: 13, color: '#C0392B', marginBottom: 12, textAlign: 'center' }}>{error}</div>}
         {success && <div style={{ fontSize: 13, color: '#2E7D32', fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>{t('success.saved')}</div>}
 
-        <div
+        <Pressable
           onClick={handleSave}
-          style={{ background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}
+          style={{ display: 'block', background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}
         >
           <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{saving ? t('loading.saving') : t('sheet.hcp.save')}</span>
-        </div>
+        </Pressable>
       </div>
     </BottomSheet>
   )

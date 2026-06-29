@@ -9,6 +9,7 @@ import { Post } from '@/types/post'
 import { Round } from '@/types/round'
 import { formatHandicap } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
 import { RoundCard } from '@/components/screens/RoundsScreen'
 import { PostCard } from '@/components/screens/CommunityScreen'
 import type { TranslationKey } from '@/lib/translations'
@@ -125,9 +126,9 @@ export function CommunityDetailOverlay() {
             <path d="M290 52 L312 62 L290 74 Z" fill="rgba(255,255,255,.8)" />
           </svg>
         )}
-        <div className="detail-back" onClick={closeOverlay} style={{ top: 16, left: 16 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-        </div>
+        <Pressable className="detail-back" onClick={closeOverlay} style={{ top: 16, left: 16 }} aria-label={t('a11y.back')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="15 18 9 12 15 6" /></svg>
+        </Pressable>
         {isAdmin && (
           <>
             <label
@@ -148,16 +149,16 @@ export function CommunityDetailOverlay() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,.7)', marginBottom: 4 }}>{TYPE_LABEL_KEYS[detail.type] ? t(TYPE_LABEL_KEYS[detail.type]) : detail.type}</div>
-              <div className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.15 }}>{detail.name}</div>
+              <h2 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.15 }}>{detail.name}</h2>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', marginTop: 3 }}>
                 {memberCount} {t('community.members')}{detail.homeCourse?.name ? ` · ${detail.homeCourse.name}` : ''}
               </div>
             </div>
             {loaded && (
               canJoin ? (
-                <div onClick={toggleJoin} style={{ background: isMember ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.4)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1 }}>
+                <Pressable onClick={toggleJoin} style={{ background: isMember ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.4)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{isMember ? t('community.detail.joined') : t('common.join')}</span>
-                </div>
+                </Pressable>
               ) : (
                 <div style={{ background: 'rgba(255,255,255,.14)', border: '1.5px solid rgba(255,255,255,.22)', borderRadius: 'var(--r-pill)', padding: '9px 18px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
@@ -172,13 +173,14 @@ export function CommunityDetailOverlay() {
       {/* Inner tabs */}
       <div style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--line-soft)', flexShrink: 0 }}>
         {TABS.map(tb => (
-          <div
+          <Pressable
             key={tb.key}
             onClick={() => setTab(tb.key)}
+            aria-pressed={tab === tb.key}
             style={{ flex: 1, textAlign: 'center', padding: '14px 0', fontSize: 13, fontWeight: tab === tb.key ? 700 : 600, color: tab === tb.key ? 'var(--primary)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === tb.key ? 'var(--primary)' : 'transparent'}`, cursor: 'pointer' }}
           >
             {t(tb.label)}
-          </div>
+          </Pressable>
         ))}
       </div>
 
@@ -188,7 +190,7 @@ export function CommunityDetailOverlay() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span className="label-xs">{feed.length} {t('community.detail.postsSuffix')}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openSheetWith('compose', { communityId: detail.id, communityName: detail.name })}>+ {t('community.newPost')}</span>
+              <Pressable className="link" style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openSheetWith('compose', { communityId: detail.id, communityName: detail.name })}>+ {t('community.newPost')}</Pressable>
             </div>
             {feed.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink-3)', fontSize: 13 }}>{t('community.detail.noPosts')}</div>
@@ -209,12 +211,12 @@ export function CommunityDetailOverlay() {
                 <RoundCard key={r.id} round={r} onOpenDetail={() => openOverlayWith('roundDetail', r)} />
               ))}
             </div>
-            <div
+            <Pressable
               onClick={() => { closeOverlay(); setActiveScreen('host') }}
-              style={{ background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 14, textAlign: 'center', cursor: 'pointer', marginTop: rounds.length ? 12 : 6 }}
+              style={{ display: 'block', width: '100%', background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 14, textAlign: 'center', cursor: 'pointer', marginTop: rounds.length ? 12 : 6 }}
             >
               <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{t('community.detail.hostRound')}</span>
-            </div>
+            </Pressable>
           </>
         )}
 

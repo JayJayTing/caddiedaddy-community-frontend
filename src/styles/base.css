@@ -3,3 +3,32 @@ body { background:#B0BECF; display:flex; align-items:center; justify-content:cen
 @media (max-width: 430px) {
   body { background: var(--bg); display: block; min-height: 100dvh; }
 }
+
+/* Tailwind preflight is OFF, so semantic <button>s used as styled containers
+   need their native chrome stripped to look like the old clickable divs. */
+button { font-family:inherit; font-size:inherit; line-height:inherit; color:inherit; background:none; border:none; text-align:inherit; }
+
+/* Preflight is off, so semantic headings would otherwise inherit big UA margins —
+   neutralise them so <h1>…<h3> can carry the same inline styles the old divs had. */
+h1, h2, h3, h4, h5, h6 { font-size:inherit; font-weight:inherit; margin:0; }
+
+/* Keyboard-only focus ring. Mouse/touch taps never show it (:focus-visible). */
+:focus { outline:none; }
+:focus-visible { outline:2.5px solid var(--primary); outline-offset:2px; }
+
+/* Tappable surfaces (Pressable primitive opts in) — restores the press feedback
+   that -webkit-tap-highlight-color:transparent removed, for ALL pointer types. */
+.pressable { cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .1s ease, opacity .12s ease; }
+.pressable:active { transform:scale(.97); }
+.pressable.link:active { transform:none; opacity:.6; }
+.pressable:disabled, .pressable[aria-disabled="true"] { opacity:.5; cursor:default; }
+.pressable:disabled:active, .pressable[aria-disabled="true"]:active { transform:none; }
+
+/* Loading skeleton shimmer */
+.skeleton { position:relative; overflow:hidden; background:var(--bg-alt); border-radius:var(--r-sm); }
+.skeleton::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation:skeleton-shimmer 1.3s ease-in-out infinite; }
+@keyframes skeleton-shimmer { 100% { transform:translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+}

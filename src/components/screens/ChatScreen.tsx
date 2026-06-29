@@ -7,6 +7,9 @@ import { api } from '@/lib/api'
 import { ChatThread } from '@/types/chat'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useActivated } from '@/hooks/useActivated'
 
 type ChatTab = 'friends' | 'communities'
 
@@ -21,7 +24,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
   const unread = !!lastMsg && lastMsg.senderId !== currentUserId && (!myLastRead || new Date(myLastRead) < new Date(lastMsg.createdAt))
 
   return (
-    <div className="mod-row" onClick={onOpen} style={{ cursor: 'pointer' }}>
+    <Pressable className="mod-row" onClick={onOpen} style={{ cursor: 'pointer' }}>
       <Avatar name={name} url={avatarUrl} seed={avatarSeed} size={44} fontSize={16} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
@@ -43,7 +46,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
           )}
         </div>
       </div>
-    </div>
+    </Pressable>
   )
 }
 
@@ -51,6 +54,7 @@ export function ChatScreen() {
   const { activeScreen, openOverlayWith, setActiveScreen, dataVersion } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
+  const activated = useActivated('chat')
   const [tab, setTab] = useState<ChatTab>('friends')
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,18 +63,25 @@ export function ChatScreen() {
   const [requestCount, setRequestCount] = useState(0)
 
   useEffect(() => {
+    if (!user || !activated) return
+    let alive = true
     api.get<{ data: ChatThread[] }>('/threads')
-      .then(r => setThreads(r.data ?? []))
-      .catch(() => setThreads([]))
-      .finally(() => setLoading(false))
-  }, [])
+      .then(r => { if (alive) setThreads(r.data ?? []) })
+      .catch(() => { if (alive) setThreads([]) })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [user, activated, dataVersion.threads])
 
-  // Incoming friend-request count for the Find Players badge.
+  // Incoming friend-request count for the Find Players badge — refreshes whenever
+  // the chat screen is (re)opened or a friend action bumps dataVersion.friends.
   useEffect(() => {
+    if (!user || !activated) return
+    let alive = true
     api.get<{ data: unknown[] }>('/users/friends/requests')
-      .then(r => setRequestCount(r.data?.length ?? 0))
+      .then(r => { if (alive) setRequestCount(r.data?.length ?? 0) })
       .catch(() => {})
-  }, [dataVersion.friends])
+    return () => { alive = false }
+  }, [user, activated, dataVersion.friends])
 
   const threadName = (th: ChatThread) => {
     const other = th.participants.find(p => p.userId !== (user?.id ?? ''))
@@ -90,24 +101,26 @@ export function ChatScreen() {
     <div className={`screen${activeScreen === 'chat' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 0', flexShrink: 0 }}>
-        <div className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('chat.title')}</div>
+        <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('chat.title')}</h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <div
+          <Pressable
+            aria-label={t('a11y.search')}
             onClick={() => { setSearchOpen(o => { if (o) setQuery(''); return !o }) }}
             style={{ width: 36, height: 36, background: searchOpen ? 'var(--primary-soft)' : 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={searchOpen ? 'var(--primary)' : 'var(--ink-2)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={searchOpen ? 'var(--primary)' : 'var(--ink-2)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-          </div>
-          <div
+          </Pressable>
+          <Pressable
+            aria-label={t('community.newPost')}
             onClick={() => setActiveScreen('community')}
             style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-          </div>
+          </Pressable>
         </div>
       </div>
 
@@ -127,24 +140,34 @@ export function ChatScreen() {
       {/* Toggle tabs */}
       <div style={{ padding: '14px 20px 0', flexShrink: 0 }}>
         <div className="toggle-tabs">
-          <div className={`toggle-tab${tab === 'friends' ? ' active' : ''}`} onClick={() => setTab('friends')}>
+          <Pressable aria-pressed={tab === 'friends'} className={`toggle-tab${tab === 'friends' ? ' active' : ''}`} onClick={() => setTab('friends')}>
             {t('chat.tab.friends')}
-          </div>
-          <div className={`toggle-tab${tab === 'communities' ? ' active' : ''}`} onClick={() => setTab('communities')}>
+          </Pressable>
+          <Pressable aria-pressed={tab === 'communities'} className={`toggle-tab${tab === 'communities' ? ' active' : ''}`} onClick={() => setTab('communities')}>
             {t('chat.tab.communities')}
-          </div>
+          </Pressable>
         </div>
       </div>
 
       <div className="scroll-body">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40 }}><span style={{ color: 'var(--ink-3)', fontSize: 13 }}>{t('loading')}</span></div>
+          <div style={{ marginTop: 8 }}>
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px' }}>
+                <Skeleton w={44} h={44} r="50%" />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <Skeleton w="45%" h={13} />
+                  <Skeleton w="70%" h={11} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : tab === 'friends' ? (
           <div style={{ marginTop: 8 }}>
             {/* Find players entry */}
-            <div className="mod-row" onClick={() => openOverlayWith('findPlayers')} style={{ cursor: 'pointer' }}>
+            <Pressable className="mod-row" onClick={() => openOverlayWith('findPlayers')} style={{ cursor: 'pointer' }}>
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h3"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+                <svg aria-hidden width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h3"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t('chat.findPlayers')}</div>
@@ -153,7 +176,7 @@ export function ChatScreen() {
               {requestCount > 0 && (
                 <div style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: 'var(--primary)', color: 'white', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{requestCount}</div>
               )}
-            </div>
+            </Pressable>
             {dmThreads.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 24px', color: 'var(--ink-3)', fontSize: 13 }}>{t('chat.noThreads')}</div>
             ) : (

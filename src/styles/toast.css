@@ -1,0 +1,16 @@
+/* Global toast — sits above the bottom nav, centered. Driven by UIContext.toast,
+   rendered by Toaster (mounted in (app)/layout). */
+.app-toast {
+  position:absolute; left:50%; bottom:90px;
+  transform:translate(-50%, 14px);
+  max-width:84%;
+  background:var(--ink); color:#fff;
+  font-size:13px; font-weight:600; line-height:1.45;
+  padding:11px 18px; border-radius:var(--r-pill);
+  box-shadow:var(--shadow-md);
+  z-index:300; text-align:center;
+  opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+}
+.app-toast.show { opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
+.app-toast--error { background:#B23B3B; }

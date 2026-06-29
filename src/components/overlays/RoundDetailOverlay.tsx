@@ -7,9 +7,10 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
 
 export function RoundDetailOverlay() {
-  const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess, showError } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const [joining, setJoining] = useState(false)
@@ -55,7 +56,9 @@ export function RoundDetailOverlay() {
       if (data) setDetail(data)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {}
+    } catch {
+      showError(t('error.join'))
+    }
     setJoining(false)
   }
 
@@ -75,13 +78,13 @@ export function RoundDetailOverlay() {
         )}
         {/* Scrim so the title stays legible over satellite imagery */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 45%, rgba(0,0,0,.5))' }} />
-        <div className="detail-back" onClick={closeOverlay}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable className="detail-back" onClick={closeOverlay} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
+        </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
-          <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</div>
+          <h2 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</h2>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)}</div>
         </div>
       </div>
@@ -163,9 +166,11 @@ export function RoundDetailOverlay() {
       {/* Action button */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'linear-gradient(transparent,var(--bg) 40%)' }}>
         {isHost ? (
-          <div
+          <Pressable
             onClick={() => openOverlayWith('manageRound', round)}
             style={{
+              display: 'block',
+              width: '100%',
               background: 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
@@ -175,11 +180,13 @@ export function RoundDetailOverlay() {
             }}
           >
             <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{t('manage.title')}</span>
-          </div>
+          </Pressable>
         ) : (
-          <div
+          <Pressable
             onClick={handleJoin}
             style={{
+              display: 'block',
+              width: '100%',
               background: hasRequested ? 'var(--bg-alt)' : 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
@@ -191,7 +198,7 @@ export function RoundDetailOverlay() {
             <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white' }}>
               {hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
             </span>
-          </div>
+          </Pressable>
         )}
       </div>
     </div>

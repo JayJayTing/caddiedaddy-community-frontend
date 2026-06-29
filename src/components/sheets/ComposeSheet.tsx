@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { PostType } from '@/types/post'
 import { Community } from '@/types/community'
 import { BottomSheet } from './BottomSheet'
+import { Pressable } from '@/components/ui/Pressable'
 import type { TranslationKey } from '@/lib/translations'
 
 const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string }> = [
@@ -93,10 +94,10 @@ export function ComposeSheet() {
         {/* Post type pills */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           {POST_TYPES.map(pt => (
-            <div key={pt.key} className={`compose-type-pill${postType === pt.key ? ' active' : ''}`} onClick={() => setPostType(pt.key)}>
+            <Pressable key={pt.key} className={`compose-type-pill${postType === pt.key ? ' active' : ''}`} onClick={() => setPostType(pt.key)} aria-pressed={postType === pt.key}>
               <span>{pt.emoji}</span>
               <span>{t(pt.labelKey)}</span>
-            </div>
+            </Pressable>
           ))}
         </div>
 
@@ -122,9 +123,9 @@ export function ComposeSheet() {
           <div style={{ position: 'relative', marginBottom: 14, borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={photoUrl} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
-            <div onClick={() => setPhotoUrl(null)} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
+            <Pressable onClick={() => setPhotoUrl(null)} aria-label={t('a11y.close')} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </Pressable>
           </div>
         ) : (
           <label
@@ -148,9 +149,10 @@ export function ComposeSheet() {
 
         {error && <div style={{ fontSize: 13, color: '#C0392B', marginBottom: 10 }}>{error}</div>}
 
-        <div
+        <Pressable
           onClick={handleSubmit}
           style={{
+            display: 'block',
             background: body.trim() ? 'var(--primary)' : 'var(--bg-alt)',
             borderRadius: 'var(--r-lg)', padding: '14px', textAlign: 'center',
             cursor: body.trim() && !submitting ? 'pointer' : 'default',
@@ -160,7 +162,7 @@ export function ComposeSheet() {
           <span style={{ fontSize: 15, fontWeight: 700, color: body.trim() ? 'white' : 'var(--ink-3)' }}>
             {submitting ? t('loading.posting') : t('sheet.compose.post')}
           </span>
-        </div>
+        </Pressable>
       </div>
     </BottomSheet>
   )

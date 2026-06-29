@@ -4,6 +4,7 @@ import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Community, CommunityType, CommunityPrivacy } from '@/types/community'
+import { Pressable } from '@/components/ui/Pressable'
 import type { TranslationKey } from '@/lib/translations'
 
 export function CreateCommunityOverlay() {
@@ -72,12 +73,12 @@ export function CreateCommunityOverlay() {
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
-        <div style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={closeOverlay}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={closeOverlay} aria-label={t('a11y.close')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
-        </div>
-        <span style={{ marginLeft: 12, fontSize: 18, fontWeight: 600, fontFamily: 'var(--serif)', color: 'var(--ink)' }}>{t('community.create.title')}</span>
+        </Pressable>
+        <h2 style={{ marginLeft: 12, fontSize: 18, fontWeight: 600, fontFamily: 'var(--serif)', color: 'var(--ink)' }}>{t('community.create.title')}</h2>
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
@@ -90,9 +91,9 @@ export function CreateCommunityOverlay() {
               htmlFor="create-cover-input"
               style={{ display: 'block', position: 'relative', height: 130, borderRadius: 'var(--r-lg)', overflow: 'hidden', cursor: 'pointer', backgroundImage: `url("${photoPreview}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             >
-              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); clearPhoto() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </div>
+              <Pressable onClick={(e) => { e.preventDefault(); e.stopPropagation(); clearPhoto() }} style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }} aria-label={t('a11y.close')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </Pressable>
               <div style={{ position: 'absolute', bottom: 8, left: 10, fontSize: 11, fontWeight: 700, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,.5)' }}>{t('community.create.tapToChange')}</div>
             </label>
           ) : (
@@ -123,9 +124,9 @@ export function CreateCommunityOverlay() {
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>{t('community.create.typeLabel')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {TYPES.map(t2 => (
-              <div key={t2.key} className={`filter-pill${type === t2.key ? ' active' : ''}`} onClick={() => setType(t2.key)}>
+              <Pressable key={t2.key} className={`filter-pill${type === t2.key ? ' active' : ''}`} onClick={() => setType(t2.key)} aria-pressed={type === t2.key}>
                 {t(t2.label)}
-              </div>
+              </Pressable>
             ))}
           </div>
         </div>
@@ -135,10 +136,11 @@ export function CreateCommunityOverlay() {
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>{t('community.create.privacyLabel')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {PRIVACIES.map(p => (
-              <div
+              <Pressable
                 key={p.key}
                 style={{ background: 'var(--surface)', border: `1.5px solid ${privacy === p.key ? 'var(--primary)' : 'var(--line)'}`, borderRadius: 'var(--r-md)', padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: 'border-color .15s' }}
                 onClick={() => setPrivacy(p.key)}
+                aria-pressed={privacy === p.key}
               >
                 <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${privacy === p.key ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {privacy === p.key && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }} />}
@@ -147,7 +149,7 @@ export function CreateCommunityOverlay() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{t(p.label)}</div>
                   <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t(p.desc)}</div>
                 </div>
-              </div>
+              </Pressable>
             ))}
           </div>
         </div>
@@ -168,9 +170,11 @@ export function CreateCommunityOverlay() {
       </div>
 
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'linear-gradient(transparent,var(--bg) 40%)' }}>
-        <div
+        <Pressable
           onClick={handleSubmit}
           style={{
+            display: 'block',
+            width: '100%',
             background: name.trim() ? 'var(--primary)' : 'var(--bg-alt)',
             borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center',
             cursor: name.trim() && !submitting ? 'pointer' : 'default',
@@ -181,7 +185,7 @@ export function CreateCommunityOverlay() {
           <span style={{ fontSize: 16, fontWeight: 700, color: name.trim() ? 'white' : 'var(--ink-3)' }}>
             {submitting ? t('community.create.submitting') : t('community.create.submit')}
           </span>
-        </div>
+        </Pressable>
       </div>
     </div>
   )

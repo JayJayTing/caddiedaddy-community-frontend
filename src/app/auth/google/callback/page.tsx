@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 
 // Return target for Google AND Apple OAuth. The browser completes the PKCE
 // exchange here (the verifier lives in this origin's storage), then we provision
@@ -16,7 +17,7 @@ export default function OAuthCallbackPage() {
   useEffect(() => {
     completeOAuth()
       .then(() => router.replace('/home'))
-      .catch((e) => setError(e instanceof Error ? e.message : '登入失敗'))
+      .catch((e) => setError(e instanceof Error ? e.message : t('auth.error.signInFailed')))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -24,7 +25,7 @@ export default function OAuthCallbackPage() {
       {error ? (
         <div>
           <p style={{ color: '#C0392B', marginBottom: 12, fontSize: 14 }}>{error}</p>
-          <span onClick={() => router.replace('/')} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}>{t('common.back')}</span>
+          <Pressable className="link" onClick={() => router.replace('/')} style={{ color: 'var(--primary)', fontWeight: 700 }}>{t('common.back')}</Pressable>
         </div>
       ) : (
         <p style={{ color: 'var(--ink-2)' }}>{t('loading.signingIn')}</p>

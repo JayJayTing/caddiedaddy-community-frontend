@@ -7,9 +7,12 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo, courseMapImage } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo, courseMapImage, formatWeekdayShort } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
+import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
 import { useMounted } from '@/lib/useMounted'
+import { useActivated } from '@/hooks/useActivated'
 import { useNotifications } from '@/contexts/NotificationsContext'
 import type { TranslationKey } from '@/lib/translations'
 
@@ -21,13 +24,13 @@ export function HomeScreen() {
   const { user } = useAuth()
   const { t, lang } = useLang()
   const mounted = useMounted()
+  const activated = useActivated('home')
 
   const [upcoming, setUpcoming] = useState<Round | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [rounds, setRounds] = useState<Round[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loadingUpcoming, setLoadingUpcoming] = useState(true)
-  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true)
   const [loadingRounds, setLoadingRounds] = useState(true)
   const [activeTab, setActiveTab] = useState<HomeTab>('rounds')
   const [expandedRound, setExpandedRound] = useState<string | null>(null)
@@ -39,30 +42,31 @@ export function HomeScreen() {
     return t('home.greeting.evening')
   }
 
-  const dateLabel = () => {
-    return new Date().toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-  }
+  const dateLabel = () => formatWeekdayShort(new Date())
 
   useEffect(() => {
+    // Don't fetch until logged in (avoids a 401 storm behind the auth overlay).
+    if (!user || !activated) return
+    let alive = true
     api.get<{ data: Round[] }>('/rounds/upcoming')
-      .then(r => setUpcoming(r.data?.[0] ?? null))
-      .catch(() => setUpcoming(null))
-      .finally(() => setLoadingUpcoming(false))
+      .then(r => { if (alive) setUpcoming(r.data?.[0] ?? null) })
+      .catch(() => { if (alive) setUpcoming(null) })
+      .finally(() => { if (alive) setLoadingUpcoming(false) })
 
     api.get<{ data: Announcement[] }>('/announcements')
-      .then(r => setAnnouncements(r.data ?? []))
-      .catch(() => setAnnouncements([]))
-      .finally(() => setLoadingAnnouncements(false))
+      .then(r => { if (alive) setAnnouncements(r.data ?? []) })
+      .catch(() => { if (alive) setAnnouncements([]) })
 
     api.get<{ data: Round[] }>('/rounds?limit=4')
-      .then(r => setRounds(r.data ?? []))
-      .catch(() => setRounds([]))
-      .finally(() => setLoadingRounds(false))
+      .then(r => { if (alive) setRounds(r.data ?? []) })
+      .catch(() => { if (alive) setRounds([]) })
+      .finally(() => { if (alive) setLoadingRounds(false) })
 
     api.get<{ data: Post[] }>('/posts?scope=discover&limit=3')
-      .then(r => setPosts(r.data ?? []))
-      .catch(() => setPosts([]))
-  }, [dataVersion.rounds, dataVersion.posts])
+      .then(r => { if (alive) setPosts(r.data ?? []) })
+      .catch(() => { if (alive) setPosts([]) })
+    return () => { alive = false }
+  }, [user, activated, dataVersion.rounds, dataVersion.posts])
 
   const acceptedCount = (r: Round) =>
     r.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
@@ -83,11 +87,12 @@ export function HomeScreen() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Notifications bell */}
-          <div
+          <Pressable
+            aria-label={t('a11y.notifications')}
             style={{ position: 'relative', width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             onClick={() => openSheetWith('notifications')}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden stroke="var(--ink-2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
             {unreadCount > 0 && (
@@ -95,16 +100,17 @@ export function HomeScreen() {
                 <span style={{ fontSize: 9.5, fontWeight: 800, color: 'white', lineHeight: 1 }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
               </div>
             )}
-          </div>
+          </Pressable>
           {/* Search */}
-          <div
+          <Pressable
+            aria-label={t('a11y.search')}
             style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             onClick={() => setActiveScreen('rounds')}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-          </div>
+          </Pressable>
           <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={38} fontSize={14} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
       </div>
@@ -113,8 +119,11 @@ export function HomeScreen() {
         {/* Upcoming Round Card */}
         <div style={{ margin: '4px 20px 18px' }}>
           {loadingUpcoming ? (
-            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', padding: 20, textAlign: 'center' }}>
-              <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('loading')}</span>
+            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--line-soft)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Skeleton w={120} h={11} />
+              <Skeleton w="60%" h={17} />
+              <Skeleton w="80%" h={12} />
+              <Skeleton w="100%" h={42} r="var(--r-md)" style={{ marginTop: 4 }} />
             </div>
           ) : upcoming ? (
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)' }}>
@@ -146,12 +155,12 @@ export function HomeScreen() {
                   </div>
                 </div>
                 <div style={{ marginTop: 14 }}>
-                  <div
-                    style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: 'pointer' }}
+                  <Pressable
+                    style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: 'pointer', width: '100%' }}
                     onClick={() => openOverlayWith('roundDetail', upcoming)}
                   >
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{t('home.viewRound')}</span>
-                  </div>
+                  </Pressable>
                 </div>
               </div>
             </div>
@@ -159,17 +168,18 @@ export function HomeScreen() {
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)', padding: 20, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>⛳️</div>
               <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>{t('home.noUpcomingRound')}</div>
-              <div
+              <Pressable
                 style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px', display: 'inline-block', cursor: 'pointer', marginTop: 8 }}
                 onClick={() => setActiveScreen('rounds')}
               >
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{t('home.findRound')}</span>
-              </div>
+              </Pressable>
             </div>
           )}
         </div>
 
-        {/* News */}
+        {/* News — hidden entirely when there are no real announcements (no mock fallback) */}
+        {announcements.length > 0 && (<>
         <div className="section-row" style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -178,9 +188,8 @@ export function HomeScreen() {
             <span className="label-xs">{t('home.news')}</span>
           </div>
         </div>
-        {loadingAnnouncements ? null : (
           <div className="hscroll" style={{ marginBottom: 20 }}>
-            {(announcements.length > 0 ? announcements : MOCK_ANNOUNCEMENTS).map(ann => (
+            {announcements.map(ann => (
               <div key={ann.id} onClick={() => openSheetWith('newsDetail', ann)} style={{ width: 220, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
                 <div style={{ height: 110, background: `linear-gradient(135deg,${ann.color1} 0%,${ann.color2} 100%)`, position: 'relative', overflow: 'hidden' }}>
                   <svg viewBox="0 0 220 110" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -205,22 +214,23 @@ export function HomeScreen() {
             ))}
             <div style={{ width: 4, flexShrink: 0 }} />
           </div>
-        )}
+        </>)}
 
         {/* Tab bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 10 }}>
           <span className="label-xs">{t('home.discover')}</span>
-          <span className="see-all" style={{ cursor: 'pointer' }} onClick={() => setActiveScreen(activeTab === 'community' ? 'community' : 'rounds')}>{t('home.seeAll')}</span>
+          <Pressable className="see-all link" style={{ cursor: 'pointer' }} onClick={() => setActiveScreen(activeTab === 'community' ? 'community' : 'rounds')}>{t('home.seeAll')}</Pressable>
         </div>
         <div style={{ display: 'flex', borderBottom: '1px solid var(--line-soft)', margin: '0 20px 14px' }}>
           {(['rounds', 'teetimes', 'community'] as HomeTab[]).map(tab => (
-            <div
+            <Pressable
               key={tab}
               className={`home-tab${activeTab === tab ? ' active' : ''}`}
+              aria-pressed={activeTab === tab}
               onClick={() => setActiveTab(tab)}
             >
               {tab === 'rounds' ? t('home.tab.rounds') : tab === 'teetimes' ? t('home.tab.teeTimes') : t('home.tab.community')}
-            </div>
+            </Pressable>
           ))}
         </div>
 
@@ -228,7 +238,7 @@ export function HomeScreen() {
         {activeTab === 'rounds' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '0 20px 20px' }}>
             {loadingRounds ? (
-              <div style={{ textAlign: 'center', padding: 20 }}><span style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('loading.rounds')}</span></div>
+              <>{[0, 1, 2].map(i => <RoundCardSkeleton key={i} />)}</>
             ) : rounds.slice(0, 4).map(round => (
               <RoundCard key={round.id} round={round} expanded={expandedRound === round.id} onToggle={() => setExpandedRound(expandedRound === round.id ? null : round.id)} onOpenDetail={() => openOverlayWith('roundDetail', round)} />
             ))}
@@ -251,9 +261,9 @@ export function HomeScreen() {
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 1 }}>{round.course.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)} · {formatMoney(round.greenFeeCents)}</div>
                   </div>
-                  <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('roundDetail', round)}>
+                  <Pressable style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('roundDetail', round)}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)' }}>{t('common.join')}</span>
-                  </div>
+                  </Pressable>
                 </div>
               )
             })}
@@ -277,7 +287,7 @@ export function HomeScreen() {
 function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; expanded: boolean; onToggle: () => void; onOpenDetail: () => void }) {
   const { t } = useLang()
   const { user } = useAuth()
-  const { refreshData, showSuccess } = useUI()
+  const { refreshData, showSuccess, showError } = useUI()
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
 
@@ -298,13 +308,15 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
       setJoined(true)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {}
+    } catch {
+      showError(t('error.join'))
+    }
     setJoining(false)
   }
 
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', cursor: 'pointer' }} onClick={onToggle}>
+      <div role="button" tabIndex={0} style={{ display: 'flex', cursor: 'pointer' }} onClick={onToggle} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}>
         <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
           {!art && (
             <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -355,17 +367,17 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <div
+            <Pressable
               style={{ flex: 1, background: hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: hasRequested || isHost ? 'default' : 'pointer' }}
               onClick={handleJoin}
             >
               <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
                 {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
-            </div>
-            <div style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', textAlign: 'center', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
+            </Pressable>
+            <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', textAlign: 'center', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('common.fullPage')}</span>
-            </div>
+            </Pressable>
           </div>
         </div>
       </div>
@@ -419,14 +431,9 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
           </svg>
           <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{post.commentsCount}</span>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>{t('community.view')}</span>
+        <Pressable className="link" style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={onClick}>{t('community.view')}</Pressable>
       </div>
     </div>
   )
 }
 
-const MOCK_ANNOUNCEMENTS: Announcement[] = [
-  { id: '1', title: '夏季合擊賽系列 7 月 5 日開賽', body: '為期四週的夏季合擊賽開放報名，請於 6 月 30 日前完成 2 至 4 人組隊報名。', badge: '公告', createdAt: new Date().toISOString(), color1: '#5C7A9A', color2: '#3A6080' },
-  { id: '2', title: '預約取消政策更新', body: '開球前 6 小時以上取消不收取任何費用；逾時取消可能喪失保留名額。', badge: '規則更新', createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), color1: '#C9A848', color2: '#a07c28' },
-  { id: '3', title: '天母球場 14–16 洞 6 月 24–26 日封閉', body: '因灌溉工程暫時封閉，受影響的球局將改打 15 洞配置。', badge: '球場通知', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), color1: '#7C96A3', color2: '#4A6888' },
-]

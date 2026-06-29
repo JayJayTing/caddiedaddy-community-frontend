@@ -7,11 +7,12 @@ import { Player, Relation } from '@/types/player'
 import type { TranslationKey } from '@/lib/translations'
 import { formatHandicap } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import { Pressable } from '@/components/ui/Pressable'
 
 type Translate = (k: TranslationKey) => string
 
 export function FindPlayersOverlay() {
-  const { openOverlay, closeOverlay, showSuccess, refreshData } = useUI()
+  const { openOverlay, closeOverlay, showSuccess, refreshData, showError } = useUI()
   const { t } = useLang()
   const isOpen = openOverlay === 'findPlayers'
 
@@ -62,6 +63,7 @@ export function FindPlayersOverlay() {
       }
     } catch {
       setRelation(p.id, 'none')
+      showError(t('error.generic'))
     }
   }
 
@@ -73,12 +75,12 @@ export function FindPlayersOverlay() {
       showSuccess(t('players.nowFriends'))
       loadLists()
       refreshData('friends')
-    } catch { /* leave as-is */ }
+    } catch { showError(t('error.generic')) }
   }
 
   const handleDecline = async (p: Player) => {
     setRequests((rs) => rs.filter((r) => r.id !== p.id)) // optimistic
-    try { await api.post(`/users/friends/${p.id}/decline`); refreshData('friends') } catch { loadLists() }
+    try { await api.post(`/users/friends/${p.id}/decline`); refreshData('friends') } catch { loadLists(); showError(t('error.generic')) }
   }
 
   if (!isOpen) return null
@@ -87,10 +89,10 @@ export function FindPlayersOverlay() {
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 12px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
-        <div onClick={closeOverlay} style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-        </div>
-        <div style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('players.title')}</div>
+        <Pressable onClick={closeOverlay} style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }} aria-label={t('a11y.back')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="15 18 9 12 15 6" /></svg>
+        </Pressable>
+        <h2 style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('players.title')}</h2>
       </div>
 
       {/* Search */}

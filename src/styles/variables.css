@@ -2,12 +2,15 @@
   --bg:#F4F6F8; --bg-alt:#E8ECF0; --surface:#FAFBFC;
   --ink:#1A2332; --ink-2:#4A5568; --ink-3:#8B99AA;
   --line:#D5DCE4; --line-soft:#E8ECF0;
-  --sage:#B8CBE0; --sage-deep:#5C7A9A;
-  --peach:#C8D9E8; --peach-deep:#5C7A9A;
-  --rose:#D4DDE8; --rose-deep:#4A6080;
-  --butter:#D8E4F0; --butter-deep:#4A6888;
-  --sky:#B8CCE0; --sky-deep:#3A6080;
-  --lilac:#CCDAEB; --lilac-deep:#4A5E80;
+  /* Soft, distinct accent hues — pale tints (avatar/chip/gradient backgrounds)
+     paired with darker companions (label text + gradient ends). Kept calm to
+     match the brand blue while restoring real hue variety across the UI. */
+  --sage:#CDE5D6; --sage-deep:#3F6B4E;
+  --peach:#F5DCC8; --peach-deep:#A85F2E;
+  --rose:#F2D3D6; --rose-deep:#9C4654;
+  --butter:#F3E4BE; --butter-deep:#7E6320;
+  --sky:#C7DCEF; --sky-deep:#36577A;
+  --lilac:#DCD5EE; --lilac-deep:#524678;
   --primary:#5C7A9A; --primary-ink:#1A2B3C; --primary-soft:#DCE8F2;
   --serif:'Fraunces',Georgia,serif; --sans:'Manrope',-apple-system,sans-serif;
   --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-pill:9999px;

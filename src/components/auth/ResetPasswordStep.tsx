@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 
 interface Props {
   onBack: () => void
@@ -18,11 +19,11 @@ export function ResetPasswordStep({ onBack, onSubmit, isLoading, error }: Props)
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
-        <div onClick={onBack} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable onClick={onBack} aria-label={t('a11y.back')} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-        </div>
+        </Pressable>
       </div>
 
       <div style={{ padding: '4px 28px 0' }}>
@@ -51,9 +52,10 @@ export function ResetPasswordStep({ onBack, onSubmit, isLoading, error }: Props)
           <div style={{ fontSize: 12, color: '#C0392B', textAlign: 'center', marginBottom: 12 }}>{error}</div>
         )}
 
-        <div
+        <Pressable
           onClick={() => { if (valid && !isLoading) onSubmit(password) }}
           style={{
+            display: 'block',
             background: 'var(--primary)',
             borderRadius: 'var(--r-lg)',
             padding: 18,
@@ -66,7 +68,7 @@ export function ResetPasswordStep({ onBack, onSubmit, isLoading, error }: Props)
           }}
         >
           <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{isLoading ? '…' : t('auth.reset.submit')}</span>
-        </div>
+        </Pressable>
       </div>
     </div>
   )

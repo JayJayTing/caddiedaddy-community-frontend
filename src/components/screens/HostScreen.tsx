@@ -7,6 +7,7 @@ import { Course } from '@/types/round'
 import { Community } from '@/types/community'
 import { RoundFormat, HandicapRequirement } from '@/types/round'
 import { DateField } from '@/components/ui/DateField'
+import { Pressable } from '@/components/ui/Pressable'
 
 export function HostScreen() {
   const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion } = useUI()
@@ -105,12 +106,12 @@ export function HostScreen() {
     <div className={`screen${activeScreen === 'host' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 20px 14px', flexShrink: 0, borderBottom: '1px solid var(--line-soft)' }}>
-        <div style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setActiveScreen('rounds')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable aria-label={t('a11y.back')} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setActiveScreen('rounds')}>
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
-        <div className="serif" style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('host.title')}</div>
+        </Pressable>
+        <h1 className="serif" style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('host.title')}</h1>
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
@@ -118,8 +119,8 @@ export function HostScreen() {
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.postTo')}</div>
           <div className="host-toggle-row">
-            <div className={`host-toggle-btn${postTo === 'public' ? ' active' : ''}`} onClick={() => setPostTo('public')}>{t('host.postPublic')}</div>
-            <div className={`host-toggle-btn${postTo === 'community' ? ' active' : ''}`} onClick={() => setPostTo('community')}>{t('host.postCommunity')}</div>
+            <Pressable aria-pressed={postTo === 'public'} className={`host-toggle-btn${postTo === 'public' ? ' active' : ''}`} onClick={() => setPostTo('public')}>{t('host.postPublic')}</Pressable>
+            <Pressable aria-pressed={postTo === 'community'} className={`host-toggle-btn${postTo === 'community' ? ' active' : ''}`} onClick={() => setPostTo('community')}>{t('host.postCommunity')}</Pressable>
           </div>
           {postTo === 'community' && myCommunities.length > 0 && (
             <select
@@ -137,8 +138,8 @@ export function HostScreen() {
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.venue')}</div>
           <div className="host-toggle-row">
-            <div className={`host-toggle-btn${venueType === 'course' ? ' active' : ''}`} onClick={() => setVenueType('course')}>{t('host.golfCourse')}</div>
-            <div className={`host-toggle-btn${venueType === 'driving_range' ? ' active' : ''}`} onClick={() => setVenueType('driving_range')}>{t('host.drivingRange')}</div>
+            <Pressable aria-pressed={venueType === 'course'} className={`host-toggle-btn${venueType === 'course' ? ' active' : ''}`} onClick={() => setVenueType('course')}>{t('host.golfCourse')}</Pressable>
+            <Pressable aria-pressed={venueType === 'driving_range'} className={`host-toggle-btn${venueType === 'driving_range' ? ' active' : ''}`} onClick={() => setVenueType('driving_range')}>{t('host.drivingRange')}</Pressable>
           </div>
         </div>
 
@@ -158,16 +159,16 @@ export function HostScreen() {
               style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)' }}
             />
             {selectedCourse && (
-              <div style={{ cursor: 'pointer', fontSize: 16, color: 'var(--ink-3)' }} onClick={() => { setSelectedCourse(null); setCourseSearch(''); setCourseResults([]) }}>×</div>
+              <Pressable aria-label={t('a11y.close')} style={{ cursor: 'pointer', fontSize: 16, color: 'var(--ink-3)' }} onClick={() => { setSelectedCourse(null); setCourseSearch(''); setCourseResults([]) }}>×</Pressable>
             )}
           </div>
           {courseResults.length > 0 && !selectedCourse && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', overflow: 'hidden', marginTop: 4 }}>
               {courseResults.map(c => (
-                <div key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }}>
+                <Pressable key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }} style={{ display: 'block', width: '100%', textAlign: 'left' }}>
                   <div style={{ fontWeight: 600 }}>{c.name}</div>
                   {c.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.locationText}</div>}
-                </div>
+                </Pressable>
               ))}
             </div>
           )}
@@ -194,8 +195,8 @@ export function HostScreen() {
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.holes')}</div>
           <div className="host-toggle-row">
-            <div className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</div>
-            <div className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</div>
+            <Pressable aria-pressed={holes === 9} className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</Pressable>
+            <Pressable aria-pressed={holes === 18} className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</Pressable>
           </div>
         </div>
 
@@ -204,9 +205,9 @@ export function HostScreen() {
           <div style={labelStyle}>{t('host.format')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {FORMATS.map(f => (
-              <div key={f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)}>
+              <Pressable key={f.key} aria-pressed={format === f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)}>
                 {f.label}
-              </div>
+              </Pressable>
             ))}
           </div>
         </div>
@@ -215,9 +216,9 @@ export function HostScreen() {
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.spots')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(1, spots - 1))}>−</div>
+            <Pressable aria-label="−" style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(1, spots - 1))}>−</Pressable>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', minWidth: 32, textAlign: 'center' }}>{spots}</span>
-            <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</div>
+            <Pressable aria-label="+" style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</Pressable>
           </div>
         </div>
 
@@ -269,7 +270,7 @@ export function HostScreen() {
 
       {/* Sticky publish button */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 20px', background: 'linear-gradient(transparent,var(--bg) 40%)', zIndex: 5 }}>
-        <div
+        <Pressable
           onClick={handlePublish}
           style={{
             background: 'var(--primary)',
@@ -280,12 +281,14 @@ export function HostScreen() {
             boxShadow: '0 4px 20px rgba(92,122,154,.35)',
             opacity: publishing ? 0.7 : 1,
             transition: 'opacity .15s',
+            display: 'block',
+            width: '100%',
           }}
         >
           <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
             {publishing ? t('host.publishing') : t('host.publish')}
           </span>
-        </div>
+        </Pressable>
       </div>
     </div>
   )

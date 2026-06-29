@@ -1,5 +1,6 @@
 'use client'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 
 interface Props {
   onNext: () => void
@@ -61,7 +62,7 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
 
       {/* CTA */}
       <div style={{ padding: '0 24px 44px', display: 'flex', flexDirection: 'column', gap: 11 }}>
-        <div
+        <Pressable
           onClick={onNext}
           style={{
             background: 'white', borderRadius: 'var(--r-lg)', padding: 18,
@@ -76,15 +77,16 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
           <span style={{ fontSize: 16, fontWeight: 700, color: '#1A2B3C' }}>
             {t('auth.welcome.cta')}
           </span>
-        </div>
+        </Pressable>
         <div style={{ textAlign: 'center', padding: 4 }}>
           <span style={{ fontSize: 14, color: 'rgba(255,255,255,.45)' }}>{t('auth.welcome.signin')} </span>
-          <span
+          <Pressable
+            className="link"
             onClick={onSignIn}
             style={{ fontSize: 14, color: 'rgba(255,255,255,.82)', fontWeight: 700, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
           >
             {t('auth.welcome.signinLink')}
-          </span>
+          </Pressable>
         </div>
       </div>
     </div>

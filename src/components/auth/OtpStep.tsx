@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
+import { Pressable } from '@/components/ui/Pressable'
 import { useOtpTimer } from '@/hooks/useOtpTimer'
 
 interface Props {
@@ -42,11 +43,11 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
-        <div onClick={onBack} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <Pressable onClick={onBack} aria-label={t('a11y.back')} style={{ width: 36, height: 36, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-        </div>
+        </Pressable>
       </div>
 
       <div style={{ padding: '4px 28px 0' }}>
@@ -70,7 +71,7 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
         />
 
         {/* OTP boxes */}
-        <div
+        <Pressable
           style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 28 }}
           onClick={() => inputRef.current?.focus()}
         >
@@ -91,7 +92,7 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
               {otp[i] || ''}
             </div>
           ))}
-        </div>
+        </Pressable>
 
         {error && (
           <div style={{ fontSize: 12, color: '#C0392B', textAlign: 'center', marginBottom: 16 }}>{error}</div>
@@ -104,18 +105,20 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
               {t('auth.otp.resendIn')} {label}
             </span>
           ) : (
-            <span
+            <Pressable
+              className="link"
               onClick={handleResend}
               style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}
             >
               {t('auth.otp.resend')}
-            </span>
+            </Pressable>
           )}
         </div>
 
-        <div
+        <Pressable
           onClick={handleVerify}
           style={{
+            display: 'block',
             background: 'var(--primary)',
             borderRadius: 'var(--r-lg)',
             padding: 18,
@@ -130,7 +133,7 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
           <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
             {isLoading ? '…' : t('auth.otp.verify')}
           </span>
-        </div>
+        </Pressable>
       </div>
     </div>
   )
