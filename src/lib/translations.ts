@@ -370,6 +370,7 @@ const en = {
   'loading.posting': 'Posting…',
   // shared errors
   'error.uploadPhotoFailed': 'Failed to upload photo.',
+  'error.imageTooLarge': 'That image is too large (max 5MB). Try a smaller one.',
   'error.saveFailed': 'Failed to save.',
   'error.postFailed': 'Failed to post.',
   'error.publishFailed': 'Failed to publish round.',
@@ -435,6 +436,12 @@ const en = {
   'compose.lfpLocationLabel': 'Where',
   'compose.lfpLocationPlaceholder': 'e.g. Taipei · Linkou Golf Club',
   'compose.lfpPlayersLabel': 'Players needed',
+  'compose.modeLabel': 'Create',
+  'compose.modePost': 'Community Post',
+  'compose.modeRound': 'Host a Round',
+  'compose.typeLabel': 'Post type',
+  'compose.photoLabel': 'Photo',
+  'compose.messageLabel': 'Message',
 }
 
 const zh: typeof en = {
@@ -782,6 +789,7 @@ const zh: typeof en = {
   'loading.posting': '發布中…',
   // shared errors
   'error.uploadPhotoFailed': '上傳照片失敗。',
+  'error.imageTooLarge': '圖片太大了（上限 5MB），請換一張較小的。',
   'error.saveFailed': '儲存失敗。',
   'error.postFailed': '發布失敗。',
   'error.publishFailed': '發布球局失敗。',
@@ -847,6 +855,12 @@ const zh: typeof en = {
   'compose.lfpLocationLabel': '地點',
   'compose.lfpLocationPlaceholder': '例如：台北 · 林口高爾夫',
   'compose.lfpPlayersLabel': '需要人數',
+  'compose.modeLabel': '建立',
+  'compose.modePost': '社群貼文',
+  'compose.modeRound': '主辦球局',
+  'compose.typeLabel': '貼文類型',
+  'compose.photoLabel': '照片',
+  'compose.messageLabel': '內容',
 }
 
 export type TranslationKey = keyof typeof en

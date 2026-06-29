@@ -8,6 +8,7 @@ import { PostType } from '@/types/post'
 import { Community } from '@/types/community'
 import { BottomSheet } from './BottomSheet'
 import { Pressable } from '@/components/ui/Pressable'
+import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import type { TranslationKey } from '@/lib/translations'
 
 const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string }> = [
@@ -17,8 +18,11 @@ const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string
   { key: 'general', labelKey: 'post.type.general', emoji: '💬' },
 ]
 
+// Matches the Host screen's section labels so the two create flows read as one.
+const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }
+
 export function ComposeSheet() {
-  const { openSheet, closeSheet, refreshData, showSuccess, sheetData } = useUI()
+  const { openSheet, closeSheet, refreshData, showSuccess, sheetData, setActiveScreen } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const isOpen = openSheet === 'compose'
@@ -54,12 +58,14 @@ export function ComposeSheet() {
   }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePhotoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const raw = e.target.files?.[0]
     e.target.value = ''
-    if (!file) return
+    if (!raw) return
     setError(null)
     setUploadingPhoto(true)
     try {
+      const file = await prepareImage(raw, { maxDim: 1600 }) // downscale + compress client-side
+      if (file.size > MAX_UPLOAD_BYTES) { setError(t('error.imageTooLarge')); return }
       const { data } = await api.upload<{ data: { url: string } }>('/uploads/post', file)
       setPhotoUrl(data.url)
     } catch (err: unknown) {
@@ -98,7 +104,16 @@ export function ComposeSheet() {
   return (
     <BottomSheet isOpen={isOpen} onClose={closeSheet} title={t('community.newPost')}>
       <div style={{ padding: '16px 20px 20px' }}>
-        {/* Post type pills */}
+        {/* Mode — same segmented control the Host screen uses, with a shortcut into it.
+            Posting and hosting are the two ways to create, so they share one language. */}
+        <div style={sectionLabel}>{t('compose.modeLabel')}</div>
+        <div className="host-toggle-row" style={{ marginBottom: 18 }}>
+          <Pressable className="host-toggle-btn active" aria-pressed={true}>{t('compose.modePost')}</Pressable>
+          <Pressable className="host-toggle-btn" aria-pressed={false} onClick={() => { closeSheet(); setActiveScreen('host') }}>⛳ {t('compose.modeRound')}</Pressable>
+        </div>
+
+        {/* Post type */}
+        <div style={sectionLabel}>{t('compose.typeLabel')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           {POST_TYPES.map(pt => (
             <Pressable key={pt.key} className={`compose-type-pill${postType === pt.key ? ' active' : ''}`} onClick={() => setPostType(pt.key)} aria-pressed={postType === pt.key}>
@@ -135,6 +150,7 @@ export function ComposeSheet() {
         {/* Community selector */}
         {communities.length > 0 && (
           <div style={{ marginBottom: 14 }}>
+            <div style={sectionLabel}>{t('host.postTo')}</div>
             <select
               value={communityId}
               onChange={e => setCommunityId(e.target.value)}
@@ -149,6 +165,7 @@ export function ComposeSheet() {
         {/* Photo (prominent, above the text). A <label> opens the native picker
             reliably on mobile — a JS-triggered click on a hidden input is blocked
             by some mobile browsers. */}
+        <div style={sectionLabel}>{t('compose.photoLabel')}</div>
         <input id="compose-photo-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handlePhotoPick} style={{ display: 'none' }} />
         {photoUrl ? (
           <div style={{ position: 'relative', marginBottom: 14, borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
@@ -168,7 +185,8 @@ export function ComposeSheet() {
           </label>
         )}
 
-        {/* Textarea */}
+        {/* Message */}
+        <div style={sectionLabel}>{t('compose.messageLabel')}</div>
         <textarea
           className="compose-textarea"
           placeholder={t('community.sharePrompt')}

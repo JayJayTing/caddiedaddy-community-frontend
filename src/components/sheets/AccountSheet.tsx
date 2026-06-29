@@ -8,6 +8,7 @@ import { AuthUser } from '@/types/auth'
 import { Avatar } from '@/components/ui/Avatar'
 import { BottomSheet } from './BottomSheet'
 import { Pressable } from '@/components/ui/Pressable'
+import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 
 export function AccountSheet() {
   const { openSheet, closeSheet } = useUI()
@@ -24,12 +25,14 @@ export function AccountSheet() {
   const [uploading, setUploading] = useState(false)
 
   const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const raw = e.target.files?.[0]
     e.target.value = '' // allow re-picking the same file
-    if (!file) return
+    if (!raw) return
     setError(null)
     setUploading(true)
     try {
+      const file = await prepareImage(raw, { maxDim: 512 }) // avatars don't need to be large
+      if (file.size > MAX_UPLOAD_BYTES) { setError(t('error.imageTooLarge')); return }
       const { data: updated } = await api.upload<{ data: AuthUser }>('/uploads/avatar', file)
       updateUser(updated)
     } catch (err: unknown) {

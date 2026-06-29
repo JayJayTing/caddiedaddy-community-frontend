@@ -5,6 +5,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Community, CommunityType, CommunityPrivacy } from '@/types/community'
 import { Pressable } from '@/components/ui/Pressable'
+import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import type { TranslationKey } from '@/lib/translations'
 
 export function CreateCommunityOverlay() {
@@ -21,10 +22,13 @@ export function CreateCommunityOverlay() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
-  const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const pickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.files?.[0]
     e.target.value = ''
-    if (!file) return
+    if (!raw) return
+    setError(null)
+    const file = await prepareImage(raw, { maxDim: 1280 }) // downscale + compress client-side
+    if (file.size > MAX_UPLOAD_BYTES) { setError(t('error.imageTooLarge')); return }
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
