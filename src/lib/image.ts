@@ -6,6 +6,12 @@ const PROCESSABLE = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024 // mirrors backend lib/storage.ts
 
+// Accepted upload formats. GIFs are intentionally excluded (no animation support
+// and they bypass compression). Mirrors the backend allow-list.
+export function isSupportedImage(file: File): boolean {
+  return PROCESSABLE.has(file.type)
+}
+
 interface PrepareOpts {
   maxDim?: number    // longest edge after downscale
   quality?: number   // initial JPEG quality

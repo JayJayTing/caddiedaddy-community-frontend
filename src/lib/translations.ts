@@ -371,6 +371,7 @@ const en = {
   // shared errors
   'error.uploadPhotoFailed': 'Failed to upload photo.',
   'error.imageTooLarge': 'That image is too large (max 5MB). Try a smaller one.',
+  'error.unsupportedImage': 'That format isn’t supported. Use JPG, PNG, or WebP.',
   'error.saveFailed': 'Failed to save.',
   'error.postFailed': 'Failed to post.',
   'error.publishFailed': 'Failed to publish round.',
@@ -790,6 +791,7 @@ const zh: typeof en = {
   // shared errors
   'error.uploadPhotoFailed': '上傳照片失敗。',
   'error.imageTooLarge': '圖片太大了（上限 5MB），請換一張較小的。',
+  'error.unsupportedImage': '不支援這個格式，請使用 JPG、PNG 或 WebP。',
   'error.saveFailed': '儲存失敗。',
   'error.postFailed': '發布失敗。',
   'error.publishFailed': '發布球局失敗。',

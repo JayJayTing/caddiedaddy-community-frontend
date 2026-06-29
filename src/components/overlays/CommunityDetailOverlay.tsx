@@ -8,6 +8,7 @@ import { Community } from '@/types/community'
 import { Post } from '@/types/post'
 import { Round } from '@/types/round'
 import { formatHandicap } from '@/lib/utils'
+import { prepareImage, isSupportedImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { RoundCard } from '@/components/screens/RoundsScreen'
@@ -25,7 +26,7 @@ const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
 }
 
 export function CommunityDetailOverlay() {
-  const { openOverlay, openOverlayWith, closeOverlay, openSheetWith, setActiveScreen, overlayData, refreshData, showSuccess } = useUI()
+  const { openOverlay, openOverlayWith, closeOverlay, openSheetWith, setActiveScreen, overlayData, refreshData, showSuccess, showError } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
 
@@ -69,14 +70,17 @@ export function CommunityDetailOverlay() {
   const isAdmin = !!user && (detail.creatorId === user.id || members.some(m => m.user.id === user.id && m.role === 'admin'))
 
   const handleArtPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const raw = e.target.files?.[0]
     e.target.value = ''
-    if (!file || !detail) return
+    if (!raw || !detail) return
+    if (!isSupportedImage(raw)) { showError(t('error.unsupportedImage')); return }
     setUploadingArt(true)
     try {
+      const file = await prepareImage(raw, { maxDim: 1280 }) // downscale + compress client-side
+      if (file.size > MAX_UPLOAD_BYTES) { showError(t('error.imageTooLarge')); return }
       const { data } = await api.upload<{ data: Community }>(`/uploads/community/${detail.id}`, file)
       if (data) setDetail(data)
-    } catch { /* ignore — keep existing art */ }
+    } catch { showError(t('error.uploadPhotoFailed')) }
     finally { setUploadingArt(false) }
   }
 
@@ -142,7 +146,7 @@ export function CommunityDetailOverlay() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               )}
             </label>
-            <input id="community-art-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleArtPick} style={{ display: 'none' }} />
+            <input id="community-art-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleArtPick} style={{ display: 'none' }} />
           </>
         )}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(transparent,rgba(0,0,0,.52))' }}>

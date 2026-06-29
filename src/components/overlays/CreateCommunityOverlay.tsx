@@ -5,7 +5,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Community, CommunityType, CommunityPrivacy } from '@/types/community'
 import { Pressable } from '@/components/ui/Pressable'
-import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
+import { prepareImage, isSupportedImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import type { TranslationKey } from '@/lib/translations'
 
 export function CreateCommunityOverlay() {
@@ -27,6 +27,7 @@ export function CreateCommunityOverlay() {
     e.target.value = ''
     if (!raw) return
     setError(null)
+    if (!isSupportedImage(raw)) { setError(t('error.unsupportedImage')); return }
     const file = await prepareImage(raw, { maxDim: 1280 }) // downscale + compress client-side
     if (file.size > MAX_UPLOAD_BYTES) { setError(t('error.imageTooLarge')); return }
     if (photoPreview) URL.revokeObjectURL(photoPreview)
@@ -89,7 +90,7 @@ export function CreateCommunityOverlay() {
         {/* Cover photo */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>{t('community.create.coverPhoto')}</div>
-          <input id="create-cover-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pickPhoto} style={{ display: 'none' }} />
+          <input id="create-cover-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={pickPhoto} style={{ display: 'none' }} />
           {photoPreview ? (
             <label
               htmlFor="create-cover-input"

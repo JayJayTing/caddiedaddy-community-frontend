@@ -8,7 +8,7 @@ import { AuthUser } from '@/types/auth'
 import { Avatar } from '@/components/ui/Avatar'
 import { BottomSheet } from './BottomSheet'
 import { Pressable } from '@/components/ui/Pressable'
-import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
+import { prepareImage, isSupportedImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 
 export function AccountSheet() {
   const { openSheet, closeSheet } = useUI()
@@ -28,6 +28,7 @@ export function AccountSheet() {
     const raw = e.target.files?.[0]
     e.target.value = '' // allow re-picking the same file
     if (!raw) return
+    if (!isSupportedImage(raw)) { setError(t('error.unsupportedImage')); return }
     setError(null)
     setUploading(true)
     try {
@@ -96,7 +97,7 @@ export function AccountSheet() {
             </div>
           </label>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}>{uploading ? t('loading.uploading') : t('sheet.account.changePhoto')}</span>
-          <input id="account-avatar-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleAvatarPick} style={{ display: 'none' }} />
+          <input id="account-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarPick} style={{ display: 'none' }} />
         </div>
         <div>
           <label style={labelStyle}>{t('sheet.account.displayName')}</label>

@@ -8,7 +8,7 @@ import { PostType } from '@/types/post'
 import { Community } from '@/types/community'
 import { BottomSheet } from './BottomSheet'
 import { Pressable } from '@/components/ui/Pressable'
-import { prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
+import { prepareImage, isSupportedImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import type { TranslationKey } from '@/lib/translations'
 
 const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string }> = [
@@ -61,6 +61,7 @@ export function ComposeSheet() {
     const raw = e.target.files?.[0]
     e.target.value = ''
     if (!raw) return
+    if (!isSupportedImage(raw)) { setError(t('error.unsupportedImage')); return }
     setError(null)
     setUploadingPhoto(true)
     try {
@@ -166,7 +167,7 @@ export function ComposeSheet() {
             reliably on mobile — a JS-triggered click on a hidden input is blocked
             by some mobile browsers. */}
         <div style={sectionLabel}>{t('compose.photoLabel')}</div>
-        <input id="compose-photo-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handlePhotoPick} style={{ display: 'none' }} />
+        <input id="compose-photo-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePhotoPick} style={{ display: 'none' }} />
         {photoUrl ? (
           <div style={{ position: 'relative', marginBottom: 14, borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
