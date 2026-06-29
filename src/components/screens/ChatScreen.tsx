@@ -48,7 +48,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
 }
 
 export function ChatScreen() {
-  const { activeScreen, openOverlayWith, setActiveScreen } = useUI()
+  const { activeScreen, openOverlayWith, setActiveScreen, dataVersion } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const [tab, setTab] = useState<ChatTab>('friends')
@@ -56,6 +56,7 @@ export function ChatScreen() {
   const [loading, setLoading] = useState(true)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [requestCount, setRequestCount] = useState(0)
 
   useEffect(() => {
     api.get<{ data: ChatThread[] }>('/threads')
@@ -63,6 +64,13 @@ export function ChatScreen() {
       .catch(() => setThreads([]))
       .finally(() => setLoading(false))
   }, [])
+
+  // Incoming friend-request count for the Find Players badge.
+  useEffect(() => {
+    api.get<{ data: unknown[] }>('/users/friends/requests')
+      .then(r => setRequestCount(r.data?.length ?? 0))
+      .catch(() => {})
+  }, [dataVersion.friends])
 
   const threadName = (th: ChatThread) => {
     const other = th.participants.find(p => p.userId !== (user?.id ?? ''))
@@ -132,22 +140,28 @@ export function ChatScreen() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40 }}><span style={{ color: 'var(--ink-3)', fontSize: 13 }}>{t('loading')}</span></div>
         ) : tab === 'friends' ? (
-          dmThreads.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 24px' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>⛳️</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{t('chat.findBuddies')}</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 20 }}>{t('chat.findBuddiesSubtitle')}</div>
-              <div onClick={() => setActiveScreen('rounds')} style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '11px 24px', display: 'inline-block', cursor: 'pointer' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{t('chat.findPlayers')}</span>
+          <div style={{ marginTop: 8 }}>
+            {/* Find players entry */}
+            <div className="mod-row" onClick={() => openOverlayWith('findPlayers')} style={{ cursor: 'pointer' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h3"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
               </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t('chat.findPlayers')}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t('chat.findBuddiesSubtitle')}</div>
+              </div>
+              {requestCount > 0 && (
+                <div style={{ minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: 'var(--primary)', color: 'white', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{requestCount}</div>
+              )}
             </div>
-          ) : (
-            <div style={{ marginTop: 8 }}>
-              {dmThreads.map(thread => (
+            {dmThreads.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px 24px', color: 'var(--ink-3)', fontSize: 13 }}>{t('chat.noThreads')}</div>
+            ) : (
+              dmThreads.map(thread => (
                 <ThreadRow key={thread.id} thread={thread} currentUserId={user?.id ?? ''} onOpen={() => openOverlayWith('chatThread', thread)} />
-              ))}
-            </div>
-          )
+              ))
+            )}
+          </div>
         ) : (
           groupThreads.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 24px' }}>
