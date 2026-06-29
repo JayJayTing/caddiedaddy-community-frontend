@@ -32,6 +32,12 @@ const TYPE_COLORS: Record<string, [string, string]> = {
   announcement: ['var(--sky)', 'var(--sky-deep)'],
 }
 
+// A post counts as "looking for players" if explicitly flagged, or it's the
+// seeking type (covers posts created before the isLfp flag was wired up).
+export function isLfpPost(p: Post) {
+  return p.isLfp || p.type === 'seeking'
+}
+
 export function PostCard({ post }: { post: Post }) {
   const { openOverlayWith, showError } = useUI()
   const { t } = useLang()
@@ -65,6 +71,18 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <div className="post-card">
+      {/* Looking-for-Players banner — players needed + location, up top where it's scannable */}
+      {isLfpPost(post) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)' }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary-ink)' }}>🏌️ {t('lfp.lookingForPlayers')}</span>
+          {post.lfpPlayersNeeded ? (
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '2px 9px', borderRadius: 'var(--r-pill)' }}>{post.lfpPlayersNeeded} {t('lfp.playersNeededSuffix')}</span>
+          ) : null}
+          {post.locationText ? (
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary-ink)', marginLeft: 'auto' }}>📍 {post.locationText}</span>
+          ) : null}
+        </div>
+      )}
       {/* Author row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={36} fontSize={13} />
@@ -140,13 +158,14 @@ function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void 
 }
 
 export function CommunityScreen() {
-  const { activeScreen, openOverlayWith, openSheetWith, dataVersion } = useUI()
+  const { activeScreen, openOverlayWith, openSheetWith, setActiveScreen, dataVersion } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const activated = useActivated('community')
   const [tab, setTab] = useState<CommunityTab>('discover')
   const [postFilter, setPostFilter] = useState<PostFilter>('all')
   const [showAllComms, setShowAllComms] = useState(false)
+  const [discoverLfp, setDiscoverLfp] = useState(false)
 
   const [discoverCommunities, setDiscoverCommunities] = useState<Community[]>([])
   const [discoverPosts, setDiscoverPosts] = useState<Post[]>([])
@@ -186,6 +205,8 @@ export function CommunityScreen() {
     if (postFilter === 'all') return true
     return p.type === postFilter
   })
+
+  const discoverShown = discoverLfp ? discoverPosts.filter(isLfpPost) : discoverPosts
 
   const POST_FILTER_OPTS: Array<{ key: PostFilter; label: string }> = [
     { key: 'all', label: t('community.filter.all') },
@@ -238,12 +259,30 @@ export function CommunityScreen() {
               </div>
             )}
             <div className="section-row">
-              <span className="label-xs">{t('community.recentPosts')}</span>
+              <span className="label-xs">{discoverLfp ? t('community.lfp') : t('community.recentPosts')}</span>
+            </div>
+            {/* Looking-for-Players filter — finding players is the priority surface */}
+            <div className="hscroll" style={{ padding: '0 16px 10px', gap: 8 }}>
+              <Pressable aria-pressed={!discoverLfp} className={`fchip${!discoverLfp ? ' active' : ''}`} onClick={() => setDiscoverLfp(false)}>
+                {t('community.allPosts')}
+              </Pressable>
+              <Pressable aria-pressed={discoverLfp} className={`fchip${discoverLfp ? ' active' : ''}`} onClick={() => setDiscoverLfp(true)}>
+                🏌️ {t('community.lfp')}
+              </Pressable>
             </div>
             <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {loadingDiscover ? (
                 <>{[0, 1, 2].map(i => <PostCardSkeleton key={i} />)}</>
-              ) : discoverPosts.map(p => <PostCard key={p.id} post={p} />)}
+              ) : discoverShown.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '28px 16px' }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>⛳️</div>
+                  <div style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 14 }}>{discoverLfp ? t('lfp.none') : t('community.followPrompt')}</div>
+                  {/* Bridge to a booking: hosting a round creates an open game others can join */}
+                  <Pressable onClick={() => setActiveScreen('host')} style={{ display: 'inline-block', background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('rounds.host')}</span>
+                  </Pressable>
+                </div>
+              ) : discoverShown.map(p => <PostCard key={p.id} post={p} />)}
             </div>
           </>
         )}

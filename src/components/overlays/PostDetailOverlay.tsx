@@ -93,6 +93,18 @@ export function PostDetailOverlay() {
       </div>
 
       <div className="scroll-body" style={{ padding: '16px 20px 80px' }}>
+        {/* Looking-for-Players banner */}
+        {(post.isLfp || post.type === 'seeking') && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16, padding: '10px 14px', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-ink)' }}>🏌️ {t('lfp.lookingForPlayers')}</span>
+            {post.lfpPlayersNeeded ? (
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '3px 10px', borderRadius: 'var(--r-pill)' }}>{post.lfpPlayersNeeded} {t('lfp.playersNeededSuffix')}</span>
+            ) : null}
+            {post.locationText ? (
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-ink)', marginLeft: 'auto' }}>📍 {post.locationText}</span>
+            ) : null}
+          </div>
+        )}
         {/* Post */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>

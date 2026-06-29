@@ -425,6 +425,16 @@ const en = {
   'a11y.prevMonth': 'Previous month',
   'a11y.nextMonth': 'Next month',
   'a11y.send': 'Send',
+  // looking for players (LFP)
+  'community.lfp': 'Looking for Players',
+  'community.allPosts': 'All posts',
+  'lfp.lookingForPlayers': 'Looking for players',
+  'lfp.playersNeededSuffix': 'players needed',
+  'lfp.none': 'No open player searches yet.',
+  'lfp.beFirst': 'Post one',
+  'compose.lfpLocationLabel': 'Where',
+  'compose.lfpLocationPlaceholder': 'e.g. Taipei · Linkou Golf Club',
+  'compose.lfpPlayersLabel': 'Players needed',
 }
 
 const zh: typeof en = {
@@ -827,6 +837,16 @@ const zh: typeof en = {
   'a11y.prevMonth': '上個月',
   'a11y.nextMonth': '下個月',
   'a11y.send': '傳送',
+  // looking for players (LFP)
+  'community.lfp': '尋找球友',
+  'community.allPosts': '所有貼文',
+  'lfp.lookingForPlayers': '正在尋找球友',
+  'lfp.playersNeededSuffix': '位球友待補',
+  'lfp.none': '目前還沒有人在徵求球友。',
+  'lfp.beFirst': '發布徵求',
+  'compose.lfpLocationLabel': '地點',
+  'compose.lfpLocationPlaceholder': '例如：台北 · 林口高爾夫',
+  'compose.lfpPlayersLabel': '需要人數',
 }
 
 export type TranslationKey = keyof typeof en
