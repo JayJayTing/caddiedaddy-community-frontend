@@ -20,6 +20,7 @@ import { CommunityDetailOverlay } from '@/components/overlays/CommunityDetailOve
 import { BookVenueOverlay } from '@/components/overlays/BookVenueOverlay'
 import { MyBookingsOverlay } from '@/components/overlays/MyBookingsOverlay'
 import { FindPlayersOverlay } from '@/components/overlays/FindPlayersOverlay'
+import { MapOverlay } from '@/components/overlays/MapOverlay'
 import { SuccessOverlay } from '@/components/overlays/SuccessOverlay'
 import { Toaster } from '@/components/ui/Toaster'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
@@ -67,6 +68,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <BookVenueOverlay />
       <MyBookingsOverlay />
       <FindPlayersOverlay />
+      <MapOverlay />
 
       {/* Global success confirmation (animated checkmark) */}
       <SuccessOverlay />

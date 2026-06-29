@@ -5,7 +5,6 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Course } from '@/types/round'
 import { Community } from '@/types/community'
-import { RoundFormat, HandicapRequirement } from '@/types/round'
 import { DateField } from '@/components/ui/DateField'
 import { Pressable } from '@/components/ui/Pressable'
 
@@ -23,8 +22,13 @@ const TEE_TIMES: { v: string; label: string }[] = (() => {
   return out
 })()
 
+// Player caps differ by venue: a flight is max 4 on a course, but a driving-range
+// session can take a bigger group.
+const MAX_SPOTS = { course: 4, driving_range: 10 } as const
+const MIN_SPOTS = 2
+
 export function HostScreen() {
-  const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion } = useUI()
+  const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion, hostCommunity, setHostCommunity } = useUI()
   const { t } = useLang()
 
   const [postTo, setPostTo] = useState<'public' | 'community'>('public')
@@ -35,9 +39,7 @@ export function HostScreen() {
   const [date, setDate] = useState('')
   const [teeTime, setTeeTime] = useState('')
   const [holes, setHoles] = useState<9 | 18>(18)
-  const [format, setFormat] = useState<RoundFormat>('stroke_play')
   const [spots, setSpots] = useState(4)
-  const [handicap, setHandicap] = useState<HandicapRequirement>('all')
   const [greenFee, setGreenFee] = useState('')
   const [notes, setNotes] = useState('')
   const [selectedCommunity, setSelectedCommunity] = useState<string>('')
@@ -46,11 +48,33 @@ export function HostScreen() {
   const [error, setError] = useState<string | null>(null)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const maxSpots = MAX_SPOTS[venueType]
+  const spotOptions = Array.from({ length: maxSpots - MIN_SPOTS + 1 }, (_, i) => i + MIN_SPOTS)
+
   useEffect(() => {
     api.get<{ data: Community[] }>('/communities/mine')
       .then(r => setMyCommunities(r.data ?? []))
       .catch(() => {})
   }, [dataVersion.communities])
+
+  // Arriving here via "Host a Round" from inside a community: pre-target it.
+  useEffect(() => {
+    if (activeScreen !== 'host' || !hostCommunity) return
+    setPostTo('community')
+    setSelectedCommunity(hostCommunity.id)
+    setMyCommunities(prev =>
+      prev.some(c => c.id === hostCommunity.id)
+        ? prev
+        : [{ id: hostCommunity.id, name: hostCommunity.name } as Community, ...prev],
+    )
+    setHostCommunity(null)
+  }, [activeScreen, hostCommunity]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Switching venue re-caps the player count (course max 4, range max 10).
+  const changeVenue = (v: 'course' | 'driving_range') => {
+    setVenueType(v)
+    setSpots(s => Math.min(s, MAX_SPOTS[v]))
+  }
 
   const handleCourseSearch = (q: string) => {
     setCourseSearch(q)
@@ -64,21 +88,6 @@ export function HostScreen() {
       } catch { setCourseResults([]) }
     }, 300)
   }
-
-  const FORMATS: Array<{ key: RoundFormat; label: string }> = [
-    { key: 'stroke_play', label: t('format.stroke_play') },
-    { key: 'stableford', label: t('format.stableford') },
-    { key: 'best_ball', label: t('format.best_ball') },
-    { key: 'scramble', label: t('format.scramble') },
-  ]
-
-  const HCP_OPTIONS: Array<{ key: HandicapRequirement; label: string }> = [
-    { key: 'all', label: t('hcp.all') },
-    { key: 'u10', label: t('hcp.u10') },
-    { key: 'u15', label: t('hcp.u15') },
-    { key: 'u20', label: t('hcp.u20') },
-    { key: 'u28', label: t('hcp.u28') },
-  ]
 
   const handlePublish = async () => {
     if (!selectedCourse || !date || !teeTime) {
@@ -94,10 +103,8 @@ export function HostScreen() {
         date,
         teeTime: teeTimeFull,
         venueType,
-        format,
-        holes,
+        holes: venueType === 'course' ? holes : undefined,
         totalSpots: spots,
-        handicapRequirement: handicap,
         greenFeeCents: greenFee ? Math.round(parseFloat(greenFee) * 100) : null,
         notes: notes || null,
         visibility: postTo,
@@ -152,8 +159,8 @@ export function HostScreen() {
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.venue')}</div>
           <div className="host-toggle-row">
-            <Pressable aria-pressed={venueType === 'course'} className={`host-toggle-btn${venueType === 'course' ? ' active' : ''}`} onClick={() => setVenueType('course')}>{t('host.golfCourse')}</Pressable>
-            <Pressable aria-pressed={venueType === 'driving_range'} className={`host-toggle-btn${venueType === 'driving_range' ? ' active' : ''}`} onClick={() => setVenueType('driving_range')}>{t('host.drivingRange')}</Pressable>
+            <Pressable aria-pressed={venueType === 'course'} className={`host-toggle-btn${venueType === 'course' ? ' active' : ''}`} onClick={() => changeVenue('course')}>{t('host.golfCourse')}</Pressable>
+            <Pressable aria-pressed={venueType === 'driving_range'} className={`host-toggle-btn${venueType === 'driving_range' ? ' active' : ''}`} onClick={() => changeVenue('driving_range')}>{t('host.drivingRange')}</Pressable>
           </div>
         </div>
 
@@ -207,47 +214,53 @@ export function HostScreen() {
           </div>
         </div>
 
-        {/* Holes */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.holes')}</div>
-          <div className="host-toggle-row">
-            <Pressable aria-pressed={holes === 9} className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</Pressable>
-            <Pressable aria-pressed={holes === 18} className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</Pressable>
+        {/* Holes — golf course only (a driving range has no holes) */}
+        {venueType === 'course' && (
+          <div style={sectionStyle}>
+            <div style={labelStyle}>{t('host.holes')}</div>
+            <div className="host-toggle-row">
+              <Pressable aria-pressed={holes === 9} className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</Pressable>
+              <Pressable aria-pressed={holes === 18} className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</Pressable>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Format */}
+        {/* Total Spots — tap a number; cap depends on venue */}
         <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.format')}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {FORMATS.map(f => (
-              <Pressable key={f.key} aria-pressed={format === f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)}>
-                {f.label}
-              </Pressable>
-            ))}
+          <div style={{ ...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span>{t('host.spots')}</span>
+            <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-3)', fontWeight: 700 }}>{spots} / {maxSpots}</span>
           </div>
-        </div>
-
-        {/* Spots */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.spots')}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Pressable aria-label="−" style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(1, spots - 1))}>−</Pressable>
-            <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', minWidth: 32, textAlign: 'center' }}>{spots}</span>
-            <Pressable aria-label="+" style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</Pressable>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {spotOptions.map(n => {
+              const active = spots === n
+              return (
+                <Pressable
+                  key={n}
+                  aria-pressed={active}
+                  aria-label={`${n}`}
+                  onClick={() => setSpots(n)}
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 'var(--r-md)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--line)',
+                    background: active ? 'var(--primary)' : 'var(--surface)',
+                    color: active ? '#fff' : 'var(--ink)',
+                    transition: 'background .12s, border-color .12s, color .12s',
+                  }}
+                >
+                  {n}
+                </Pressable>
+              )
+            })}
           </div>
-        </div>
-
-        {/* Handicap */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.handicap')}</div>
-          <select
-            value={handicap}
-            onChange={e => setHandicap(e.target.value as HandicapRequirement)}
-            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)' }}
-          >
-            {HCP_OPTIONS.map(h => <option key={h.key} value={h.key}>{h.label}</option>)}
-          </select>
         </div>
 
         {/* Green fee */}

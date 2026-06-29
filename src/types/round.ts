@@ -44,6 +44,9 @@ export interface Course {
   district: string | null
   city: string | null
   holeCount: number
+  venueType?: 'course' | 'driving_range'
   lat?: number | string | null
   lng?: number | string | null
+  coverPhotoUrl?: string | null
+  photos?: string[]
 }

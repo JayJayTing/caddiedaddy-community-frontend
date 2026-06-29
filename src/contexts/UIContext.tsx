@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
 export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'findPlayers' | 'map' | 'bookVenue' | 'myBookings' | null
@@ -12,6 +12,9 @@ export interface ToastInfo { id: number; message: string; variant: ToastVariant 
 interface UIContextType {
   activeScreen: Screen
   setActiveScreen: (s: Screen) => void
+  // When hosting from inside a community, the round is pre-targeted to it.
+  hostCommunity: { id: string; name: string } | null
+  setHostCommunity: (c: { id: string; name: string } | null) => void
   openOverlay: Overlay
   openOverlayWith: (o: Overlay, data?: unknown) => void
   closeOverlay: () => void
@@ -40,8 +43,22 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined)
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [activeScreen, setActiveScreen] = useState<Screen>('home')
+  const [activeScreen, setActiveScreenState] = useState<Screen>('home')
+  const [hostCommunity, setHostCommunity] = useState<{ id: string; name: string } | null>(null)
   const [openOverlay, setOpenOverlay] = useState<Overlay>(null)
+
+  // Restore the last screen after a reload (e.g. mobile pull-to-refresh) so the
+  // user stays put instead of being bounced to Home. Client-only, so no SSR
+  // hydration mismatch.
+  useEffect(() => {
+    const saved = sessionStorage.getItem('caddie_screen') as Screen | null
+    if (saved) setActiveScreenState(saved)
+  }, [])
+
+  const setActiveScreen = useCallback((s: Screen) => {
+    setActiveScreenState(s)
+    try { sessionStorage.setItem('caddie_screen', s) } catch { /* private mode */ }
+  }, [])
   const [overlayData, setOverlayData] = useState<unknown>(null)
   const [openSheet, setOpenSheet] = useState<Sheet>(null)
   const [sheetData, setSheetData] = useState<unknown>(null)
@@ -85,7 +102,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const hideToast = useCallback(() => setToast(null), [])
 
   return (
-    <UIContext.Provider value={{ activeScreen, setActiveScreen, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess, toast, showToast, showError, hideToast }}>
+    <UIContext.Provider value={{ activeScreen, setActiveScreen, hostCommunity, setHostCommunity, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess, toast, showToast, showError, hideToast }}>
       {children}
     </UIContext.Provider>
   )
