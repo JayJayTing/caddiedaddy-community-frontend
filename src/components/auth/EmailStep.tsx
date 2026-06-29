@@ -6,11 +6,12 @@ interface Props {
   onBack: () => void
   onLogin: (email: string, password: string, rememberMe: boolean) => void
   onSignup: (email: string, password: string, displayName: string) => void
+  onForgot: (email: string) => void
   isLoading: boolean
   error?: string
 }
 
-export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props) {
+export function EmailStep({ onBack, onLogin, onSignup, onForgot, isLoading, error }: Props) {
   const { t } = useLang()
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
@@ -128,6 +129,14 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
               )}
             </div>
             <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>{t('auth.email.rememberMe')}</span>
+          </div>
+        )}
+
+        {mode === 'signin' && (
+          <div style={{ textAlign: 'right', marginBottom: 16, marginTop: -4 }}>
+            <span onClick={() => onForgot(email)} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
+              {t('auth.email.forgot')}
+            </span>
           </div>
         )}
 

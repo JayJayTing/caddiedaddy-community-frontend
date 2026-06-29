@@ -1,9 +1,17 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
+// A session lives in localStorage ("remember me" on) or sessionStorage (off).
+// Reads prefer whichever currently holds the access token; refreshed tokens are
+// written back to that same store so the persistence choice is preserved.
+function tokenStore(): Storage | null {
+  if (typeof window === 'undefined') return null
+  if (localStorage.getItem('caddie_token')) return localStorage
+  if (sessionStorage.getItem('caddie_token')) return sessionStorage
+  return null
+}
+
 function getToken(): string | null {
   if (typeof window === 'undefined') return null
-  // "Remember me = off" stores the token in sessionStorage; fall back to it so auth
-  // works in that case (matches AuthContext's init check + clearSession).
   return localStorage.getItem('caddie_token') ?? sessionStorage.getItem('caddie_token')
 }
 
@@ -14,9 +22,55 @@ export class ApiError extends Error {
   }
 }
 
+function sessionExpired() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('caddie:session-expired'))
+  }
+}
+
+async function parseError(res: Response): Promise<string> {
+  const body = await res.text()
+  try { return JSON.parse(body).error ?? body } catch { return body }
+}
+
+// A single in-flight refresh shared by all concurrent 401s, so a burst of requests
+// triggers exactly one token refresh (avoids hammering refresh-token rotation).
+let refreshInFlight: Promise<boolean> | null = null
+
+async function refreshSession(): Promise<boolean> {
+  const store = tokenStore()
+  const refresh = store?.getItem('caddie_refresh')
+  if (!store || !refresh) return false
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
+    })
+    if (!res.ok) return false
+    const { session } = (await res.json()) as {
+      session: { access_token: string; refresh_token: string }
+    }
+    store.setItem('caddie_token', session.access_token)
+    store.setItem('caddie_refresh', session.refresh_token)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Runs the shared refresh once for a 401, returning whether a retry should proceed.
+async function tryRefreshOnce(): Promise<boolean> {
+  refreshInFlight = refreshInFlight ?? refreshSession()
+  const ok = await refreshInFlight
+  refreshInFlight = null
+  return ok
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
+  _retried = false,
 ): Promise<T> {
   const token = getToken()
   const res = await fetch(`${API_URL}${path}`, {
@@ -27,16 +81,17 @@ export async function apiFetch<T>(
       ...(options?.headers ?? {}),
     },
   })
+
+  // Access token likely expired — refresh once and retry the original request.
+  if (res.status === 401 && !_retried && token && path !== '/auth/refresh') {
+    if (await tryRefreshOnce()) return apiFetch<T>(path, options, true)
+    sessionExpired()
+    throw new ApiError(401, await parseError(res))
+  }
+
   if (!res.ok) {
-    const body = await res.text()
-    let msg = body
-    try { msg = JSON.parse(body).error ?? body } catch {}
-    if (res.status === 401) {
-      // Dispatch session expired event
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('caddie:session-expired'))
-      }
-    }
+    const msg = await parseError(res)
+    if (res.status === 401) sessionExpired()
     throw new ApiError(res.status, msg)
   }
   return res.json() as Promise<T>
@@ -44,7 +99,12 @@ export async function apiFetch<T>(
 
 // Multipart upload — sends a File as form-data. Does NOT set Content-Type so the
 // browser adds the multipart boundary itself.
-export async function apiUpload<T>(path: string, file: File, field = 'file'): Promise<T> {
+export async function apiUpload<T>(
+  path: string,
+  file: File,
+  field = 'file',
+  _retried = false,
+): Promise<T> {
   const token = getToken()
   const fd = new FormData()
   fd.append(field, file)
@@ -53,13 +113,16 @@ export async function apiUpload<T>(path: string, file: File, field = 'file'): Pr
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: fd,
   })
+
+  if (res.status === 401 && !_retried && token) {
+    if (await tryRefreshOnce()) return apiUpload<T>(path, file, field, true)
+    sessionExpired()
+    throw new ApiError(401, await parseError(res))
+  }
+
   if (!res.ok) {
-    const body = await res.text()
-    let msg = body
-    try { msg = JSON.parse(body).error ?? body } catch {}
-    if (res.status === 401 && typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('caddie:session-expired'))
-    }
+    const msg = await parseError(res)
+    if (res.status === 401) sessionExpired()
     throw new ApiError(res.status, msg)
   }
   return res.json() as Promise<T>

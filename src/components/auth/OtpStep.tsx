@@ -7,12 +7,13 @@ interface Props {
   onBack: () => void
   onVerify: (otp: string) => void
   onResend: () => void
-  phone: string
+  destination: string
+  channel?: 'phone' | 'email'
   isLoading: boolean
   error?: string
 }
 
-export function OtpStep({ onBack, onVerify, onResend, phone, isLoading, error }: Props) {
+export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'phone', isLoading, error }: Props) {
   const { t } = useLang()
   const [otp, setOtp] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -50,11 +51,11 @@ export function OtpStep({ onBack, onVerify, onResend, phone, isLoading, error }:
 
       <div style={{ padding: '4px 28px 0' }}>
         <div style={{ fontFamily: 'var(--serif)', fontSize: 30, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.15, marginBottom: 8, whiteSpace: 'pre-line' }}>
-          {t('auth.otp.title')}
+          {channel === 'email' ? t('auth.otp.titleEmail') : t('auth.otp.title')}
         </div>
         <div style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 36 }}>
           {t('auth.otp.subtitle')}{' '}
-          <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{phone}</span>
+          <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{destination}</span>
         </div>
 
         {/* Hidden real input */}

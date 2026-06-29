@@ -36,6 +36,7 @@ const en = {
   'auth.phone.error': 'Please enter a valid phone number',
   // auth - otp
   'auth.otp.title': "Check your\nphone",
+  'auth.otp.titleEmail': "Check your\nemail",
   'auth.otp.subtitle': 'Code sent to',
   'auth.otp.resendIn': 'Resend in',
   'auth.otp.noCode': "Didn't get it?",
@@ -56,6 +57,12 @@ const en = {
   'auth.email.error': 'Please enter a valid email',
   'auth.email.switchToSignup': "Don't have an account? Sign up",
   'auth.email.switchToSignin': 'Already have an account? Sign in',
+  'auth.email.forgot': 'Forgot password?',
+  // auth - reset password
+  'auth.reset.title': 'Set a new\npassword',
+  'auth.reset.subtitle': 'Choose a new password for your account',
+  'auth.reset.label': 'New Password',
+  'auth.reset.submit': 'Update Password',
   // home
   'home.greeting.morning': 'Good morning',
   'home.greeting.afternoon': 'Good afternoon',
@@ -332,6 +339,7 @@ const en = {
   // auth errors
   'auth.error.googleUnavailable': 'Google sign-in unavailable.',
   'auth.error.appleSoon': 'Apple sign-in coming soon.',
+  'auth.error.appleUnavailable': 'Apple sign-in unavailable.',
   'auth.error.sendCodeFailed': 'Failed to send code.',
   'auth.error.invalidCode': 'Invalid code.',
   'auth.error.resendFailed': 'Failed to resend.',
@@ -410,6 +418,7 @@ const zh: typeof en = {
   'auth.phone.useEmail': '改用電子郵件',
   'auth.phone.error': '請輸入有效的手機號碼',
   'auth.otp.title': '請查看您的\n手機',
+  'auth.otp.titleEmail': '請查看您的\n電子郵件',
   'auth.otp.subtitle': '驗證碼已發送至',
   'auth.otp.resendIn': '重新發送倒計時',
   'auth.otp.noCode': '沒收到嗎？',
@@ -429,6 +438,12 @@ const zh: typeof en = {
   'auth.email.error': '請輸入有效的電子郵件',
   'auth.email.switchToSignup': '還沒有帳號？立即註冊',
   'auth.email.switchToSignin': '已有帳號？立即登入',
+  'auth.email.forgot': '忘記密碼？',
+  // auth - reset password
+  'auth.reset.title': '設定新\n密碼',
+  'auth.reset.subtitle': '為您的帳號設定新密碼',
+  'auth.reset.label': '新密碼',
+  'auth.reset.submit': '更新密碼',
   'home.greeting.morning': '早安',
   'home.greeting.afternoon': '午安',
   'home.greeting.evening': '晚安',
@@ -687,6 +702,7 @@ const zh: typeof en = {
   // auth errors
   'auth.error.googleUnavailable': '無法使用 Google 登入。',
   'auth.error.appleSoon': 'Apple 登入即將推出。',
+  'auth.error.appleUnavailable': '無法使用 Apple 登入。',
   'auth.error.sendCodeFailed': '發送驗證碼失敗。',
   'auth.error.invalidCode': '驗證碼無效。',
   'auth.error.resendFailed': '重新發送失敗。',

@@ -19,7 +19,11 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
 
   const handleSubmit = () => {
     if (!isValid || isLoading) return
-    onSendCode('+886' + phone.replace(/\D/g, ''))
+    // Normalise to E.164: strip non-digits and any leading 0 (the TW national
+    // prefix) before the +886 country code — so "0912 345 678" and "912345678"
+    // both become +886912345678 instead of an invalid +8860912345678.
+    const national = phone.replace(/\D/g, '').replace(/^0+/, '')
+    onSendCode('+886' + national)
   }
 
   return (
