@@ -22,7 +22,7 @@ const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string
 const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }
 
 export function ComposeSheet() {
-  const { openSheet, closeSheet, refreshData, showSuccess, sheetData, setActiveScreen } = useUI()
+  const { openSheet, closeSheet, closeOverlay, refreshData, showSuccess, sheetData, setActiveScreen, setHostCommunity } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const isOpen = openSheet === 'compose'
@@ -110,7 +110,16 @@ export function ComposeSheet() {
         <div style={sectionLabel}>{t('compose.modeLabel')}</div>
         <div className="host-toggle-row" style={{ marginBottom: 18 }}>
           <Pressable className="host-toggle-btn active" aria-pressed={true}>{t('compose.modePost')}</Pressable>
-          <Pressable className="host-toggle-btn" aria-pressed={false} onClick={() => { closeSheet(); setActiveScreen('host') }}>⛳ {t('compose.modeRound')}</Pressable>
+          <Pressable className="host-toggle-btn" aria-pressed={false} onClick={() => {
+            // Hosting from inside a community: dismiss BOTH this sheet and the
+            // community overlay behind it (otherwise the host screen stays hidden),
+            // and pre-target the round to this community.
+            const target = sheetData as { communityId?: string; communityName?: string } | null
+            closeSheet()
+            closeOverlay()
+            setHostCommunity(target?.communityId ? { id: target.communityId, name: target.communityName ?? '' } : null)
+            setActiveScreen('host')
+          }}>⛳ {t('compose.modeRound')}</Pressable>
         </div>
 
         {/* Post type */}

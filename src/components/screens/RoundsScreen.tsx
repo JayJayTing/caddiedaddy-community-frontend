@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage, formatMonthYear } from '@/lib/utils'
+import { formatTeeTime, formatMoney, courseMapImage, formatMonthYear } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -13,7 +13,7 @@ import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import type { TranslationKey } from '@/lib/translations'
 
-type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
+type Filter = 'all' | 'morning' | 'afternoon' | '9h' | '18h' | 'communities'
 
 // ─── Date picker ─────────────────────────────────────────────────────────────
 
@@ -149,7 +149,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             </div>
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 8 }}>
-            {formatTeeTime(round.teeTime)} · {formatFormat(round.format)} · {round.holes}h · {formatHcpReq(round.handicapRequirement)} · {formatMoney(round.greenFeeCents)}
+            {formatTeeTime(round.teeTime)} · {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes}h`} · {formatMoney(round.greenFeeCents)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
@@ -166,8 +166,9 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
-              [t('rounds.format'), formatFormat(round.format)],
-              [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
+              round.venueType === 'driving_range'
+                ? [t('host.venue'), t('host.drivingRange')]
+                : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val]) => (
               <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
@@ -231,14 +232,11 @@ export function RoundsScreen() {
       const h = new Date(r.teeTime).getHours()
       if (h < 12) return false
     }
-    if (activeFilter === 'hcp15') {
-      if (!['u10', 'u15'].includes(r.handicapRequirement)) return false
-    }
     if (activeFilter === '9h') {
-      if (r.holes !== 9) return false
+      if (r.venueType !== 'course' || r.holes !== 9) return false
     }
     if (activeFilter === '18h') {
-      if (r.holes !== 18) return false
+      if (r.venueType !== 'course' || r.holes !== 18) return false
     }
     return true
   })
@@ -247,7 +245,6 @@ export function RoundsScreen() {
     { key: 'all', label: t('rounds.filter.all') },
     { key: 'morning', label: t('rounds.filter.morning') },
     { key: 'afternoon', label: t('rounds.filter.afternoon') },
-    { key: 'hcp15', label: t('rounds.filter.hcp15') },
     { key: '9h', label: t('rounds.filter.9h') },
     { key: '18h', label: t('rounds.filter.18h') },
   ]

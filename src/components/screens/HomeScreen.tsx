@@ -8,7 +8,7 @@ import { bookingApi, VenueCard } from '@/lib/booking'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, timeAgo, courseMapImage, formatWeekdayShort } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, timeAgo, courseMapImage, formatWeekdayShort } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -318,7 +318,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
             </div>
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 8 }}>
-            {formatTeeTime(round.teeTime)} · {formatFormat(round.format)} · {round.holes}h · {formatHcpReq(round.handicapRequirement)} · {formatMoney(round.greenFeeCents)}
+            {formatTeeTime(round.teeTime)} · {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes}h`} · {formatMoney(round.greenFeeCents)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
@@ -335,8 +335,9 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
-              [t('rounds.format'), formatFormat(round.format)],
-              [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
+              round.venueType === 'driving_range'
+                ? [t('host.venue'), t('host.drivingRange')]
+                : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val]) => (
               <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { formatDate, formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
+import { formatDate, formatTeeTime, formatMoney, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 
@@ -96,10 +96,7 @@ export function RoundDetailOverlay() {
             {openSpots > 0 ? `${openSpots} ${t('home.spotsOpen')}` : t('common.full')}
           </span>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>
-            {round.holes} {t('common.holesSuffix')} · {formatFormat(round.format)}
-          </span>
-          <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--bg-alt)', color: 'var(--ink-2)' }}>
-            {formatHcpReq(round.handicapRequirement)}
+            {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes} ${t('common.holesSuffix')}`}
           </span>
         </div>
 
@@ -117,9 +114,9 @@ export function RoundDetailOverlay() {
           {[
             [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
             [t('host.date'), formatDate(round.date)],
-            [t('host.format'), formatFormat(round.format)],
-            [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
-            [t('host.handicap'), formatHcpReq(round.handicapRequirement)],
+            round.venueType === 'driving_range'
+              ? [t('host.venue'), t('host.drivingRange')]
+              : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
             [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
           ].map(([label, val]) => (
             <div key={label} style={{ background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }}>
@@ -150,14 +147,32 @@ export function RoundDetailOverlay() {
                   <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
                 </div>
               ))}
-              {Array.from({ length: openSpots }).map((_, i) => (
-                <div key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
+              {Array.from({ length: openSpots }).map((_, i) => {
+                const requestedSpot = hasRequested && i === 0 // surface the viewer's pending request
+                const canJoin = !isHost && !hasRequested
+                const circle = (
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: `2px dashed ${requestedSpot ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: requestedSpot ? 15 : 18, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)' }}>{requestedSpot ? '⏳' : '+'}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{t('round.openSpot')}</div>
-                </div>
-              ))}
+                )
+                const label = (
+                  <div style={{ fontSize: 10, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)', fontWeight: requestedSpot ? 700 : 400 }}>
+                    {requestedSpot ? t('rounds.requested') : t('round.openSpot')}
+                  </div>
+                )
+                if (canJoin) {
+                  return (
+                    <Pressable key={`empty-${i}`} onClick={handleJoin} disabled={joining} aria-label={t('rounds.requestToJoin')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none' }}>
+                      {circle}{label}
+                    </Pressable>
+                  )
+                }
+                return (
+                  <div key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    {circle}{label}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

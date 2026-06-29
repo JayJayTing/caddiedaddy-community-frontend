@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
-import { Round, RoundParticipant, RoundFormat, HandicapRequirement, RoundStatus } from '@/types/round'
-import { formatDate } from '@/lib/utils'
+import { Round, RoundParticipant, RoundStatus } from '@/types/round'
+import { Player } from '@/types/player'
+import { formatDate, formatHandicap } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { DateField } from '@/components/ui/DateField'
@@ -25,14 +26,18 @@ export function ManageRoundOverlay() {
   const [status, setStatus] = useState<RoundStatus>('open')
   const [date, setDate] = useState('')
   const [teeTime, setTeeTime] = useState('')
-  const [format, setFormat] = useState<RoundFormat>('stroke_play')
   const [holes, setHoles] = useState<number>(18)
   const [spots, setSpots] = useState(4)
-  const [handicap, setHandicap] = useState<HandicapRequirement>('all')
   const [greenFee, setGreenFee] = useState('')
   const [notes, setNotes] = useState('')
   const [saved, setSaved] = useState(false)
   const [confirmingCancel, setConfirmingCancel] = useState(false)
+  // Invite picker (host fills an open spot directly).
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [friends, setFriends] = useState<Player[]>([])
+  const [inviteQuery, setInviteQuery] = useState('')
+  const [inviteResults, setInviteResults] = useState<Player[]>([])
+  const [invitingId, setInvitingId] = useState<string | null>(null)
 
   // Re-seed each time the overlay opens: immediately from the (minimal) list data,
   // then refine from GET /rounds/:id which includes participant names.
@@ -44,10 +49,8 @@ export function ManageRoundOverlay() {
       setDate((r.date ?? '').slice(0, 10))
       const d = new Date(r.teeTime)
       setTeeTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)
-      setFormat(r.format)
       setHoles(r.holes)
-      setSpots(r.totalSpots)
-      setHandicap(r.handicapRequirement)
+      setSpots(Math.min(r.totalSpots, r.venueType === 'driving_range' ? 10 : 4))
       setGreenFee(r.greenFeeCents != null ? String(Math.round(r.greenFeeCents / 100)) : '')
       setNotes(r.notes ?? '')
     }
@@ -60,6 +63,24 @@ export function ManageRoundOverlay() {
       .catch(() => {})
     return () => { stale = true }
   }, [isOpen, round?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load the host's friends when the invite picker opens.
+  useEffect(() => {
+    if (!inviteOpen) { setInviteQuery(''); setInviteResults([]); return }
+    api.get<{ data: Player[] }>('/users/friends').then(r => setFriends(r.data ?? [])).catch(() => {})
+  }, [inviteOpen])
+
+  // Debounced player search inside the invite picker.
+  useEffect(() => {
+    const q = inviteQuery.trim()
+    if (!q) { setInviteResults([]); return }
+    const id = setTimeout(() => {
+      api.get<{ data: Player[] }>(`/users/search?q=${encodeURIComponent(q)}`)
+        .then(r => setInviteResults(r.data ?? []))
+        .catch(() => setInviteResults([]))
+    }, 300)
+    return () => clearTimeout(id)
+  }, [inviteQuery])
 
   if (!isOpen || !round) return null
 
@@ -90,10 +111,8 @@ export function ManageRoundOverlay() {
       await api.patch(`/rounds/${round.id}`, {
         date,
         teeTime,
-        format,
-        holes,
+        holes: round.venueType === 'course' ? holes : undefined,
         totalSpots: spots,
-        handicapRequirement: handicap,
         greenFeeCents: greenFee ? Math.round(parseFloat(greenFee) * 100) : null,
         notes: notes || null,
       })
@@ -108,19 +127,30 @@ export function ManageRoundOverlay() {
     catch { showError(t('error.generic')) }
   }
 
-  const FORMATS: Array<{ key: RoundFormat; label: string }> = [
-    { key: 'stroke_play', label: t('format.stroke_play') },
-    { key: 'stableford', label: t('format.stableford') },
-    { key: 'best_ball', label: t('format.best_ball') },
-    { key: 'scramble', label: t('format.scramble') },
-  ]
-  const HCP_OPTIONS: Array<{ key: HandicapRequirement; label: string }> = [
-    { key: 'all', label: t('hcp.all') },
-    { key: 'u10', label: t('hcp.u10') },
-    { key: 'u15', label: t('hcp.u15') },
-    { key: 'u20', label: t('hcp.u20') },
-    { key: 'u28', label: t('hcp.u28') },
-  ]
+  const handleInvite = async (userId: string) => {
+    if (invitingId) return
+    setInvitingId(userId)
+    try {
+      const { data } = await api.post<{ data: Round }>(`/rounds/${round.id}/invite`, { userId })
+      if (data?.participants) {
+        setParticipants(data.participants)
+        const taken = data.participants.filter(p => p.role === 'accepted' || p.role === 'host').length
+        if (taken >= (data.totalSpots ?? spots)) setInviteOpen(false) // close once full
+      }
+      refreshData('rounds')
+    } catch {
+      showError(t('error.generic'))
+    } finally {
+      setInvitingId(null)
+    }
+  }
+
+  const existingIds = new Set(participants.map(p => p.userId))
+  const inviteList = (inviteQuery.trim() ? inviteResults : friends).filter(p => !existingIds.has(p.id))
+
+  // Player cap depends on venue: a flight is max 4 on a course, a range up to 10.
+  const maxSpots = round.venueType === 'driving_range' ? 10 : 4
+  const spotOptions = Array.from({ length: maxSpots - 1 }, (_, i) => i + 2) // 2..max
 
   const sectionStyle = { marginBottom: 22 }
   const labelStyle = { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--ink-3)', marginBottom: 10 }
@@ -192,12 +222,18 @@ export function ManageRoundOverlay() {
               </div>
             ))}
             {Array.from({ length: openSpots }).map((_, i) => (
-              <div key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
+              <Pressable
+                key={`empty-${i}`}
+                onClick={() => setInviteOpen(true)}
+                disabled={cancelled}
+                aria-label={t('manage.inviteTitle')}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none' }}
+              >
+                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 18, color: 'var(--primary)' }}>+</span>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{t('round.openSpot')}</div>
-              </div>
+                <div style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 600 }}>{t('manage.invite')}</div>
+              </Pressable>
             ))}
           </div>
         </div>
@@ -217,38 +253,48 @@ export function ManageRoundOverlay() {
             </div>
           </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.format')}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {FORMATS.map(f => (
-                <Pressable key={f.key} className={`host-toggle-btn${format === f.key ? ' active' : ''}`} onClick={() => setFormat(f.key)} aria-pressed={format === f.key}>{f.label}</Pressable>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div>
+          {round.venueType === 'course' && (
+            <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.holes')}</div>
               <div className="host-toggle-row">
                 <Pressable className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)} aria-pressed={holes === 9}>{t('holes.9')}</Pressable>
                 <Pressable className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)} aria-pressed={holes === 18}>{t('holes.18')}</Pressable>
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.spots')}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Pressable style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.max(Math.max(1, players.length), spots - 1))}>−</Pressable>
-                <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', minWidth: 24, textAlign: 'center' }}>{spots}</span>
-                <Pressable style={{ width: 34, height: 34, borderRadius: 'var(--r-sm)', background: 'var(--bg-alt)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18 }} onClick={() => setSpots(Math.min(8, spots + 1))}>+</Pressable>
-              </div>
-            </div>
-          </div>
+          )}
 
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>{t('host.handicap')}</div>
-            <select value={handicap} onChange={e => setHandicap(e.target.value as HandicapRequirement)} style={inputStyle}>
-              {HCP_OPTIONS.map(h => <option key={h.key} value={h.key}>{h.label}</option>)}
-            </select>
+            <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span>{t('host.spots')}</span>
+              <span style={{ fontWeight: 700, color: 'var(--ink-3)' }}>{spots} / {maxSpots}</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {spotOptions.map(n => {
+                const active = spots === n
+                const disabled = n < players.length // can't drop below seated players
+                return (
+                  <Pressable
+                    key={n}
+                    aria-pressed={active}
+                    aria-label={`${n}`}
+                    disabled={disabled}
+                    onClick={() => !disabled && setSpots(n)}
+                    style={{
+                      width: 42, height: 42, borderRadius: 'var(--r-md)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 15, fontWeight: 700,
+                      cursor: disabled ? 'default' : 'pointer',
+                      opacity: disabled ? 0.35 : 1,
+                      border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--line)',
+                      background: active ? 'var(--primary)' : 'var(--surface)',
+                      color: active ? '#fff' : 'var(--ink)',
+                    }}
+                  >
+                    {n}
+                  </Pressable>
+                )
+              })}
+            </div>
           </div>
 
           <div style={{ marginBottom: 14 }}>
@@ -288,6 +334,44 @@ export function ManageRoundOverlay() {
           </div>
         )}
       </div>
+
+      {/* Invite picker — host fills an open spot from friends / search */}
+      {inviteOpen && (
+        <div onClick={() => setInviteOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(26,35,50,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, maxHeight: '82%', background: 'var(--bg)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', padding: '16px 18px 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 500, color: 'var(--ink)' }}>{t('manage.inviteTitle')}</div>
+              <Pressable aria-label={t('a11y.close')} onClick={() => setInviteOpen(false)} style={{ padding: 4 }}>
+                <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </Pressable>
+            </div>
+            <div className="search-bar" style={{ marginBottom: 12 }}>
+              <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <input value={inviteQuery} onChange={e => setInviteQuery(e.target.value)} placeholder={t('players.search')} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)' }} />
+            </div>
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              {inviteList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '28px 16px', color: 'var(--ink-3)', fontSize: 13 }}>{inviteQuery.trim() ? t('players.noResults') : t('players.noFriends')}</div>
+              ) : inviteList.map(p => (
+                <div key={p.id} className="mod-row" style={{ alignItems: 'center', cursor: 'default' }}>
+                  <Avatar name={p.displayName} url={p.avatarUrl} seed={p.id} size={42} fontSize={15} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.displayName}</div>
+                    {(p.handicapIndex != null || p.locationText) && (
+                      <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                        {[p.handicapIndex != null ? `${t('profile.stat.hcp')} ${formatHandicap(p.handicapIndex)}` : null, p.locationText || null].filter(Boolean).join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                  <Pressable onClick={() => handleInvite(p.id)} disabled={invitingId === p.id} style={{ background: 'var(--primary)', color: 'white', borderRadius: 'var(--r-pill)', padding: '7px 16px', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                    {invitingId === p.id ? '…' : t('manage.invite')}
+                  </Pressable>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

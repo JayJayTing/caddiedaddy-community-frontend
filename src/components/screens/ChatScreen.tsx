@@ -5,6 +5,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { ChatThread } from '@/types/chat'
+import { Player } from '@/types/player'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
@@ -51,7 +52,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
 }
 
 export function ChatScreen() {
-  const { activeScreen, openOverlayWith, setActiveScreen, dataVersion } = useUI()
+  const { activeScreen, openOverlayWith, dataVersion, refreshData, showError } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const activated = useActivated('chat')
@@ -61,6 +62,12 @@ export function ChatScreen() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [requestCount, setRequestCount] = useState(0)
+  // New-message (start a DM) picker.
+  const [newMsgOpen, setNewMsgOpen] = useState(false)
+  const [pickerQuery, setPickerQuery] = useState('')
+  const [friends, setFriends] = useState<Player[]>([])
+  const [pickerResults, setPickerResults] = useState<Player[]>([])
+  const [creatingDm, setCreatingDm] = useState(false)
 
   useEffect(() => {
     if (!user || !activated) return
@@ -82,6 +89,42 @@ export function ChatScreen() {
       .catch(() => {})
     return () => { alive = false }
   }, [user, activated, dataVersion.friends])
+
+  // New-message picker: load friends on open, reset on close.
+  useEffect(() => {
+    if (!newMsgOpen) { setPickerQuery(''); setPickerResults([]); return }
+    api.get<{ data: Player[] }>('/users/friends').then(r => setFriends(r.data ?? [])).catch(() => {})
+  }, [newMsgOpen])
+
+  // Debounced people search within the picker.
+  useEffect(() => {
+    const q = pickerQuery.trim()
+    if (!q) { setPickerResults([]); return }
+    const id = setTimeout(() => {
+      api.get<{ data: Player[] }>(`/users/search?q=${encodeURIComponent(q)}`)
+        .then(r => setPickerResults(r.data ?? []))
+        .catch(() => setPickerResults([]))
+    }, 300)
+    return () => clearTimeout(id)
+  }, [pickerQuery])
+
+  // Find-or-create a DM with the chosen person, then open the thread.
+  const startDm = async (targetId: string) => {
+    if (creatingDm) return
+    setCreatingDm(true)
+    try {
+      const { data } = await api.post<{ data: ChatThread }>('/threads', { userId: targetId })
+      setNewMsgOpen(false)
+      refreshData('threads')
+      openOverlayWith('chatThread', data)
+    } catch {
+      showError(t('error.generic'))
+    } finally {
+      setCreatingDm(false)
+    }
+  }
+
+  const pickerList = pickerQuery.trim() ? pickerResults : friends
 
   const threadName = (th: ChatThread) => {
     const other = th.participants.find(p => p.userId !== (user?.id ?? ''))
@@ -113,8 +156,8 @@ export function ChatScreen() {
             </svg>
           </Pressable>
           <Pressable
-            aria-label={t('community.newPost')}
-            onClick={() => setActiveScreen('community')}
+            aria-label={t('chat.newMessage')}
+            onClick={() => setNewMsgOpen(true)}
             style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -199,6 +242,41 @@ export function ChatScreen() {
           )
         )}
       </div>
+
+      {/* New-message picker — start a DM with a friend or searched player */}
+      {newMsgOpen && (
+        <div onClick={() => setNewMsgOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(26,35,50,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, maxHeight: '82%', background: 'var(--bg)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', padding: '16px 18px 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 500, color: 'var(--ink)' }}>{t('chat.newMessage')}</div>
+              <Pressable aria-label={t('a11y.close')} onClick={() => setNewMsgOpen(false)} style={{ padding: 4 }}>
+                <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </Pressable>
+            </div>
+            <div className="search-bar" style={{ marginBottom: 12 }}>
+              <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <input autoFocus value={pickerQuery} onChange={e => setPickerQuery(e.target.value)} placeholder={t('players.search')} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)' }} />
+            </div>
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              {pickerList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--ink-3)', fontSize: 13 }}>
+                  {pickerQuery.trim() ? t('players.noResults') : t('chat.noFriendsYet')}
+                </div>
+              ) : (
+                pickerList.map(p => (
+                  <Pressable key={p.id} className="mod-row" onClick={() => startDm(p.id)} disabled={creatingDm} style={{ cursor: creatingDm ? 'default' : 'pointer', opacity: creatingDm ? 0.6 : 1 }}>
+                    <Avatar name={p.displayName} url={p.avatarUrl} seed={p.id} size={40} fontSize={15} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.displayName}</div>
+                      {p.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{p.locationText}</div>}
+                    </div>
+                  </Pressable>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
