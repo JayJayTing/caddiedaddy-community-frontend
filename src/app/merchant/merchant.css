@@ -365,6 +365,35 @@
   color: #8493a0;
   margin-bottom: 6px;
 }
+
+/* Hour selector (compact tee-sheet / bay-grid hour pills) */
+.mc-hourtabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.mc-hourtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #e3e8ee;
+  border-radius: 9999px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a2733;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.mc-hourtab:hover { border-color: #b9c4d0; }
+.mc-hourtab.active { background: #0f6fff; border-color: #0f6fff; color: #fff; }
+.mc-hourtab-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: #0f6fff;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 1px 6px;
+}
+.mc-hourtab.active .mc-hourtab-badge { background: rgba(255, 255, 255, 0.28); }
 .mc-slotrow {
   border: 1px solid #e3e8ee;
   border-radius: 10px;

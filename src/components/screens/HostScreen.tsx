@@ -9,6 +9,20 @@ import { RoundFormat, HandicapRequirement } from '@/types/round'
 import { DateField } from '@/components/ui/DateField'
 import { Pressable } from '@/components/ui/Pressable'
 
+// Tee-time options (every 10 min, 05:00–20:00). A reliable dropdown beats the
+// native <input type="time">, which is fiddly/unselectable on some browsers.
+// Values are "HH:mm" (unchanged downstream); labels are friendly 12-hour.
+const TEE_TIMES: { v: string; label: string }[] = (() => {
+  const out: { v: string; label: string }[] = []
+  for (let m = 300; m <= 1200; m += 10) {
+    const h = Math.floor(m / 60), mm = m % 60
+    const v = `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+    const h12 = h % 12 === 0 ? 12 : h % 12
+    out.push({ v, label: `${h12}:${String(mm).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}` })
+  }
+  return out
+})()
+
 export function HostScreen() {
   const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion } = useUI()
   const { t } = useLang()
@@ -182,12 +196,14 @@ export function HostScreen() {
           </div>
           <div>
             <div style={labelStyle}>{t('host.teeTime')}</div>
-            <input
-              type="time"
+            <select
               value={teeTime}
               onChange={e => setTeeTime(e.target.value)}
-              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: teeTime ? 'var(--ink)' : 'var(--ink-3)', fontFamily: 'var(--sans)' }}
-            />
+              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: teeTime ? 'var(--ink)' : 'var(--ink-3)', fontFamily: 'var(--sans)', appearance: 'none', cursor: 'pointer' }}
+            >
+              <option value="">{t('host.pickTime')}</option>
+              {TEE_TIMES.map(tm => <option key={tm.v} value={tm.v}>{tm.label}</option>)}
+            </select>
           </div>
         </div>
 

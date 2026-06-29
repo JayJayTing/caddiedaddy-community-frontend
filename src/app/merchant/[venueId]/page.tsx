@@ -593,6 +593,7 @@ function OperateTab({ venue, isRange }: { venue: MerchantVenueDetail; isRange: b
   const [bookings, setBookings] = useState<MerchantBooking[]>([])
   const [closures, setClosures] = useState<AvailabilityException[]>([])
   const [filter, setFilter] = useState<Filter>('all')
+  const [activeHour, setActiveHour] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -650,6 +651,12 @@ function OperateTab({ venue, isRange }: { venue: MerchantVenueDetail; isRange: b
     return groups
   }, [filteredSlots])
 
+  // Keep the selected hour valid as the day / filter changes.
+  useEffect(() => {
+    if (byHour.length && !byHour.some((g) => g.hour === activeHour)) setActiveHour(byHour[0].hour)
+  }, [byHour]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeGroup = byHour.find((g) => g.hour === activeHour) ?? byHour[0]
   const days = weekStart ? Array.from({ length: 7 }, (_, i) => addDaysIso(weekStart, i)) : []
 
   const closeDay = async () => {
@@ -714,24 +721,35 @@ function OperateTab({ venue, isRange }: { venue: MerchantVenueDetail; isRange: b
       ) : (filteredSlots ?? []).length === 0 ? (
         <div className="mc-empty">No {L.unit}s for this day. Set them up in the {isRange ? '“Bays & Hours”' : '“Schedule”'} tab.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {byHour.map((g) => (
-            <div key={g.hour}>
-              <div className="mc-hour">{g.hour}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {g.items.map((s) => (
-                  <SlotRow
-                    key={s.id}
-                    venueId={venue.id}
-                    slot={s}
-                    isRange={isRange}
-                    bookings={bookingsBySlot.get(`${hhmm(s.startTime)}|${s.holes ?? ''}`) ?? []}
-                    onChanged={loadDay}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+        <div>
+          {/* Hour selector — pick an hour to keep the sheet compact */}
+          <div className="mc-hourtabs">
+            {byHour.map((g) => {
+              const booked = g.items.reduce((n, s) => n + s.bookedCount, 0)
+              return (
+                <button
+                  key={g.hour}
+                  className={`mc-hourtab ${activeGroup?.hour === g.hour ? 'active' : ''}`}
+                  onClick={() => setActiveHour(g.hour)}
+                >
+                  {g.hour}
+                  {booked > 0 && <span className="mc-hourtab-badge">{booked}</span>}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14 }}>
+            {(activeGroup?.items ?? []).map((s) => (
+              <SlotRow
+                key={s.id}
+                venueId={venue.id}
+                slot={s}
+                isRange={isRange}
+                bookings={bookingsBySlot.get(`${hhmm(s.startTime)}|${s.holes ?? ''}`) ?? []}
+                onChanged={loadDay}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
