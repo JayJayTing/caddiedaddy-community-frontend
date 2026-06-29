@@ -31,6 +31,7 @@ const TYPE_COLORS: Record<string, [string, string]> = {
 export function PostCard({ post }: { post: Post }) {
   const { openOverlayWith } = useUI()
   const [expanded, setExpanded] = useState(false)
+  const [clamp, setClamp] = useState(true)
   const [liked, setLiked] = useState(post.userHasLiked ?? false)
   const [likeCount, setLikeCount] = useState(post.likesCount)
 
@@ -61,9 +62,17 @@ export function PostCard({ post }: { post: Post }) {
       </div>
       {/* Body */}
       <div
-        className={expanded ? '' : 'post-text-clamped'}
+        className={`post-text${expanded ? ' open' : ''}${clamp ? ' post-text-clamped' : ''}`}
         style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.6, marginBottom: 10, cursor: 'pointer' }}
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          if (expanded) setExpanded(false)              // collapse: animate down, clamp restored on transition end
+          else { setClamp(false); setExpanded(true) }   // expand: drop clamp, animate up
+        }}
+        onTransitionEnd={e => {
+          if (e.propertyName !== 'max-height') return
+          if (expanded) e.currentTarget.style.maxHeight = 'none'        // unpin so long posts never clip
+          else { e.currentTarget.style.maxHeight = ''; setClamp(true) } // re-pin + restore ellipsis
+        }}
       >
         {post.body}
       </div>
@@ -74,10 +83,10 @@ export function PostCard({ post }: { post: Post }) {
       {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={handleLike}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill={liked ? 'var(--primary)' : 'none'} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--primary)" fillOpacity={liked ? 1 : 0} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'fill-opacity .15s, stroke .15s' }}>
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
-          <span style={{ fontSize: 12, color: liked ? 'var(--primary)' : 'var(--ink-3)' }}>{likeCount}</span>
+          <span style={{ fontSize: 12, color: liked ? 'var(--primary)' : 'var(--ink-3)', transition: 'color .15s' }}>{likeCount}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => openOverlayWith('postDetail', post)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

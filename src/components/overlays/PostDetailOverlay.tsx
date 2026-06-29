@@ -101,10 +101,10 @@ export function PostDetailOverlay() {
           {/* Actions */}
           <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line-soft)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={handleLike}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? 'var(--primary)' : 'none'} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" fillOpacity={liked ? 1 : 0} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'fill-opacity .15s, stroke .15s' }}>
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
-              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600 }}>{likeCount} Likes</span>
+              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600, transition: 'color .15s' }}>{likeCount} Likes</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -156,7 +156,7 @@ export function PostDetailOverlay() {
               />
               <div
                 onClick={handleComment}
-                style={{ cursor: commentText.trim() ? 'pointer' : 'default', opacity: commentText.trim() ? 1 : 0.4 }}
+                style={{ cursor: commentText.trim() ? 'pointer' : 'default', opacity: commentText.trim() ? 1 : 0.4, transition: 'opacity .15s' }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>

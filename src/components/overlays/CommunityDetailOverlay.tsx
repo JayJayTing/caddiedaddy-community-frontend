@@ -154,7 +154,7 @@ export function CommunityDetailOverlay() {
             </div>
             {loaded && (
               canJoin ? (
-                <div onClick={toggleJoin} style={{ background: isMember ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.4)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1 }}>
+                <div onClick={toggleJoin} style={{ background: isMember ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.4)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1, transition: 'background .15s, border-color .15s, opacity .15s' }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{isMember ? 'Joined ✓' : 'Join'}</span>
                 </div>
               ) : (
@@ -174,7 +174,7 @@ export function CommunityDetailOverlay() {
           <div
             key={tb.key}
             onClick={() => setTab(tb.key)}
-            style={{ flex: 1, textAlign: 'center', padding: '14px 0', fontSize: 13, fontWeight: tab === tb.key ? 700 : 600, color: tab === tb.key ? 'var(--primary)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === tb.key ? 'var(--primary)' : 'transparent'}`, cursor: 'pointer' }}
+            style={{ flex: 1, textAlign: 'center', padding: '14px 0', fontSize: 13, fontWeight: tab === tb.key ? 700 : 600, color: tab === tb.key ? 'var(--primary)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === tb.key ? 'var(--primary)' : 'transparent'}`, cursor: 'pointer', transition: 'color .15s, border-color .15s' }}
           >
             {tb.label}
           </div>

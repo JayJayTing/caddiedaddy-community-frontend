@@ -4,6 +4,7 @@ import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
+import { bookingApi, VenueCard } from '@/lib/booking'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
@@ -234,30 +235,8 @@ export function HomeScreen() {
           </div>
         )}
 
-        {/* Tee times pane */}
-        {activeTab === 'teetimes' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '0 20px 24px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 10 }}>
-              Tee Times Near You
-            </div>
-            {loadingRounds ? null : rounds.slice(0, 3).map((round, idx) => {
-              const colors = [['var(--butter)', 'var(--butter-deep)'], ['var(--sage)', 'var(--sage-deep)'], ['var(--lilac)', 'var(--lilac-deep)']]
-              const [c1, c2] = colors[idx % 3]
-              return (
-                <div key={round.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 1 }}>{round.course.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)} · {formatMoney(round.greenFeeCents)}</div>
-                  </div>
-                  <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('roundDetail', round)}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)' }}>Join</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+        {/* Tee times pane — real bookable venues */}
+        {activeTab === 'teetimes' && <TeeTimesPane />}
 
         {/* Community pane */}
         {activeTab === 'community' && (
@@ -428,3 +407,47 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
   { id: '2', title: 'Booking cancellation policy updated', body: 'Cancel up to 6 hours before tee time without penalty. Late cancellations may forfeit your spot.', badge: 'Rule Update', createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), color1: '#C9A848', color2: '#a07c28' },
   { id: '3', title: 'Tianmu GC holes 14–16 closed Jun 24–26', body: 'Temporary closure for irrigation work. Affected rounds will play a modified 15-hole layout.', badge: 'Course Notice', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), color1: '#7C96A3', color2: '#4A6888' },
 ]
+
+// Tee Times tab — browse real venues (stores / driving ranges) and open the
+// booking overlay. Empty until a venue is set to `active`.
+function TeeTimesPane() {
+  const { openOverlayWith, dataVersion } = useUI()
+  const { t } = useLang()
+  const [venues, setVenues] = useState<VenueCard[] | null>(null)
+
+  useEffect(() => {
+    let stale = false
+    bookingApi.listVenues().then(v => { if (!stale) setVenues(v) }).catch(() => { if (!stale) setVenues([]) })
+    return () => { stale = true }
+  }, [dataVersion.bookings])
+
+  const palette = [['var(--butter)', 'var(--butter-deep)'], ['var(--sage)', 'var(--sage-deep)'], ['var(--lilac)', 'var(--lilac-deep)']]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '0 20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>{t('home.teeTimes.title')}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openOverlayWith('myBookings')}>{t('home.teeTimes.myBookings')}</span>
+      </div>
+      {venues === null ? (
+        <div style={{ textAlign: 'center', padding: 20, fontSize: 13, color: 'var(--ink-3)' }}>{t('loading')}</div>
+      ) : venues.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 24, fontSize: 13, color: 'var(--ink-3)', background: 'var(--surface)', borderRadius: 'var(--r-lg)' }}>{t('home.teeTimes.empty')}</div>
+      ) : venues.map((v, idx) => {
+        const [c1, c2] = palette[idx % 3]
+        return (
+          <div key={v.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 1 }}>{v.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{v.type === 'driving_range' ? t('booking.range') : t('booking.course')}{v.locationText ? ` · ${v.locationText}` : ''}</div>
+            </div>
+            <div style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '7px 14px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('bookVenue', v)}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{t('home.teeTimes.book')}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

@@ -16,12 +16,15 @@ import { ChatThreadOverlay } from '@/components/overlays/ChatThreadOverlay'
 import { PostDetailOverlay } from '@/components/overlays/PostDetailOverlay'
 import { CreateCommunityOverlay } from '@/components/overlays/CreateCommunityOverlay'
 import { CommunityDetailOverlay } from '@/components/overlays/CommunityDetailOverlay'
+import { BookVenueOverlay } from '@/components/overlays/BookVenueOverlay'
+import { MyBookingsOverlay } from '@/components/overlays/MyBookingsOverlay'
 import { SuccessOverlay } from '@/components/overlays/SuccessOverlay'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
 import { AccountSheet } from '@/components/sheets/AccountSheet'
 import { HandicapSheet } from '@/components/sheets/HandicapSheet'
 import { NotificationsSheet } from '@/components/sheets/NotificationsSheet'
 import { NewsDetailSheet } from '@/components/sheets/NewsDetailSheet'
+import { WalletSheet } from '@/components/sheets/WalletSheet'
 
 export default function AppLayout({ children: _children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -45,6 +48,8 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <PostDetailOverlay />
       <CreateCommunityOverlay />
       <CommunityDetailOverlay />
+      <BookVenueOverlay />
+      <MyBookingsOverlay />
 
       {/* Global success confirmation (animated checkmark) */}
       <SuccessOverlay />
@@ -55,6 +60,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <HandicapSheet />
       <NotificationsSheet />
       <NewsDetailSheet />
+      <WalletSheet />
 
       {/* Backdrop */}
       <div

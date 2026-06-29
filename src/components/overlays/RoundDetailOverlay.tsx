@@ -185,10 +185,11 @@ export function RoundDetailOverlay() {
               padding: 18,
               textAlign: 'center',
               cursor: hasRequested ? 'default' : 'pointer',
-              boxShadow: hasRequested ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
+              boxShadow: hasRequested ? '0 4px 20px rgba(92,122,154,0)' : '0 4px 20px rgba(92,122,154,.35)',
+              transition: 'background .15s, box-shadow .15s',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white' }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white', transition: 'color .15s' }}>
               {hasRequested ? 'Requested ✓' : joining ? '…' : 'Request to Join'}
             </span>
           </div>

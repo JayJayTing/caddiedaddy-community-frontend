@@ -154,9 +154,10 @@ export function ComposeSheet() {
             borderRadius: 'var(--r-lg)', padding: '14px', textAlign: 'center',
             cursor: body.trim() && !submitting ? 'pointer' : 'default',
             opacity: submitting ? 0.7 : 1,
+            transition: 'background .15s, opacity .15s',
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 700, color: body.trim() ? 'white' : 'var(--ink-3)' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: body.trim() ? 'white' : 'var(--ink-3)', transition: 'color .15s' }}>
             {submitting ? 'Posting…' : 'Post'}
           </span>
         </div>

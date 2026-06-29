@@ -2,8 +2,8 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
-export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'map' | null
-export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | null
+export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'map' | 'bookVenue' | 'myBookings' | null
+export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | 'wallet' | null
 
 export interface SuccessInfo { title: string; subtitle?: string }
 

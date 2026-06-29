@@ -5,14 +5,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap } from '@/lib/utils'
+import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, formatMoney } from '@/lib/utils'
+import { creditsApi } from '@/lib/credits'
 
 export function ProfileScreen() {
-  const { activeScreen, openSheetWith } = useUI()
+  const { activeScreen, openSheetWith, dataVersion } = useUI()
   const { user, logout } = useAuth()
-  const { t } = useLang()
+  const { t, lang, toggleLang } = useLang()
   const [recentRounds, setRecentRounds] = useState<Round[]>([])
   const [stats, setStats] = useState<{ roundsCount: number; followingCount: number } | null>(null)
+  const [creditBalance, setCreditBalance] = useState<number | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -28,6 +30,14 @@ export function ProfileScreen() {
       })
       .catch(() => setRecentRounds([]))
   }, [user])
+
+  // Credit balance — re-pull when credits change (purchase, booking, refund).
+  useEffect(() => {
+    if (!user) return
+    creditsApi.getWallet()
+      .then(w => setCreditBalance(w.balanceCents))
+      .catch(() => setCreditBalance(null))
+  }, [user, dataVersion.credits])
 
   const handleSignOut = async () => {
     await logout()
@@ -97,6 +107,24 @@ export function ProfileScreen() {
           </div>
         </div>
 
+        {/* Credits wallet */}
+        <div style={{ margin: '18px 20px 0' }}>
+          <div
+            onClick={() => openSheetWith('wallet')}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'linear-gradient(135deg,#3A6080,#5C7A9A)', borderRadius: 'var(--r-lg)', padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
+          >
+            <div style={{ width: 42, height: 42, borderRadius: 'var(--r-md)', background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>💳</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{t('profile.credits')}</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)' }}>{t('profile.creditsSub')}</div>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'white' }}>{creditBalance != null ? formatMoney(creditBalance) : '—'}</div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+
         {/* Recent rounds */}
         <div style={{ padding: '18px 20px 0' }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>
@@ -141,6 +169,12 @@ export function ProfileScreen() {
                 </svg>
               </div>
             ))}
+            {/* Language — toggles inline (moved here from the floating button) */}
+            <div className="mod-row" onClick={toggleLang} style={{ borderTop: '1px solid var(--line-soft)' }}>
+              <span style={{ fontSize: 18 }}>🌐</span>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>{t('profile.language')}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>{lang === 'zh' ? '中文' : 'English'}</span>
+            </div>
           </div>
         </div>
 
