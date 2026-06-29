@@ -127,7 +127,7 @@ export function EmailStep({ onBack, onLogin, onSignup, isLoading, error }: Props
                 </svg>
               )}
             </div>
-            <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>Remember me</span>
+            <span style={{ fontSize: 14, color: 'var(--ink-2)', fontWeight: 500 }}>{t('auth.email.rememberMe')}</span>
           </div>
         )}
 

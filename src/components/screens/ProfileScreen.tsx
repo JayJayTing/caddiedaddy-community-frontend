@@ -10,7 +10,7 @@ import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap } fr
 export function ProfileScreen() {
   const { activeScreen, openSheetWith } = useUI()
   const { user, logout } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [recentRounds, setRecentRounds] = useState<Round[]>([])
   const [stats, setStats] = useState<{ roundsCount: number; followingCount: number } | null>(null)
 
@@ -59,7 +59,7 @@ export function ProfileScreen() {
               {user?.avatarUrl ? '' : (user ? getInitial(user.displayName) : '?')}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? 'Loading…'}</div>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? t('loading')}</div>
               {user?.locationText && (
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>📍 {user.locationText}</div>
               )}
@@ -67,7 +67,7 @@ export function ProfileScreen() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', maxWidth: 240, lineHeight: 1.5, margin: '4px auto 0' }}>{user.bio}</div>
               )}
               {user?.memberSince && (
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 4 }}>{t('profile.memberSince')} {new Date(user.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 4 }}>{t('profile.memberSince')} {new Date(user.memberSince).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', year: 'numeric' })}</div>
               )}
             </div>
             <div
@@ -104,7 +104,7 @@ export function ProfileScreen() {
           </div>
           {recentRounds.length === 0 ? (
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', border: '1px solid var(--line-soft)' }}>
-              <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>No recent rounds yet</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('profile.noRecentRounds')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

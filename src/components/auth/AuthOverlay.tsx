@@ -1,6 +1,7 @@
 'use client'
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { WelcomeStep } from './WelcomeStep'
 import { MethodStep, AuthMethod } from './MethodStep'
 import { PhoneStep } from './PhoneStep'
@@ -15,6 +16,7 @@ interface Props {
 
 export function AuthOverlay({ onComplete }: Props) {
   const { sendOtp, verifyOtp, loginWithEmail, signupWithEmail, getGoogleUrl } = useAuth()
+  const { t } = useLang()
   const [step, setStep] = useState<Step>('welcome')
   const [phone, setPhone] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -38,14 +40,14 @@ export function AuthOverlay({ onComplete }: Props) {
         const url = await getGoogleUrl()
         window.location.href = url
       } catch {
-        setError('Google sign-in unavailable.')
+        setError(t('auth.error.googleUnavailable'))
       } finally {
         setIsLoading(false)
       }
     } else if (method === 'apple') {
-      setError('Apple sign-in coming soon.')
+      setError(t('auth.error.appleSoon'))
     }
-  }, [getGoogleUrl])
+  }, [getGoogleUrl, t])
 
   const handleSendCode = useCallback(async (fullPhone: string) => {
     setError(undefined)
@@ -55,11 +57,11 @@ export function AuthOverlay({ onComplete }: Props) {
       setPhone(fullPhone)
       setStep('otp')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to send code.')
+      setError(e instanceof Error ? e.message : t('auth.error.sendCodeFailed'))
     } finally {
       setIsLoading(false)
     }
-  }, [sendOtp])
+  }, [sendOtp, t])
 
   const handleVerifyOtp = useCallback(async (otp: string) => {
     setError(undefined)
@@ -68,20 +70,20 @@ export function AuthOverlay({ onComplete }: Props) {
       await verifyOtp(phone, otp)
       finish()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Invalid code.')
+      setError(e instanceof Error ? e.message : t('auth.error.invalidCode'))
     } finally {
       setIsLoading(false)
     }
-  }, [phone, verifyOtp, finish])
+  }, [phone, verifyOtp, finish, t])
 
   const handleResend = useCallback(async () => {
     setError(undefined)
     try {
       await sendOtp(phone)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to resend.')
+      setError(e instanceof Error ? e.message : t('auth.error.resendFailed'))
     }
-  }, [phone, sendOtp])
+  }, [phone, sendOtp, t])
 
   const handleLogin = useCallback(async (email: string, password: string, rememberMe?: boolean) => {
     setError(undefined)
@@ -90,11 +92,11 @@ export function AuthOverlay({ onComplete }: Props) {
       await loginWithEmail(email, password, rememberMe)
       finish()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Sign in failed.')
+      setError(e instanceof Error ? e.message : t('auth.error.signInFailed'))
     } finally {
       setIsLoading(false)
     }
-  }, [loginWithEmail, finish])
+  }, [loginWithEmail, finish, t])
 
   const handleSignup = useCallback(async (email: string, password: string, displayName: string) => {
     setError(undefined)
@@ -103,11 +105,11 @@ export function AuthOverlay({ onComplete }: Props) {
       await signupWithEmail(email, password, displayName)
       finish()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Sign up failed.')
+      setError(e instanceof Error ? e.message : t('auth.error.signUpFailed'))
     } finally {
       setIsLoading(false)
     }
-  }, [signupWithEmail, finish])
+  }, [signupWithEmail, finish, t])
 
   return (
     <div style={{

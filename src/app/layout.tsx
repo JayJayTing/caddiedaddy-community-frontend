@@ -19,12 +19,12 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: 'CaddieDaddy Community',
-  description: 'Find your next round. Play with your community.',
+  description: '找到你的下一場球局，與社群一起打球。',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${manrope.variable}`}>
+    <html lang="zh-Hant" className={`${fraunces.variable} ${manrope.variable}`}>
       <body>
         <LanguageProvider>
           <AuthProvider>

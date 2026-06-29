@@ -11,8 +11,9 @@ import { Avatar } from '@/components/ui/Avatar'
 type ChatTab = 'friends' | 'communities'
 
 function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; currentUserId: string; onOpen: () => void }) {
+  const { t } = useLang()
   const otherParticipant = thread.participants.find(p => p.userId !== currentUserId)
-  const name = thread.type === 'group' ? (thread.name ?? 'Group chat') : (otherParticipant?.user?.displayName ?? thread.name ?? 'Unknown')
+  const name = thread.type === 'group' ? (thread.name ?? t('chat.groupChat')) : (otherParticipant?.user?.displayName ?? thread.name ?? t('chat.unknownThread'))
   const avatarSeed = thread.type === 'group' ? thread.id : (otherParticipant?.userId ?? thread.id)
   const avatarUrl = thread.type === 'group' ? null : (otherParticipant?.user?.avatarUrl ?? null)
   const lastMsg = thread.lastMessage ?? thread.messages?.[0] ?? null
@@ -35,7 +36,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             fontWeight: unread ? 600 : 400,
           }}>
-            {lastMsg ? lastMsg.text : 'No messages yet'}
+            {lastMsg ? lastMsg.text : t('chat.noMessages')}
           </span>
           {unread && (
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }} />
@@ -65,7 +66,7 @@ export function ChatScreen() {
 
   const threadName = (th: ChatThread) => {
     const other = th.participants.find(p => p.userId !== (user?.id ?? ''))
-    return th.type === 'group' ? (th.name ?? 'Group chat') : (other?.user?.displayName ?? th.name ?? '')
+    return th.type === 'group' ? (th.name ?? t('chat.groupChat')) : (other?.user?.displayName ?? th.name ?? '')
   }
   const matchesQuery = (th: ChatThread) => {
     const q = query.trim().toLowerCase()
@@ -129,7 +130,7 @@ export function ChatScreen() {
 
       <div className="scroll-body">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40 }}><span style={{ color: 'var(--ink-3)', fontSize: 13 }}>Loading…</span></div>
+          <div style={{ textAlign: 'center', padding: 40 }}><span style={{ color: 'var(--ink-3)', fontSize: 13 }}>{t('loading')}</span></div>
         ) : tab === 'friends' ? (
           dmThreads.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 24px' }}>
@@ -150,7 +151,7 @@ export function ChatScreen() {
         ) : (
           groupThreads.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 24px' }}>
-              <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>Join communities to see their channels here</div>
+              <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>{t('chat.joinCommunityPrompt')}</div>
             </div>
           ) : (
             <div style={{ marginTop: 8 }}>

@@ -2,14 +2,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Post, Comment } from '@/types/post'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import type { TranslationKey } from '@/lib/translations'
 
 export function PostDetailOverlay() {
   const { openOverlay, closeOverlay, overlayData } = useUI()
   const { user } = useAuth()
+  const { t } = useLang()
   const post = overlayData as Post | null
   const isOpen = openOverlay === 'postDetail' && post != null
 
@@ -58,9 +61,9 @@ export function PostDetailOverlay() {
     announcement: ['var(--sky)', 'var(--sky-deep)'],
   } as Record<string, [string, string]>)[post.type] ?? ['var(--bg-alt)', 'var(--ink-2)']
 
-  const TYPE_LABELS: Record<string, string> = {
-    round_report: 'Round Report', seeking: 'Looking for Players',
-    tip: 'Tip', general: 'General', announcement: 'Announcement',
+  const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+    round_report: 'post.type.roundReport', seeking: 'post.type.seeking',
+    tip: 'post.type.tip', general: 'post.type.general', announcement: 'post.type.announcement',
   }
 
   return (
@@ -72,7 +75,7 @@ export function PostDetailOverlay() {
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </div>
-        <span style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Post</span>
+        <span style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>{t('post.detail.title')}</span>
       </div>
 
       <div className="scroll-body" style={{ padding: '16px 20px 80px' }}>
@@ -84,7 +87,7 @@ export function PostDetailOverlay() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
                 <span style={{ padding: '2px 8px', borderRadius: 'var(--r-pill)', fontSize: 10, fontWeight: 600, background: bg, color: fg }}>
-                  {TYPE_LABELS[post.type]}
+                  {t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>
@@ -104,25 +107,25 @@ export function PostDetailOverlay() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? 'var(--primary)' : 'none'} stroke={liked ? 'var(--primary)' : 'var(--ink-3)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
-              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600 }}>{likeCount} Likes</span>
+              <span style={{ fontSize: 13, color: liked ? 'var(--primary)' : 'var(--ink-3)', fontWeight: 600 }}>{likeCount} {t('post.detail.likesSuffix')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 600 }}>{comments.length} Comments</span>
+              <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 600 }}>{comments.length} {t('post.detail.commentsSuffix')}</span>
             </div>
           </div>
         </div>
 
         {/* Comments */}
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>
-          Comments
+          {t('post.detail.commentsLabel')}
         </div>
         {loadingComments ? (
-          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>{t('loading')}</div>
         ) : comments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>No comments yet. Be the first!</div>
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--ink-3)', fontSize: 13 }}>{t('post.detail.noComments')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {comments.map(c => (
@@ -150,7 +153,7 @@ export function PostDetailOverlay() {
               <textarea
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
-                placeholder="Add a comment…"
+                placeholder={t('post.detail.commentPlaceholder')}
                 rows={1}
                 style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)', resize: 'none', lineHeight: 1.5 }}
               />

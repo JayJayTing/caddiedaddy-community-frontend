@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { ChatThread, Message } from '@/types/chat'
 import { Avatar } from '@/components/ui/Avatar'
@@ -14,6 +15,7 @@ const timeFmt = (iso: string) =>
 export function ChatThreadOverlay() {
   const { openOverlay, closeOverlay, overlayData } = useUI()
   const { user } = useAuth()
+  const { t } = useLang()
 
   const thread = overlayData as ChatThread | null
   const isOpen = openOverlay === 'chatThread' && thread != null
@@ -67,10 +69,10 @@ export function ChatThreadOverlay() {
   if (!isOpen || !thread) return null
 
   const other = thread.participants.find(p => p.userId !== user?.id)
-  const title = thread.type === 'group' ? (thread.name ?? 'Group chat') : (other?.user?.displayName ?? thread.name ?? 'Chat')
+  const title = thread.type === 'group' ? (thread.name ?? t('chat.groupChat')) : (other?.user?.displayName ?? thread.name ?? t('chat.title'))
   const avatarSeed = thread.type === 'group' ? thread.id : (other?.userId ?? thread.id)
   const avatarUrl = thread.type === 'group' ? null : (other?.user?.avatarUrl ?? null)
-  const subtitle = thread.type === 'group' ? `${thread.participants.length} members` : ''
+  const subtitle = thread.type === 'group' ? `${thread.participants.length} ${t('community.members')}` : ''
 
   const send = async () => {
     const text = input.trim()
@@ -105,7 +107,7 @@ export function ChatThreadOverlay() {
       {/* Messages */}
       <div ref={scrollRef} className="scroll-body" style={{ padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 13, marginTop: 40 }}>No messages yet — say hi 👋</div>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 13, marginTop: 40 }}>{t('chat.threadNoMessages')}</div>
         ) : messages.map((m, i) => {
           const own = m.senderId === user?.id
           const showSender = thread.type === 'group' && !own && (i === 0 || messages[i - 1].senderId !== m.senderId)
@@ -136,7 +138,7 @@ export function ChatThreadOverlay() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-          placeholder="Message…"
+          placeholder={t('chat.messagePlaceholder')}
           rows={1}
           style={{ flex: 1, resize: 'none', maxHeight: 100, padding: '10px 14px', border: '1.5px solid var(--line)', borderRadius: 20, fontSize: 14, fontFamily: 'var(--sans)', background: 'var(--surface)', color: 'var(--ink)', outline: 'none' }}
         />

@@ -49,7 +49,7 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
           <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 10, borderBottom: '1px solid var(--line-soft)' }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>🇹🇼</span>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>+886</span>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Taiwan</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('auth.phone.country')}</span>
             <svg style={{ marginLeft: 'auto' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>

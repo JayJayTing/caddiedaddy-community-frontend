@@ -8,16 +8,17 @@ import { Post } from '@/types/post'
 import { Community } from '@/types/community'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
+import type { TranslationKey } from '@/lib/translations'
 
 type CommunityTab = 'discover' | 'following' | 'mine'
 type PostFilter = 'all' | 'round_report' | 'seeking' | 'tip'
 
-const TYPE_LABELS: Record<string, string> = {
-  round_report: 'Round Report',
-  seeking: 'Looking for Players',
-  tip: 'Tip',
-  general: 'General',
-  announcement: 'Announcement',
+const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+  round_report: 'post.type.roundReport',
+  seeking: 'post.type.seeking',
+  tip: 'post.type.tip',
+  general: 'post.type.general',
+  announcement: 'post.type.announcement',
 }
 
 const TYPE_COLORS: Record<string, [string, string]> = {
@@ -30,6 +31,7 @@ const TYPE_COLORS: Record<string, [string, string]> = {
 
 export function PostCard({ post }: { post: Post }) {
   const { openOverlayWith } = useUI()
+  const { t } = useLang()
   const [expanded, setExpanded] = useState(false)
   const [liked, setLiked] = useState(post.userHasLiked ?? false)
   const [likeCount, setLikeCount] = useState(post.likesCount)
@@ -51,7 +53,7 @@ export function PostCard({ post }: { post: Post }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
-            <span className="badge" style={{ background: bg, color: fg, fontSize: 10 }}>{TYPE_LABELS[post.type]}</span>
+            <span className="badge" style={{ background: bg, color: fg, fontSize: 10 }}>{t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>
             {post.communities[0]?.community.name && <span>{post.communities[0].community.name} · </span>}
@@ -86,7 +88,7 @@ export function PostCard({ post }: { post: Post }) {
           <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{post.commentsCount}</span>
         </div>
         <div style={{ marginLeft: 'auto', cursor: 'pointer' }} onClick={() => openOverlayWith('postDetail', post)}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>View</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>{t('community.view')}</span>
         </div>
       </div>
     </div>
@@ -94,6 +96,7 @@ export function PostCard({ post }: { post: Post }) {
 }
 
 function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void }) {
+  const { t } = useLang()
   const c1 = comm.color1 ?? '#B8CBE0'
   const c2 = comm.color2 ?? '#5C7A9A'
   return (
@@ -106,13 +109,13 @@ function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void 
       >
         <div style={{ position: 'absolute', bottom: 8, left: 10 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white' }}>
-            {comm.memberCount} members
+            {comm.memberCount} {t('community.members')}
           </span>
         </div>
       </div>
       <div className="comm-thumb-body">
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, marginBottom: 2 }}>{comm.name}</div>
-        <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{comm.roundCount ?? 0} rounds</div>
+        <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{comm.roundCount ?? 0} {t('community.roundsSuffix')}</div>
       </div>
     </div>
   )
@@ -240,7 +243,7 @@ export function CommunityScreen() {
               ) : filteredFollowing.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40 }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}>👋</div>
-                  <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>Follow communities to see their posts here</div>
+                  <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>{t('community.followPrompt')}</div>
                 </div>
               ) : filteredFollowing.map(p => <PostCard key={p.id} post={p} />)}
             </div>
@@ -276,7 +279,7 @@ export function CommunityScreen() {
                         </div>
                       </div>
                       <div style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.memberCount} {t('community.members')} · {c.roundCount} rounds</span>
+                        <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.memberCount} {t('community.members')} · {c.roundCount} {t('community.roundsSuffix')}</span>
                         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>
                           {c.userMembership?.role === 'admin' ? t('community.manage') : t('community.view')}
                         </span>

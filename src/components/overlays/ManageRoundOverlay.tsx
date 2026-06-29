@@ -161,7 +161,7 @@ export function ManageRoundOverlay() {
                 <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-sm)' }}>
                   <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={40} fontSize={15} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.user?.displayName ?? 'Player'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.user?.displayName ?? t('common.player')}</div>
                     <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t('manage.requests')}</div>
                   </div>
                   {!cancelled && (
@@ -187,7 +187,7 @@ export function ManageRoundOverlay() {
             {players.map(p => (
               <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
-                <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? 'Host' : (p.user?.displayName?.split(' ')[0] ?? 'Player')}</div>
+                <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
               </div>
             ))}
             {Array.from({ length: openSpots }).map((_, i) => (
@@ -195,7 +195,7 @@ export function ManageRoundOverlay() {
                 <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>Open</div>
+                <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{t('round.openSpot')}</div>
               </div>
             ))}
           </div>

@@ -2,11 +2,13 @@
 import { Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLang } from '@/contexts/LanguageContext'
 
 function GoogleCallbackInner() {
   const params = useSearchParams()
   const router = useRouter()
   const { handleGoogleCallback } = useAuth()
+  const { t } = useLang()
 
   useEffect(() => {
     const code = params.get('code')
@@ -18,18 +20,23 @@ function GoogleCallbackInner() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'var(--sans)' }}>
-      <p style={{ color: 'var(--ink-2)' }}>Signing in...</p>
+      <p style={{ color: 'var(--ink-2)' }}>{t('loading.signingIn')}</p>
+    </div>
+  )
+}
+
+function SigningInFallback() {
+  const { t } = useLang()
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'var(--sans)' }}>
+      <p style={{ color: 'var(--ink-2)' }}>{t('loading.signingIn')}</p>
     </div>
   )
 }
 
 export default function GoogleCallbackPage() {
   return (
-    <Suspense fallback={
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'var(--sans)' }}>
-        <p style={{ color: 'var(--ink-2)' }}>Signing in...</p>
-      </div>
-    }>
+    <Suspense fallback={<SigningInFallback />}>
       <GoogleCallbackInner />
     </Suspense>
   )

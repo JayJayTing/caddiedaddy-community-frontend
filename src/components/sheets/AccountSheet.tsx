@@ -32,7 +32,7 @@ export function AccountSheet() {
       const { data: updated } = await api.upload<{ data: AuthUser }>('/uploads/avatar', file)
       updateUser(updated)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to upload photo.')
+      setError(err instanceof Error ? err.message : t('error.uploadPhotoFailed'))
     } finally {
       setUploading(false)
     }
@@ -64,7 +64,7 @@ export function AccountSheet() {
       setSuccess(true)
       setTimeout(closeSheet, 800)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save.')
+      setError(e instanceof Error ? e.message : t('error.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -91,7 +91,7 @@ export function AccountSheet() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </div>
           </label>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}>{uploading ? 'Uploading…' : 'Tap to change photo'}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}>{uploading ? t('loading.uploading') : t('sheet.account.changePhoto')}</span>
           <input id="account-avatar-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleAvatarPick} style={{ display: 'none' }} />
         </div>
         <div>
@@ -100,20 +100,20 @@ export function AccountSheet() {
         </div>
         <div>
           <label style={labelStyle}>{t('sheet.account.location')}</label>
-          <input type="text" placeholder="e.g. Taoyuan, Taiwan" value={locationText} onChange={e => setLocationText(e.target.value)} style={inputStyle} />
+          <input type="text" placeholder={t('sheet.account.locationPlaceholder')} value={locationText} onChange={e => setLocationText(e.target.value)} style={inputStyle} />
         </div>
         <div>
-          <label style={labelStyle}>Bio</label>
+          <label style={labelStyle}>{t('sheet.account.bio')}</label>
           <textarea
             value={bio}
             onChange={e => setBio(e.target.value)}
-            placeholder="Tell others about your golf game…"
+            placeholder={t('sheet.account.bioPlaceholder')}
             rows={3}
             style={{ ...inputStyle, resize: 'none', lineHeight: 1.5 }}
           />
         </div>
         {error && <div style={{ fontSize: 13, color: '#C0392B' }}>{error}</div>}
-        {success && <div style={{ fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>Saved!</div>}
+        {success && <div style={{ fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>{t('success.saved')}</div>}
         <div
           onClick={handleSave}
           style={{
@@ -123,7 +123,7 @@ export function AccountSheet() {
           }}
         >
           <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>
-            {saving ? 'Saving…' : t('sheet.account.save')}
+            {saving ? t('loading.saving') : t('sheet.account.save')}
           </span>
         </div>
       </div>

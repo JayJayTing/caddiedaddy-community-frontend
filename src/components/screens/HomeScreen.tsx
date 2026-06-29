@@ -11,6 +11,7 @@ import { formatTeeTime, formatDate, formatMoney, formatFormat, formatHcpReq, tim
 import { Avatar } from '@/components/ui/Avatar'
 import { useMounted } from '@/lib/useMounted'
 import { useNotifications } from '@/contexts/NotificationsContext'
+import type { TranslationKey } from '@/lib/translations'
 
 type HomeTab = 'rounds' | 'teetimes' | 'community'
 
@@ -18,7 +19,7 @@ export function HomeScreen() {
   const { activeScreen, setActiveScreen, openOverlayWith, openSheetWith, dataVersion } = useUI()
   const { unreadCount } = useNotifications()
   const { user } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const mounted = useMounted()
 
   const [upcoming, setUpcoming] = useState<Round | null>(null)
@@ -39,7 +40,7 @@ export function HomeScreen() {
   }
 
   const dateLabel = () => {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    return new Date().toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric' })
   }
 
   useEffect(() => {
@@ -104,7 +105,7 @@ export function HomeScreen() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </div>
-          <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={38} fontSize={14} onClick={() => setActiveScreen('profile')} title="Profile" />
+          <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={38} fontSize={14} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
       </div>
 
@@ -192,7 +193,7 @@ export function HomeScreen() {
                     </span>
                   </div>
                   <div style={{ position: 'absolute', top: 8, right: 10, fontSize: 10, color: 'rgba(255,255,255,.7)', fontWeight: 500 }}>
-                    {new Date(ann.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(ann.createdAt).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
                 <div style={{ padding: '11px 13px 13px' }}>
@@ -238,7 +239,7 @@ export function HomeScreen() {
         {activeTab === 'teetimes' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '0 20px 24px' }}>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 10 }}>
-              Tee Times Near You
+              {t('home.teeTimesNearYou')}
             </div>
             {loadingRounds ? null : rounds.slice(0, 3).map((round, idx) => {
               const colors = [['var(--butter)', 'var(--butter-deep)'], ['var(--sage)', 'var(--sage-deep)'], ['var(--lilac)', 'var(--lilac-deep)']]
@@ -251,7 +252,7 @@ export function HomeScreen() {
                     <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)} · {formatMoney(round.greenFeeCents)}</div>
                   </div>
                   <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('roundDetail', round)}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)' }}>Join</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)' }}>{t('common.join')}</span>
                   </div>
                 </div>
               )
@@ -318,7 +319,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
               <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : 'Full'}
+                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
               </span>
               <svg className={`round-card-chevron${expanded ? ' open' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
@@ -344,7 +345,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
               [t('rounds.format'), formatFormat(round.format)],
-              [t('rounds.holes'), `${round.holes} holes`],
+              [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val]) => (
               <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
@@ -359,11 +360,11 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
               onClick={handleJoin}
             >
               <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {isHost ? 'Your Round' : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+                {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </div>
             <div style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', textAlign: 'center', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>Full Page →</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('common.fullPage')}</span>
             </div>
           </div>
         </div>
@@ -374,6 +375,7 @@ function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; 
 
 // Mini post card for community pane
 function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
+  const { t } = useLang()
   const TYPE_COLORS: Record<string, [string, string]> = {
     round_report: ['var(--primary-soft)', 'var(--primary-ink)'],
     seeking: ['var(--butter)', 'var(--butter-deep)'],
@@ -381,12 +383,12 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
     general: ['var(--bg-alt)', 'var(--ink-2)'],
     announcement: ['var(--sky)', 'var(--sky-deep)'],
   }
-  const TYPE_LABELS: Record<string, string> = {
-    round_report: 'Round Report',
-    seeking: 'Looking for Players',
-    tip: 'Tip',
-    general: 'General',
-    announcement: 'Announcement',
+  const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+    round_report: 'post.type.roundReport',
+    seeking: 'post.type.seeking',
+    tip: 'post.type.tip',
+    general: 'post.type.general',
+    announcement: 'post.type.announcement',
   }
   const [bg, fg] = TYPE_COLORS[post.type] ?? ['var(--bg-alt)', 'var(--ink-2)']
 
@@ -394,7 +396,7 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '13px 14px', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }} onClick={onClick}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 'var(--r-pill)', background: bg, color: fg }}>
-          {TYPE_LABELS[post.type]}
+          {t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}
         </span>
         {post.communities[0] && <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>{post.communities[0].community.name}</span>}
       </div>
@@ -417,14 +419,14 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
           </svg>
           <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{post.commentsCount}</span>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>View</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>{t('community.view')}</span>
       </div>
     </div>
   )
 }
 
 const MOCK_ANNOUNCEMENTS: Announcement[] = [
-  { id: '1', title: 'Summer Scramble Series starts July 5', body: 'Sign-ups are open for our 4-week summer scramble. Register your team of 2–4 by June 30.', badge: 'Announcement', createdAt: new Date().toISOString(), color1: '#5C7A9A', color2: '#3A6080' },
-  { id: '2', title: 'Booking cancellation policy updated', body: 'Cancel up to 6 hours before tee time without penalty. Late cancellations may forfeit your spot.', badge: 'Rule Update', createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), color1: '#C9A848', color2: '#a07c28' },
-  { id: '3', title: 'Tianmu GC holes 14–16 closed Jun 24–26', body: 'Temporary closure for irrigation work. Affected rounds will play a modified 15-hole layout.', badge: 'Course Notice', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), color1: '#7C96A3', color2: '#4A6888' },
+  { id: '1', title: '夏季合擊賽系列 7 月 5 日開賽', body: '為期四週的夏季合擊賽開放報名，請於 6 月 30 日前完成 2 至 4 人組隊報名。', badge: '公告', createdAt: new Date().toISOString(), color1: '#5C7A9A', color2: '#3A6080' },
+  { id: '2', title: '預約取消政策更新', body: '開球前 6 小時以上取消不收取任何費用；逾時取消可能喪失保留名額。', badge: '規則更新', createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), color1: '#C9A848', color2: '#a07c28' },
+  { id: '3', title: '天母球場 14–16 洞 6 月 24–26 日封閉', body: '因灌溉工程暫時封閉，受影響的球局將改打 15 洞配置。', badge: '球場通知', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), color1: '#7C96A3', color2: '#4A6888' },
 ]

@@ -74,7 +74,7 @@ export function NotificationsSheet() {
     } catch { /* target may have been removed */ }
   }
 
-  const title = view === 'prefs' ? 'Notification Settings' : t('sheet.notifications.title')
+  const title = view === 'prefs' ? t('sheet.notif.settings') : t('sheet.notifications.title')
 
   return (
     <BottomSheet isOpen={isOpen} onClose={closeSheet} title={title}>
@@ -82,16 +82,16 @@ export function NotificationsSheet() {
         <div style={{ padding: '4px 0 24px' }}>
           {/* Actions */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 20px 8px' }}>
-            <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}</span>
+            <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{unreadCount > 0 ? `${unreadCount} ${t('sheet.notif.unreadSuffix')}` : t('sheet.notif.allCaughtUp')}</span>
             {unreadCount > 0 && (
-              <span onClick={() => markAllRead()} style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>Mark all read</span>
+              <span onClick={() => markAllRead()} style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>{t('sheet.notif.markAllRead')}</span>
             )}
           </div>
 
           {notifications.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 24px' }}>
               <div style={{ fontSize: 34, marginBottom: 10 }}>🔔</div>
-              <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>No notifications yet</div>
+              <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>{t('sheet.notif.empty')}</div>
             </div>
           ) : (
             <div>
@@ -120,20 +120,20 @@ export function NotificationsSheet() {
           {/* Settings link */}
           <div onClick={() => setView('prefs')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 20px 0', cursor: 'pointer', color: 'var(--ink-3)' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Notification settings</span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{t('sheet.notif.settingsLabel')}</span>
           </div>
         </div>
       ) : (
         <div style={{ padding: '8px 20px 28px' }}>
           <div onClick={() => setView('feed')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 8px', cursor: 'pointer', color: 'var(--primary)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Back</span>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>{t('common.back')}</span>
           </div>
           {([
-            ['roundsNearby', t('sheet.notifications.roundsNearby'), 'Get notified when new rounds open near you'],
-            ['communityActivity', t('sheet.notifications.communityActivity'), 'New posts and activity in your communities'],
-            ['roundReminders', t('sheet.notifications.roundReminders'), 'Reminders before your upcoming rounds'],
-            ['newMessages', t('sheet.notifications.newMessages'), 'New messages from players and communities'],
+            ['roundsNearby', t('sheet.notifications.roundsNearby'), t('sheet.notif.roundsNearbyDesc')],
+            ['communityActivity', t('sheet.notifications.communityActivity'), t('sheet.notif.communityActivityDesc')],
+            ['roundReminders', t('sheet.notifications.roundReminders'), t('sheet.notif.roundRemindersDesc')],
+            ['newMessages', t('sheet.notifications.newMessages'), t('sheet.notif.newMessagesDesc')],
           ] as Array<[keyof Prefs, string, string]>).map(([key, label, sub]) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--line-soft)' }}>
               <div style={{ paddingRight: 12 }}>

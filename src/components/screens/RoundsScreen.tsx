@@ -8,6 +8,7 @@ import { Round } from '@/types/round'
 import { formatTeeTime, formatMoney, formatFormat, formatHcpReq, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { useMounted } from '@/lib/useMounted'
+import type { TranslationKey } from '@/lib/translations'
 
 type Filter = 'all' | 'morning' | 'afternoon' | 'hcp15' | '9h' | '18h' | 'communities'
 
@@ -18,11 +19,12 @@ function WeekDatePicker({
 }: { selectedDate: string | null; onSelect: (d: string | null) => void; roundDates: Set<string> }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const mounted = useMounted()
+  const { t, lang } = useLang()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
   const WEEKS = 13
-  const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const DAY_LABELS: TranslationKey[] = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri', 'day.sat', 'day.sun']
 
   // Monday of the current week (weeks run Mon → Sun).
   const startMonday = new Date(today)
@@ -39,7 +41,7 @@ function WeekDatePicker({
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   const [monthLabel, setMonthLabel] = useState(
-    weeks[0][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    weeks[0][3].toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', year: 'numeric' }),
   )
 
   // Snaps one whole week at a time; the month header follows the visible week.
@@ -47,7 +49,7 @@ function WeekDatePicker({
     const el = scrollRef.current
     if (!el || el.clientWidth === 0) return
     const wIdx = Math.min(weeks.length - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth)))
-    setMonthLabel(weeks[wIdx][3].toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
+    setMonthLabel(weeks[wIdx][3].toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', year: 'numeric' }))
   }
 
   return (
@@ -56,7 +58,7 @@ function WeekDatePicker({
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{mounted ? monthLabel : ''}</span>
       </div>
       <div className="dp-day-labels">
-        {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{d}</div>)}
+        {DAY_LABELS.map((d, i) => <div key={i} className="dp-day-label">{t(d)}</div>)}
       </div>
       <div className="dp-weeks" ref={scrollRef} onScroll={handleScroll}>
         {mounted && weeks.map((week, wi) => (
@@ -136,7 +138,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
               <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : 'Full'}
+                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
               </span>
               <svg className={`round-card-chevron${expanded ? ' open' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
@@ -152,7 +154,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
                 <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={24} fontSize={9} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
               ))}
             </div>
-            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} hosting</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} {t('home.hosting')}</span>
           </div>
         </div>
       </div>
@@ -162,7 +164,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
               [t('rounds.format'), formatFormat(round.format)],
-              [t('rounds.holes'), `${round.holes} holes`],
+              [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val]) => (
               <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
@@ -177,11 +179,11 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
               onClick={handleJoin}
             >
               <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {isHost ? 'Your Round' : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+                {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </div>
             <div style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>Full Page →</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('common.fullPage')}</span>
             </div>
           </div>
         </div>

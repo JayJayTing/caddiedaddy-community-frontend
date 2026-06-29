@@ -32,7 +32,7 @@ export function Avatar({
         className={`avatar${className ? ' ' + className : ''}`}
         style={{ ...base, backgroundImage: `url("${url.replace(/"/g, '%22')}")`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
         role="img"
-        aria-label={title ?? name ?? 'avatar'}
+        aria-label={title ?? name ?? '頭像'}
         title={title}
         onClick={onClick}
       />

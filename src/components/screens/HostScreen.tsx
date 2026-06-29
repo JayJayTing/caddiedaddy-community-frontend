@@ -67,7 +67,7 @@ export function HostScreen() {
 
   const handlePublish = async () => {
     if (!selectedCourse || !date || !teeTime) {
-      setError('Please fill in course, date, and tee time.')
+      setError(t('host.errorIncomplete'))
       return
     }
     setError(null)
@@ -92,7 +92,7 @@ export function HostScreen() {
       showSuccess(t('success.roundPosted'))
       setActiveScreen('rounds')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to publish round.')
+      setError(e instanceof Error ? e.message : t('error.publishFailed'))
     } finally {
       setPublishing(false)
     }
@@ -127,7 +127,7 @@ export function HostScreen() {
               onChange={e => setSelectedCommunity(e.target.value)}
               style={{ marginTop: 10, width: '100%', padding: '12px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)' }}
             >
-              <option value="">Select a community…</option>
+              <option value="">{t('host.selectCommunity')}</option>
               {myCommunities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}

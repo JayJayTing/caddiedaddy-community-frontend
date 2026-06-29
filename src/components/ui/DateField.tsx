@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/contexts/LanguageContext'
+import type { TranslationKey } from '@/lib/translations'
 
 interface Props {
   value: string                 // YYYY-MM-DD ('' = none)
@@ -8,8 +10,8 @@ interface Props {
   placeholder?: string
 }
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] // Monday-first, matches the rest of the app
+const MONTH_KEYS: TranslationKey[] = ['monthFull.1', 'monthFull.2', 'monthFull.3', 'monthFull.4', 'monthFull.5', 'monthFull.6', 'monthFull.7', 'monthFull.8', 'monthFull.9', 'monthFull.10', 'monthFull.11', 'monthFull.12']
+const DOW_KEYS: TranslationKey[] = ['day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri', 'day.sat', 'day.sun'] // Monday-first, matches the rest of the app
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const toYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -22,7 +24,8 @@ const parseYMD = (s: string): Date | null => {
 }
 
 // On-brand calendar field that replaces the native (OS) date picker.
-export function DateField({ value, onChange, min, placeholder = 'Select date' }: Props) {
+export function DateField({ value, onChange, min, placeholder }: Props) {
+  const { t, lang } = useLang()
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<{ y: number; m: number }>({ y: 2026, m: 5 })
 
@@ -31,8 +34,8 @@ export function DateField({ value, onChange, min, placeholder = 'Select date' }:
   const selected = parseYMD(value)
 
   const label = selected
-    ? selected.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
-    : placeholder
+    ? selected.toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+    : (placeholder ?? t('ui.date.selectDate'))
 
   const openPicker = () => {
     const base = selected ?? (today >= minDate ? today : minDate)
@@ -82,7 +85,7 @@ export function DateField({ value, onChange, min, placeholder = 'Select date' }:
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{MONTHS[m]} {y}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{t(MONTH_KEYS[m])} {y}</span>
               <div onClick={() => step(1)} style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
               </div>
@@ -90,7 +93,7 @@ export function DateField({ value, onChange, min, placeholder = 'Select date' }:
 
             {/* Day-of-week labels */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
-              {DOW.map((d, i) => <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink-3)' }}>{d}</div>)}
+              {DOW_KEYS.map((d, i) => <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--ink-3)' }}>{t(d)}</div>)}
             </div>
 
             {/* Days */}
@@ -121,7 +124,7 @@ export function DateField({ value, onChange, min, placeholder = 'Select date' }:
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-              <span onClick={() => setOpen(false)} style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', padding: '6px 8px' }}>Cancel</span>
+              <span onClick={() => setOpen(false)} style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', padding: '6px 8px' }}>{t('common.cancel')}</span>
             </div>
           </div>
         </div>
