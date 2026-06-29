@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function AuthOverlay({ onComplete }: Props) {
-  const { sendOtp, verifyOtp, loginWithEmail, signupWithEmail, loginWithProvider, verifyEmailOtp, resendEmailOtp, forgotPassword, updatePassword } = useAuth()
+  const { sendOtp, verifyOtp, loginWithEmail, signupWithEmail, loginWithProvider, loginWithLine, verifyEmailOtp, resendEmailOtp, forgotPassword, updatePassword } = useAuth()
   const { t } = useLang()
   const [step, setStep] = useState<Step>('welcome')
   const [phone, setPhone] = useState('')
@@ -45,8 +45,16 @@ export function AuthOverlay({ onComplete }: Props) {
         setError(method === 'google' ? t('auth.error.googleUnavailable') : t('auth.error.appleUnavailable'))
         setIsLoading(false)
       }
+    } else if (method === 'line') {
+      try {
+        setIsLoading(true)
+        await loginWithLine() // redirects the browser to LINE
+      } catch {
+        setError(t('auth.error.signInFailed'))
+        setIsLoading(false)
+      }
     }
-  }, [loginWithProvider, t])
+  }, [loginWithProvider, loginWithLine, t])
 
   const handleSendCode = useCallback(async (fullPhone: string) => {
     setError(undefined)

@@ -17,6 +17,8 @@ interface AuthContextType {
   updatePassword: (password: string) => Promise<void>
   loginWithProvider: (provider: 'google' | 'apple') => Promise<void>
   completeOAuth: () => Promise<void>
+  loginWithLine: () => Promise<void>
+  completeLine: () => Promise<void>
   logout: () => Promise<void>
   updateUser: (updates: Partial<AuthUser>) => void
 }
@@ -141,6 +143,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut({ scope: 'local' })
   }, [])
 
+  // LINE login — not a Supabase provider, so OAuth runs in the browser (state +
+  // nonce in sessionStorage) and the backend verifies the id_token + mints a session.
+  const loginWithLine = useCallback(async () => {
+    const channelId = process.env.NEXT_PUBLIC_LINE_CHANNEL_ID
+    if (!channelId) throw new Error('LINE is not configured')
+    const state = crypto.randomUUID()
+    const nonce = crypto.randomUUID()
+    sessionStorage.setItem('caddie_line_state', state)
+    sessionStorage.setItem('caddie_line_nonce', nonce)
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: channelId,
+      redirect_uri: `${window.location.origin}/auth/line/callback`,
+      state,
+      scope: 'openid profile email',
+      nonce,
+    })
+    window.location.href = `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`
+  }, [])
+
+  const completeLine = useCallback(async () => {
+    const url = new URL(window.location.href)
+    const oauthErr = url.searchParams.get('error_description') ?? url.searchParams.get('error')
+    if (oauthErr) throw new Error(oauthErr)
+    const code = url.searchParams.get('code')
+    const state = url.searchParams.get('state')
+    const savedState = sessionStorage.getItem('caddie_line_state')
+    const nonce = sessionStorage.getItem('caddie_line_nonce')
+    sessionStorage.removeItem('caddie_line_state')
+    sessionStorage.removeItem('caddie_line_nonce')
+    if (!code || !state || state !== savedState || !nonce) throw new Error('LINE sign-in failed')
+    const { session, user } = await api.post<AuthResponse>('/auth/line/callback', {
+      code,
+      redirectUri: `${window.location.origin}/auth/line/callback`,
+      nonce,
+    })
+    saveSession(session)
+    setUser(user)
+  }, [])
+
   const logout = useCallback(async () => {
     try { await api.post('/auth/logout') } catch {}
     clearSession()
@@ -152,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, loginWithEmail, signupWithEmail, sendOtp, verifyOtp, verifyEmailOtp, resendEmailOtp, forgotPassword, updatePassword, loginWithProvider, completeOAuth, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isLoading, loginWithEmail, signupWithEmail, sendOtp, verifyOtp, verifyEmailOtp, resendEmailOtp, forgotPassword, updatePassword, loginWithProvider, completeOAuth, loginWithLine, completeLine, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

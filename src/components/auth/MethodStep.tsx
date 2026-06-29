@@ -1,7 +1,7 @@
 'use client'
 import { useLang } from '@/contexts/LanguageContext'
 
-export type AuthMethod = 'apple' | 'google' | 'phone' | 'email'
+export type AuthMethod = 'apple' | 'google' | 'line' | 'phone' | 'email'
 
 interface Props {
   onBack: () => void
@@ -59,6 +59,17 @@ export function MethodStep({ onBack, onSelect }: Props) {
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
           <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-.1px' }}>{t('auth.method.google')}</span>
+        </div>
+
+        {/* LINE */}
+        <div
+          onClick={() => onSelect('line')}
+          style={{ background: '#06C755', borderRadius: 'var(--r-lg)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C6.48 2 2 5.64 2 10.13c0 4.02 3.58 7.39 8.42 8.03.33.07.78.22.89.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1.01.89.55 1.09-.46 5.86-3.45 8-5.91 1.47-1.62 2.18-3.26 2.18-5.41C22 5.64 17.52 2 12 2zM8.4 12.6H6.9c-.22 0-.4-.18-.4-.4V9.2c0-.22.18-.4.4-.4s.4.18.4.4v2.6h1.1c.22 0 .4.18.4.4s-.18.4-.4.4zm1.7-.4c0 .22-.18.4-.4.4s-.4-.18-.4-.4V9.2c0-.22.18-.4.4-.4s.4.18.4.4v3zm3.9 0c0 .17-.11.32-.27.38-.04.01-.09.02-.13.02-.12 0-.24-.06-.32-.16l-1.23-1.67v1.43c0 .22-.18.4-.4.4s-.4-.18-.4-.4V9.2c0-.17.11-.32.27-.38.04-.01.08-.02.13-.02.12 0 .24.06.32.16l1.23 1.67V9.2c0-.22.18-.4.4-.4s.4.18.4.4v3zm2.5-1.9c.22 0 .4.18.4.4s-.18.4-.4.4h-1.1v.7h1.1c.22 0 .4.18.4.4s-.18.4-.4.4h-1.5c-.22 0-.4-.18-.4-.4V9.2c0-.22.18-.4.4-.4h1.5c.22 0 .4.18.4.4s-.18.4-.4.4h-1.1v.7h1.1z"/>
+          </svg>
+          <span style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>{t('auth.method.line')}</span>
         </div>
 
         {/* Phone */}
