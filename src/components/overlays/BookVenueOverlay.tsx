@@ -6,21 +6,14 @@ import { formatMoney } from '@/lib/utils'
 import { ApiError } from '@/lib/api'
 import { bookingApi, VenueCard, VenueDetail, ConsumerSlot } from '@/lib/booking'
 import { creditsApi } from '@/lib/credits'
+import { WeekDatePicker } from '@/components/ui/WeekDatePicker'
 
 type PayMethod = 'venue' | 'credits'
 
-// Local date helpers — overlays only render after a user interaction, so new Date()
+// Local date helper — overlays only render after a user interaction, so new Date()
 // here runs client-side (no SSR/hydration concern).
 function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-function dayList(n: number): Date[] {
-  const today = new Date()
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() + i)
-    return d
-  })
 }
 
 export function BookVenueOverlay() {
@@ -40,7 +33,14 @@ export function BookVenueOverlay() {
   const [booking, setBooking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const days = useMemo(() => dayList(14), [])
+  const dayLabels = useMemo(() => {
+    const locale = lang === 'zh' ? 'zh-TW' : 'en-US'
+    return Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(locale, { weekday: 'short' }))
+  }, [lang])
+  const monthFmt = useMemo(
+    () => (y: number, m: number) => new Date(y, m, 1).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'long', year: 'numeric' }),
+    [lang],
+  )
 
   // Reset + load venue detail each time the overlay opens.
   useEffect(() => {
@@ -139,30 +139,10 @@ export function BookVenueOverlay() {
           <span>💳</span><span>{t('booking.payAtVenue')}</span>
         </div>
 
-        {/* Date picker */}
+        {/* Date picker — swipeable week strip */}
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 10 }}>{t('booking.selectDate')}</div>
-        <div className="hscroll" style={{ marginBottom: 20, gap: 8 }}>
-          {days.map((d) => {
-            const iso = isoDate(d)
-            const on = iso === date
-            return (
-              <div
-                key={iso}
-                onClick={() => setDate(iso)}
-                style={{
-                  flexShrink: 0, width: 56, padding: '10px 0', textAlign: 'center', cursor: 'pointer',
-                  borderRadius: 'var(--r-md)', border: `1px solid ${on ? 'var(--primary)' : 'var(--line)'}`,
-                  background: on ? 'var(--primary)' : 'var(--surface)',
-                }}
-              >
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: on ? 'rgba(255,255,255,.8)' : 'var(--ink-3)' }}>
-                  {d.toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { weekday: 'short' })}
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: on ? 'white' : 'var(--ink)' }}>{d.getDate()}</div>
-              </div>
-            )
-          })}
-          <div style={{ width: 4, flexShrink: 0 }} />
+        <div style={{ marginBottom: 20 }}>
+          <WeekDatePicker selectedDate={date} onDateSelect={setDate} dayLabels={dayLabels} monthFormatter={monthFmt} />
         </div>
 
         {/* Slots */}
