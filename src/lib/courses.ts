@@ -59,3 +59,53 @@ export const coord = (v: number | string | null | undefined): number | null => {
   const n = typeof v === 'number' ? v : parseFloat(v)
   return Number.isFinite(n) ? n : null
 }
+
+// ── Location search — OpenStreetMap (Nominatim), free & key-less ─────────────────
+// Lets submitters SEARCH for a place by name/address instead of only dropping a
+// pin. Same OSM provider as the map tiles. Nominatim allows CORS; callers debounce
+// and the queries are country-biased + capped to stay within its usage policy.
+
+export interface PlaceResult {
+  label: string
+  lat: number
+  lng: number
+  city?: string
+  district?: string
+}
+
+const NOMINATIM = 'https://nominatim.openstreetmap.org'
+
+function placeFromAddress(a: Record<string, string> | undefined): { city?: string; district?: string } {
+  if (!a) return {}
+  return {
+    city: a.city || a.county || a.state || a.town || a.city_district,
+    district: a.suburb || a.city_district || a.town || a.village || a.neighbourhood,
+  }
+}
+
+export async function searchPlaces(q: string, signal?: AbortSignal): Promise<PlaceResult[]> {
+  const url = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=tw&accept-language=zh-TW&q=${encodeURIComponent(q)}`
+  const res = await fetch(url, { signal, headers: { Accept: 'application/json' } })
+  if (!res.ok) return []
+  const rows = (await res.json()) as Array<{
+    display_name: string
+    lat: string
+    lon: string
+    address?: Record<string, string>
+  }>
+  return rows.map((r) => ({
+    label: r.display_name,
+    lat: parseFloat(r.lat),
+    lng: parseFloat(r.lon),
+    ...placeFromAddress(r.address),
+  }))
+}
+
+export async function reverseGeocode(lat: number, lng: number): Promise<PlaceResult | null> {
+  const url = `${NOMINATIM}/reverse?format=jsonv2&addressdetails=1&accept-language=zh-TW&lat=${lat}&lon=${lng}`
+  const res = await fetch(url, { headers: { Accept: 'application/json' } })
+  if (!res.ok) return null
+  const r = (await res.json()) as { display_name?: string; address?: Record<string, string> }
+  if (!r.display_name) return null
+  return { label: r.display_name, lat, lng, ...placeFromAddress(r.address) }
+}
