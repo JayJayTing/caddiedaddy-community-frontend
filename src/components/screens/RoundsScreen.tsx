@@ -9,6 +9,7 @@ import { formatTeeTime, formatMoney, courseMapImage, formatMonthYear } from '@/l
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { RoundCardSkeleton } from '@/components/ui/Skeleton'
+import { CancelledBadge } from '@/components/ui/CancelledBadge'
 import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import type { TranslationKey } from '@/lib/translations'
@@ -109,9 +110,10 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   const userP = user && round.participants?.find(p => p.userId === user.id)
   const hasRequested = userP?.role === 'requested' || joined
   const isHost = userP?.role === 'host'
+  const cancelled = round.status === 'cancelled'
 
   const handleJoin = async () => {
-    if (joining || hasRequested || isHost) return
+    if (cancelled || joining || hasRequested || isHost) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
@@ -140,9 +142,13 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-              <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
-              </span>
+              {cancelled ? (
+                <CancelledBadge />
+              ) : (
+                <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
+                  {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
+                </span>
+              )}
               <svg className={`round-card-chevron${expanded ? ' open' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
@@ -179,11 +185,12 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Pressable
-              style={{ flex: 1, background: hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: hasRequested || isHost ? 'default' : 'pointer' }}
+              disabled={cancelled}
+              style={{ flex: 1, background: cancelled || hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasRequested || isHost ? 'default' : 'pointer' }}
               onClick={handleJoin}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
+                {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </Pressable>
             <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>

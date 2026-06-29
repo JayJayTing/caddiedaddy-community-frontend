@@ -41,13 +41,14 @@ export function RoundDetailOverlay() {
   const userP = user && round?.participants?.find(p => p.userId === user.id)
   const hasRequested = userP?.role === 'requested'
   const isHost = userP?.role === 'host'
+  const cancelled = round?.status === 'cancelled'
 
   const c1 = round?.color1 ?? '#B8CBE0'
   const c2 = round?.color2 ?? '#5C7A9A'
   const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
-    if (!round || joining || hasRequested || isHost) return
+    if (!round || joining || hasRequested || isHost || cancelled) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
@@ -90,6 +91,11 @@ export function RoundDetailOverlay() {
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
+        {cancelled && (
+          <div style={{ background: '#FDECEA', color: '#C0392B', borderRadius: 'var(--r-md)', padding: '12px 14px', marginBottom: 18, fontSize: 14, fontWeight: 600, textAlign: 'center' }}>
+            {t('manage.cancelled')}
+          </div>
+        )}
         {/* Status badges */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
@@ -199,19 +205,20 @@ export function RoundDetailOverlay() {
         ) : (
           <Pressable
             onClick={handleJoin}
+            disabled={cancelled}
             style={{
               display: 'block',
               width: '100%',
-              background: hasRequested ? 'var(--bg-alt)' : 'var(--primary)',
+              background: hasRequested || cancelled ? 'var(--bg-alt)' : 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
               textAlign: 'center',
-              cursor: hasRequested ? 'default' : 'pointer',
-              boxShadow: hasRequested ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
+              cursor: hasRequested || cancelled ? 'default' : 'pointer',
+              boxShadow: hasRequested || cancelled ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested ? 'var(--ink-3)' : 'white' }}>
-              {hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested || cancelled ? 'var(--ink-3)' : 'white' }}>
+              {cancelled ? t('rounds.cancelled') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
             </span>
           </Pressable>
         )}

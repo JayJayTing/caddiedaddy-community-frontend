@@ -105,6 +105,7 @@ const en = {
   'rounds.requestToJoin': 'Request to Join',
   'rounds.requested': 'Requested ✓',
   'rounds.open': 'open',
+  'rounds.cancelled': 'Cancelled',
   'rounds.upcomingCount': 'upcoming rounds',
   // community
   'community.title': 'Community',
@@ -633,6 +634,7 @@ const zh: typeof en = {
   'rounds.requestToJoin': '申請加入',
   'rounds.requested': '已申請 ✓',
   'rounds.open': '個空位',
+  'rounds.cancelled': '已取消',
   'rounds.upcomingCount': '場即將到來的球局',
   'community.title': '社群',
   'community.newPost': '新貼文',

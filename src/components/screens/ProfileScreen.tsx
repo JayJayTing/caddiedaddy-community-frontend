@@ -9,6 +9,7 @@ import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, for
 import { creditsApi } from '@/lib/credits'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Pressable } from '@/components/ui/Pressable'
+import { CancelledBadge } from '@/components/ui/CancelledBadge'
 import { useActivated } from '@/hooks/useActivated'
 
 export function ProfileScreen() {
@@ -161,10 +162,11 @@ export function ProfileScreen() {
               {recentRounds.map(r => (
                 <div key={r.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${r.color1 ?? '#B8CBE0'},${r.color2 ?? '#5C7A9A'})`, flexShrink: 0 }} />
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{r.course.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(r.date)} · {formatTeeTime(r.teeTime)}</div>
                   </div>
+                  {r.status === 'cancelled' && <span style={{ marginLeft: 'auto' }}><CancelledBadge /></span>}
                 </div>
               ))}
             </div>
