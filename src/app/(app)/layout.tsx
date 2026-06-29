@@ -21,9 +21,11 @@ import { BookVenueOverlay } from '@/components/overlays/BookVenueOverlay'
 import { MyBookingsOverlay } from '@/components/overlays/MyBookingsOverlay'
 import { FindPlayersOverlay } from '@/components/overlays/FindPlayersOverlay'
 import { MapOverlay } from '@/components/overlays/MapOverlay'
+import { TeeTimesOverlay } from '@/components/overlays/TeeTimesOverlay'
 import { SuccessOverlay } from '@/components/overlays/SuccessOverlay'
 import { Toaster } from '@/components/ui/Toaster'
 import { ComposeSheet } from '@/components/sheets/ComposeSheet'
+import { PlaySheet } from '@/components/sheets/PlaySheet'
 import { AccountSheet } from '@/components/sheets/AccountSheet'
 import { HandicapSheet } from '@/components/sheets/HandicapSheet'
 import { NotificationsSheet } from '@/components/sheets/NotificationsSheet'
@@ -69,6 +71,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <MyBookingsOverlay />
       <FindPlayersOverlay />
       <MapOverlay />
+      <TeeTimesOverlay />
 
       {/* Global success confirmation (animated checkmark) */}
       <SuccessOverlay />
@@ -78,6 +81,7 @@ export default function AppLayout({ children: _children }: { children: React.Rea
 
       {/* Bottom Sheets */}
       <ComposeSheet />
+      <PlaySheet />
       <AccountSheet />
       <HandicapSheet />
       <NotificationsSheet />

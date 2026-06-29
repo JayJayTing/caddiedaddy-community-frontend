@@ -31,6 +31,7 @@ export function BookVenueOverlay() {
   const [payMethod, setPayMethod] = useState<PayMethod>('venue')
   const [balance, setBalance] = useState<number | null>(null)
   const [booking, setBooking] = useState(false)
+  const [openAsRound, setOpenAsRound] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const dayLabels = useMemo(() => {
@@ -49,6 +50,7 @@ export function BookVenueOverlay() {
     setSelected(null)
     setParty(1)
     setPayMethod('venue')
+    setOpenAsRound(false)
     setError(null)
     setDate(isoDate(new Date()))
     let stale = false
@@ -92,11 +94,17 @@ export function BookVenueOverlay() {
     setBooking(true)
     setError(null)
     try {
-      await bookingApi.book(seed.id, selected.id, { partySize: party, payWithCredits: usingCredits })
+      const result = await bookingApi.book(seed.id, selected.id, {
+        partySize: party,
+        payWithCredits: usingCredits,
+        openAsRound: openAsRound && venue?.course != null,
+      })
       refreshData('bookings')
       if (usingCredits) refreshData('credits')
+      const madeRound = !!result?.roundId
+      if (madeRound) refreshData('rounds')
       closeOverlay()
-      showSuccess(t('booking.success'), `${v.name} · ${date} · ${selected.time}`)
+      showSuccess(madeRound ? t('booking.successWithRound') : t('booking.success'), `${v.name} · ${date} · ${selected.time}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('booking.failed'))
       // The slot may have just filled — refresh availability.
@@ -242,6 +250,23 @@ export function BookVenueOverlay() {
             </div>
           )}
 
+          {/* Open this tee time as a joinable round — only when the venue maps to a course */}
+          {venue?.course && (
+            <div
+              onClick={() => setOpenAsRound((o) => !o)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '10px 12px', borderRadius: 'var(--r-md)', border: `1.5px solid ${openAsRound ? 'var(--primary)' : 'var(--line)'}`, background: openAsRound ? 'var(--primary-soft)' : 'var(--surface)', cursor: 'pointer' }}
+            >
+              <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: `1.5px solid ${openAsRound ? 'var(--primary)' : 'var(--line)'}`, background: openAsRound ? 'var(--primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {openAsRound && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)' }}>{t('booking.openAsRound')}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 1 }}>{t('booking.openAsRoundHint')}</div>
+              </div>
+            </div>
+          )}
           <div onClick={handleBook} style={{ background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: booking ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(92,122,154,.35)' }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
               {booking

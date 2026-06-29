@@ -2,8 +2,8 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
-export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'findPlayers' | 'map' | 'bookVenue' | 'myBookings' | null
-export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | 'wallet' | null
+export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'findPlayers' | 'map' | 'bookVenue' | 'myBookings' | 'teeTimes' | null
+export type Sheet = 'compose' | 'account' | 'handicap' | 'notifications' | 'newsDetail' | 'wallet' | 'play' | null
 
 export interface SuccessInfo { title: string; subtitle?: string }
 export type ToastVariant = 'error' | 'info'

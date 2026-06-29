@@ -82,9 +82,11 @@ export const bookingApi = {
   book: (
     venueId: string,
     slotId: string,
-    body: { partySize: number; notes?: string; payWithCredits?: boolean },
+    body: { partySize: number; notes?: string; payWithCredits?: boolean; openAsRound?: boolean },
   ) =>
-    api.post<{ data: unknown }>(`/venues/${venueId}/slots/${slotId}/book`, body).then((r) => r.data),
+    api
+      .post<{ data: { id: string; roundId: string | null } }>(`/venues/${venueId}/slots/${slotId}/book`, body)
+      .then((r) => r.data),
 
   myBookings: () => api.get<{ data: MyBooking[] }>(`/bookings/mine`).then((r) => r.data),
 
