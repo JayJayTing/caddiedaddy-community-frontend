@@ -304,7 +304,7 @@
 /* ── Tabs ─────────────────────────────────────────────────────────────────── */
 .mc-tabs {
   display: flex;
-  gap: 4px;
+  gap: 30px;
   border-bottom: 1px solid #e3e8ee;
   margin-bottom: 16px;
   overflow-x: auto;
@@ -314,7 +314,7 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 10px 14px;
+  padding: 14px 4px;
   font-size: 14px;
   font-weight: 600;
   color: #6b7a89;
@@ -401,12 +401,12 @@
 }
 .mc-dash-head h1 { letter-spacing: -0.02em; }
 .mc-tabpane {
-  padding-top: 16px;
+  padding-top: 28px;
   animation: mc-fade 0.3s cubic-bezier(0.22, 0.7, 0.25, 1);
 }
 
-/* Animate the underline + color on the tab bar */
-.mc-tabs { margin-bottom: 0; }
+/* Animate the underline + color on the tab bar; breathe above & below it */
+.mc-tabs { margin-bottom: 0; margin-top: 18px; }
 .mc-tab { position: relative; }
 .mc-tab.active { animation: mc-tabpop 0.25s ease; }
 
@@ -415,7 +415,7 @@
 .mc-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 18px;
 }
 .mc-stat {
   position: relative;
