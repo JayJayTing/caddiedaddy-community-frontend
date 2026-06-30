@@ -356,6 +356,7 @@ const en = {
   'round.youreIn': "You're in",
   'round.backOut': 'Back out',
   'round.contactHostToCancel': "Can't make it? Message the host",
+  'round.teeOff': 'Tee off',
   // host
   'host.errorIncomplete': 'Please fill in course, date, and tee time.',
   'host.selectCommunity': 'Select a golf team…',
@@ -385,6 +386,9 @@ const en = {
   'community.detail.noMembers': 'No members yet',
   'community.detail.roleAdmin': 'Admin',
   'community.detail.roleLeader': 'Leader',
+  'community.detail.removeMember': 'Remove',
+  'community.detail.removeConfirm': 'Remove?',
+  'community.memberRemoved': 'Removed from the team',
   // community screen
   'community.roundsSuffix': 'rounds',
   'community.followPrompt': 'Follow golf teams to see their posts here',
@@ -907,6 +911,7 @@ const zh: typeof en = {
   'round.youreIn': '你已加入',
   'round.backOut': '退出',
   'round.contactHostToCancel': '無法出席？傳訊息給主辦人',
+  'round.teeOff': '開球',
   // host
   'host.errorIncomplete': '請填入球場、日期和開球時間。',
   'host.selectCommunity': '選擇球隊…',
@@ -936,6 +941,9 @@ const zh: typeof en = {
   'community.detail.noMembers': '還沒有成員',
   'community.detail.roleAdmin': '管理員',
   'community.detail.roleLeader': '組長',
+  'community.detail.removeMember': '移除',
+  'community.detail.removeConfirm': '確定移除？',
+  'community.memberRemoved': '已移出球隊',
   // community screen
   'community.roundsSuffix': '場球局',
   'community.followPrompt': '追蹤球隊即可在此看到他們的貼文',

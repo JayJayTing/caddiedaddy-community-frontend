@@ -64,6 +64,15 @@ export function formatDateLong(dateStr: string): string {
   return d.toLocaleDateString(_locale(), { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
+// Full, unambiguous date with the weekday spelled out — for detail headers where
+// clarity matters. en: "Monday, July 6, 2026"  ·  zh: "2026年7月6日 星期一".
+export function formatDateFull(dateStr: string): string {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr.length <= 10 ? `${dateStr}T00:00:00` : dateStr)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(_locale(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 // Month + year header (date pickers). Takes a Date.
 export function formatMonthYear(d: Date): string {
   if (Number.isNaN(d.getTime())) return ''
