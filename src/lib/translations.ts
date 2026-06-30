@@ -85,6 +85,7 @@ const en = {
   'home.findRound': 'Find a Round',
   'home.hosting': 'hosting',
   'home.joinRound': 'Join Round',
+  'home.moreUpcoming': 'Also Upcoming',
   // rounds
   'rounds.title': 'Find a Round',
   'rounds.host': 'Host',
@@ -649,6 +650,7 @@ const zh: typeof en = {
   'home.findRound': '尋找球局',
   'home.hosting': '主辦',
   'home.joinRound': '加入球局',
+  'home.moreUpcoming': '接下來的球局',
   'rounds.title': '尋找球局',
   'rounds.host': '主辦',
   'rounds.search': '搜尋...',

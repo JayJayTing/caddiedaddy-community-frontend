@@ -11,7 +11,6 @@ import { formatTeeTime, formatDate, formatMoney, timeAgo, formatWeekdayShort, an
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
-import { CancelledBadge } from '@/components/ui/CancelledBadge'
 import { RoundCard } from '@/components/screens/RoundsScreen'
 import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
@@ -29,6 +28,7 @@ export function HomeScreen() {
   const activated = useActivated('home')
 
   const [upcoming, setUpcoming] = useState<Round | null>(null)
+  const [upcomingMore, setUpcomingMore] = useState<Round[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [rounds, setRounds] = useState<Round[]>([])
   const [posts, setPosts] = useState<Post[]>([])
@@ -50,8 +50,13 @@ export function HomeScreen() {
     if (!user || !activated) return
     let alive = true
     api.get<{ data: Round[] }>('/rounds/upcoming')
-      .then(r => { if (alive) setUpcoming(r.data?.[0] ?? null) })
-      .catch(() => { if (alive) setUpcoming(null) })
+      .then(r => {
+        if (!alive) return
+        const list = r.data ?? []
+        setUpcoming(list[0] ?? null)        // hero = your most imminent round
+        setUpcomingMore(list.slice(1))      // the rest feed in below it
+      })
+      .catch(() => { if (alive) { setUpcoming(null); setUpcomingMore([]) } })
       .finally(() => { if (alive) setLoadingUpcoming(false) })
 
     api.get<{ data: Announcement[] }>('/announcements')
@@ -142,12 +147,10 @@ export function HomeScreen() {
               <div style={{ padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {upcoming.status !== 'cancelled' && <div className="pulse-dot" />}
+                    <div className="pulse-dot" />
                     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>{t('home.nextRound')}</span>
                   </div>
-                  {upcoming.status === 'cancelled'
-                    ? <CancelledBadge />
-                    : <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: '#E8F5E9', color: '#2E7D32' }}>{t('home.confirmed')}</span>}
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: '#E8F5E9', color: '#2E7D32' }}>{t('home.confirmed')}</span>
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 3 }}>{upcoming.course.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 12 }}>
@@ -190,6 +193,34 @@ export function HomeScreen() {
             </div>
           )}
         </div>
+
+        {/* Also upcoming — the rest of your schedule when you have more than one round booked */}
+        {upcomingMore.length > 0 && (
+          <div style={{ margin: '0 20px 20px' }}>
+            <div className="section-row" style={{ marginBottom: 10 }}>
+              <span className="label-xs">{t('home.moreUpcoming')}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcomingMore.map(r => (
+                <Pressable
+                  key={r.id}
+                  onClick={() => openOverlayWith('roundDetail', r)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', padding: '12px 14px', cursor: 'pointer' }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.course.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginTop: 2 }}>
+                      {formatDate(r.date)} · {formatTeeTime(r.teeTime)} · {acceptedCount(r)}/{r.totalSpots} {t('home.players')}
+                    </div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0 }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Pressable>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* News — hidden entirely when there are no real announcements (no mock fallback) */}
         {announcements.length > 0 && (<>
