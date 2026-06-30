@@ -277,16 +277,17 @@ export function HostScreen() {
           </div>
         )}
 
-        {/* Total Spots — a stepper fits any range (course 2–4, range 2–10) */}
+        {/* Total Spots — a compact stepper pill fits any range (course 2–4,
+            range 2–10); the disabled −/+ communicate the bounds. */}
         <div style={sectionStyle}>
-          <div style={{ ...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span>{t('host.spots')}</span>
-            <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-3)', fontWeight: 700 }}>{spots} / {maxSpots}</span>
-          </div>
-          <div className="host-stepper" role="group" aria-label={t('host.spots')}>
-            <Pressable className="host-stepper-btn" aria-label={t('host.fewerSpots')} disabled={spots <= MIN_SPOTS} onClick={() => setSpots(s => Math.max(MIN_SPOTS, s - 1))}>−</Pressable>
-            <span className="host-stepper-val" aria-live="polite">{spots}</span>
-            <Pressable className="host-stepper-btn" aria-label={t('host.moreSpots')} disabled={spots >= maxSpots} onClick={() => setSpots(s => Math.min(maxSpots, s + 1))}>+</Pressable>
+          <div style={labelStyle}>{t('host.spots')}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="host-stepper" role="group" aria-label={t('host.spots')}>
+              <Pressable className="host-stepper-btn" aria-label={t('host.fewerSpots')} disabled={spots <= MIN_SPOTS} onClick={() => setSpots(s => Math.max(MIN_SPOTS, s - 1))}>−</Pressable>
+              <span className="host-stepper-val" aria-live="polite">{spots}</span>
+              <Pressable className="host-stepper-btn" aria-label={t('host.moreSpots')} disabled={spots >= maxSpots} onClick={() => setSpots(s => Math.min(maxSpots, s + 1))}>+</Pressable>
+            </div>
+            <span style={{ fontSize: 14, color: 'var(--ink-3)', fontWeight: 600 }}>{t('home.players')}</span>
           </div>
         </div>
 
