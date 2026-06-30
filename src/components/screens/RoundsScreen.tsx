@@ -14,7 +14,7 @@ import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import type { TranslationKey } from '@/lib/translations'
 
-type Filter = 'all' | 'morning' | 'afternoon' | '9h' | '18h' | 'communities'
+type Filter = 'course' | 'driving_range'
 
 // ─── Date picker ─────────────────────────────────────────────────────────────
 
@@ -214,7 +214,7 @@ export function RoundsScreen() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [activeFilter, setActiveFilter] = useState<Filter>('all')
+  const [activeFilter, setActiveFilter] = useState<Filter | null>(null)
 
   useEffect(() => {
     if (!user || !activated) return
@@ -231,29 +231,13 @@ export function RoundsScreen() {
   const filtered = rounds.filter(r => {
     if (search && !r.course.name.toLowerCase().includes(search.toLowerCase())) return false
     if (selectedDate && (r.date ?? '').slice(0, 10) !== selectedDate) return false
-    if (activeFilter === 'morning') {
-      const h = new Date(r.teeTime).getHours()
-      if (h >= 12) return false
-    }
-    if (activeFilter === 'afternoon') {
-      const h = new Date(r.teeTime).getHours()
-      if (h < 12) return false
-    }
-    if (activeFilter === '9h') {
-      if (r.venueType !== 'course' || r.holes !== 9) return false
-    }
-    if (activeFilter === '18h') {
-      if (r.venueType !== 'course' || r.holes !== 18) return false
-    }
+    if (activeFilter && r.venueType !== activeFilter) return false
     return true
   })
 
   const FILTERS: Array<{ key: Filter; label: string }> = [
-    { key: 'all', label: t('rounds.filter.all') },
-    { key: 'morning', label: t('rounds.filter.morning') },
-    { key: 'afternoon', label: t('rounds.filter.afternoon') },
-    { key: '9h', label: t('rounds.filter.9h') },
-    { key: '18h', label: t('rounds.filter.18h') },
+    { key: 'course', label: t('host.golfCourse') },
+    { key: 'driving_range', label: t('host.drivingRange') },
   ]
 
   return (
@@ -295,7 +279,7 @@ export function RoundsScreen() {
       <div style={{ flexShrink: 0 }}>
         <div className="hscroll" style={{ padding: '8px 20px', gap: 8 }}>
           {FILTERS.map(f => (
-            <Pressable key={f.key} className={`filter-pill${activeFilter === f.key ? ' active' : ''}`} aria-pressed={activeFilter === f.key} onClick={() => setActiveFilter(f.key)}>
+            <Pressable key={f.key} className={`filter-pill${activeFilter === f.key ? ' active' : ''}`} aria-pressed={activeFilter === f.key} onClick={() => setActiveFilter(activeFilter === f.key ? null : f.key)}>
               {f.label}
             </Pressable>
           ))}
