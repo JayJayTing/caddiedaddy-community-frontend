@@ -8,6 +8,7 @@ import type { TranslationKey } from '@/lib/translations'
 import { formatHandicap } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Translate = (k: TranslationKey) => string
 
@@ -21,10 +22,14 @@ export function FindPlayersOverlay() {
   const [requests, setRequests] = useState<Player[]>([])
   const [friends, setFriends] = useState<Player[]>([])
   const [searching, setSearching] = useState(false)
+  const [loadingLists, setLoadingLists] = useState(true)
 
   const loadLists = useCallback(() => {
-    api.get<{ data: Player[] }>('/users/friends/requests').then((r) => setRequests(r.data ?? [])).catch(() => {})
-    api.get<{ data: Player[] }>('/users/friends').then((r) => setFriends(r.data ?? [])).catch(() => {})
+    setLoadingLists(true)
+    Promise.all([
+      api.get<{ data: Player[] }>('/users/friends/requests').then((r) => setRequests(r.data ?? [])).catch(() => {}),
+      api.get<{ data: Player[] }>('/users/friends').then((r) => setFriends(r.data ?? [])).catch(() => {}),
+    ]).finally(() => setLoadingLists(false))
   }, [])
 
   useEffect(() => {
@@ -111,12 +116,14 @@ export function FindPlayersOverlay() {
       <div className="scroll-body" style={{ padding: '8px 16px 24px' }}>
         {query.trim() ? (
           searching && results.length === 0 ? (
-            <Hint>{t('loading')}</Hint>
+            <PlayerListSkeleton />
           ) : results.length === 0 ? (
             <Hint>{t('players.noResults')}</Hint>
           ) : (
             results.map((p) => <PlayerRow key={p.id} p={p} t={t} onAdd={() => handleAdd(p)} onAccept={() => handleAccept(p)} />)
           )
+        ) : loadingLists ? (
+          <PlayerListSkeleton />
         ) : (
           <>
             {requests.length > 0 && (
@@ -149,6 +156,24 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 function Hint({ children }: { children: ReactNode }) {
   return <div style={{ textAlign: 'center', padding: '28px 16px', color: 'var(--ink-3)', fontSize: 13 }}>{children}</div>
+}
+
+// Placeholder rows that hold the list's shape while friends/search results load,
+// instead of briefly flashing the "no friends" empty state.
+function PlayerListSkeleton() {
+  return (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="mod-row" style={{ alignItems: 'center' }}>
+          <Skeleton w={44} h={44} r="50%" />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <Skeleton w="40%" h={13} />
+            <Skeleton w="62%" h={11} />
+          </div>
+        </div>
+      ))}
+    </>
+  )
 }
 
 function Btn({ children, primary, onClick }: { children: ReactNode; primary?: boolean; onClick?: () => void }) {

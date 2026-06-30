@@ -7,6 +7,7 @@ import { Course } from '@/types/round'
 import { Community } from '@/types/community'
 import { DateField } from '@/components/ui/DateField'
 import { Pressable } from '@/components/ui/Pressable'
+import { Spinner } from '@/components/ui/Spinner'
 
 // Tee-time options (every 10 min, 05:00–20:00). A reliable dropdown beats the
 // native <input type="time">, which is fiddly/unselectable on some browsers.
@@ -63,6 +64,7 @@ export function HostScreen() {
   const [venueType, setVenueType] = useState<'course' | 'driving_range'>('course')
   const [courseSearch, setCourseSearch] = useState('')
   const [courseResults, setCourseResults] = useState<Course[]>([])
+  const [searchingCourses, setSearchingCourses] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [date, setDate] = useState('')
   const [teeTime, setTeeTime] = useState('')
@@ -106,12 +108,14 @@ export function HostScreen() {
     setCourseSearch(q)
     setSelectedCourse(null)
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (q.length < 2) { setCourseResults([]); return }
+    if (q.length < 2) { setCourseResults([]); setSearchingCourses(false); return }
+    setSearchingCourses(true)
     searchTimeout.current = setTimeout(async () => {
       try {
         const r = await api.get<{ data: Course[] }>(`/courses?q=${encodeURIComponent(q)}`)
         setCourseResults(r.data ?? [])
       } catch { setCourseResults([]) }
+      finally { setSearchingCourses(false) }
     }, 300)
   }
 
@@ -181,15 +185,25 @@ export function HostScreen() {
               <Pressable aria-label={t('a11y.close')} style={{ cursor: 'pointer', fontSize: 16, color: 'var(--ink-3)' }} onClick={() => { setSelectedCourse(null); setCourseSearch(''); setCourseResults([]) }}>×</Pressable>
             )}
           </div>
-          {courseResults.length > 0 && !selectedCourse && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', overflow: 'hidden', marginTop: 4 }}>
-              {courseResults.map(c => (
-                <Pressable key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }} style={{ display: 'block', width: '100%', textAlign: 'left' }}>
-                  <div style={{ fontWeight: 600 }}>{c.name}</div>
-                  {c.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.locationText}</div>}
-                </Pressable>
-              ))}
-            </div>
+          {!selectedCourse && courseSearch.trim().length >= 2 && (
+            searchingCourses ? (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14, color: 'var(--ink-3)', fontSize: 13 }}>
+                <Spinner size={16} /> {t('host.searchingCourses')}
+              </div>
+            ) : courseResults.length > 0 ? (
+              <div className="fade-in" style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', overflow: 'hidden', marginTop: 4 }}>
+                {courseResults.map(c => (
+                  <Pressable key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }} style={{ display: 'block', width: '100%', textAlign: 'left' }}>
+                    <div style={{ fontWeight: 600 }}>{c.name}</div>
+                    {c.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.locationText}</div>}
+                  </Pressable>
+                ))}
+              </div>
+            ) : (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', marginTop: 4, padding: 14, textAlign: 'center', color: 'var(--ink-3)', fontSize: 13 }}>
+                {t('host.noCourses')}
+              </div>
+            )
           )}
         </div>
 

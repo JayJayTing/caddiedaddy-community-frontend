@@ -67,6 +67,7 @@ export function ChatScreen() {
   const [pickerQuery, setPickerQuery] = useState('')
   const [friends, setFriends] = useState<Player[]>([])
   const [pickerResults, setPickerResults] = useState<Player[]>([])
+  const [loadingPicker, setLoadingPicker] = useState(false)
   const [creatingDm, setCreatingDm] = useState(false)
 
   useEffect(() => {
@@ -92,18 +93,23 @@ export function ChatScreen() {
 
   // New-message picker: load friends on open, reset on close.
   useEffect(() => {
-    if (!newMsgOpen) { setPickerQuery(''); setPickerResults([]); return }
-    api.get<{ data: Player[] }>('/users/friends').then(r => setFriends(r.data ?? [])).catch(() => {})
+    if (!newMsgOpen) { setPickerQuery(''); setPickerResults([]); setLoadingPicker(false); return }
+    setLoadingPicker(true)
+    api.get<{ data: Player[] }>('/users/friends')
+      .then(r => setFriends(r.data ?? [])).catch(() => {})
+      .finally(() => setLoadingPicker(false))
   }, [newMsgOpen])
 
   // Debounced people search within the picker.
   useEffect(() => {
     const q = pickerQuery.trim()
-    if (!q) { setPickerResults([]); return }
+    if (!q) { setPickerResults([]); setLoadingPicker(false); return }
+    setLoadingPicker(true)
     const id = setTimeout(() => {
       api.get<{ data: Player[] }>(`/users/search?q=${encodeURIComponent(q)}`)
         .then(r => setPickerResults(r.data ?? []))
         .catch(() => setPickerResults([]))
+        .finally(() => setLoadingPicker(false))
     }, 300)
     return () => clearTimeout(id)
   }, [pickerQuery])
@@ -259,7 +265,17 @@ export function ChatScreen() {
               <input autoFocus value={pickerQuery} onChange={e => setPickerQuery(e.target.value)} placeholder={t('players.search')} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)' }} />
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              {pickerList.length === 0 ? (
+              {loadingPicker && pickerList.length === 0 ? (
+                [0, 1, 2].map(i => (
+                  <div key={i} className="mod-row" style={{ alignItems: 'center' }}>
+                    <Skeleton w={40} h={40} r="50%" />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <Skeleton w="42%" h={13} />
+                      <Skeleton w="60%" h={11} />
+                    </div>
+                  </div>
+                ))
+              ) : pickerList.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px', color: 'var(--ink-3)', fontSize: 13 }}>
                   {pickerQuery.trim() ? t('players.noResults') : t('chat.noFriendsYet')}
                 </div>
