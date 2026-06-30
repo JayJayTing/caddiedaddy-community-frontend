@@ -27,6 +27,34 @@ const TEE_TIMES: { v: string; label: string }[] = (() => {
 const MAX_SPOTS = { course: 4, driving_range: 10 } as const
 const MIN_SPOTS = 2
 
+// Vertical single-select: each option is a full-width row with a radio dot, so
+// the chosen one is obvious. Replaces the cramped left/right segmented toggles.
+function VSelect({ options, value, onChange }: {
+  options: { v: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="host-vselect" role="radiogroup">
+      {options.map(o => {
+        const active = o.v === value
+        return (
+          <Pressable
+            key={o.v}
+            role="radio"
+            aria-checked={active}
+            className={`host-voption${active ? ' active' : ''}`}
+            onClick={() => onChange(o.v)}
+          >
+            <span>{o.label}</span>
+            <span className="host-voption-dot" aria-hidden />
+          </Pressable>
+        )
+      })}
+    </div>
+  )
+}
+
 export function HostScreen() {
   const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion, hostCommunity, setHostCommunity } = useUI()
   const { t } = useLang()
@@ -40,7 +68,6 @@ export function HostScreen() {
   const [teeTime, setTeeTime] = useState('')
   const [holes, setHoles] = useState<9 | 18>(18)
   const [spots, setSpots] = useState(4)
-  const [greenFee, setGreenFee] = useState('')
   const [notes, setNotes] = useState('')
   const [selectedCommunity, setSelectedCommunity] = useState<string>('')
   const [myCommunities, setMyCommunities] = useState<Community[]>([])
@@ -49,7 +76,6 @@ export function HostScreen() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const maxSpots = MAX_SPOTS[venueType]
-  const spotOptions = Array.from({ length: maxSpots - MIN_SPOTS + 1 }, (_, i) => i + MIN_SPOTS)
 
   useEffect(() => {
     api.get<{ data: Community[] }>('/communities/mine')
@@ -105,7 +131,7 @@ export function HostScreen() {
         venueType,
         holes: venueType === 'course' ? holes : undefined,
         totalSpots: spots,
-        greenFeeCents: greenFee ? Math.round(parseFloat(greenFee) * 100) : null,
+        greenFeeCents: null,
         notes: notes || null,
         visibility: postTo,
         communityId: postTo === 'community' ? selectedCommunity || null : null,
@@ -136,35 +162,7 @@ export function HostScreen() {
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
-        {/* Post To */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.postTo')}</div>
-          <div className="host-toggle-row">
-            <Pressable aria-pressed={postTo === 'public'} className={`host-toggle-btn${postTo === 'public' ? ' active' : ''}`} onClick={() => setPostTo('public')}>{t('host.postPublic')}</Pressable>
-            <Pressable aria-pressed={postTo === 'community'} className={`host-toggle-btn${postTo === 'community' ? ' active' : ''}`} onClick={() => setPostTo('community')}>{t('host.postCommunity')}</Pressable>
-          </div>
-          {postTo === 'community' && myCommunities.length > 0 && (
-            <select
-              value={selectedCommunity}
-              onChange={e => setSelectedCommunity(e.target.value)}
-              style={{ marginTop: 10, width: '100%', padding: '12px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)' }}
-            >
-              <option value="">{t('host.selectCommunity')}</option>
-              {myCommunities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          )}
-        </div>
-
-        {/* Venue type */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.venue')}</div>
-          <div className="host-toggle-row">
-            <Pressable aria-pressed={venueType === 'course'} className={`host-toggle-btn${venueType === 'course' ? ' active' : ''}`} onClick={() => changeVenue('course')}>{t('host.golfCourse')}</Pressable>
-            <Pressable aria-pressed={venueType === 'driving_range'} className={`host-toggle-btn${venueType === 'driving_range' ? ' active' : ''}`} onClick={() => changeVenue('driving_range')}>{t('host.drivingRange')}</Pressable>
-          </div>
-        </div>
-
-        {/* Course search */}
+        {/* Course search — choose the venue first; everything below describes it */}
         <div style={sectionStyle}>
           <div style={labelStyle}>{t('host.course')}</div>
           <div className="search-bar" style={{ marginBottom: courseResults.length > 0 ? 0 : undefined }}>
@@ -195,6 +193,42 @@ export function HostScreen() {
           )}
         </div>
 
+        {/* Post To */}
+        <div style={sectionStyle}>
+          <div style={labelStyle}>{t('host.postTo')}</div>
+          <VSelect
+            value={postTo}
+            onChange={v => setPostTo(v as 'public' | 'community')}
+            options={[
+              { v: 'public', label: t('host.postPublic') },
+              { v: 'community', label: t('host.postCommunity') },
+            ]}
+          />
+          {postTo === 'community' && myCommunities.length > 0 && (
+            <select
+              value={selectedCommunity}
+              onChange={e => setSelectedCommunity(e.target.value)}
+              style={{ marginTop: 10, width: '100%', padding: '12px 16px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)' }}
+            >
+              <option value="">{t('host.selectCommunity')}</option>
+              {myCommunities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          )}
+        </div>
+
+        {/* Venue type */}
+        <div style={sectionStyle}>
+          <div style={labelStyle}>{t('host.venue')}</div>
+          <VSelect
+            value={venueType}
+            onChange={v => changeVenue(v as 'course' | 'driving_range')}
+            options={[
+              { v: 'course', label: t('host.golfCourse') },
+              { v: 'driving_range', label: t('host.drivingRange') },
+            ]}
+          />
+        </div>
+
         {/* Date & Tee Time */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
           <div>
@@ -218,64 +252,27 @@ export function HostScreen() {
         {venueType === 'course' && (
           <div style={sectionStyle}>
             <div style={labelStyle}>{t('host.holes')}</div>
-            <div className="host-toggle-row">
-              <Pressable aria-pressed={holes === 9} className={`host-toggle-btn${holes === 9 ? ' active' : ''}`} onClick={() => setHoles(9)}>{t('holes.9')}</Pressable>
-              <Pressable aria-pressed={holes === 18} className={`host-toggle-btn${holes === 18 ? ' active' : ''}`} onClick={() => setHoles(18)}>{t('holes.18')}</Pressable>
-            </div>
+            <VSelect
+              value={String(holes)}
+              onChange={v => setHoles(Number(v) as 9 | 18)}
+              options={[
+                { v: '9', label: t('holes.9') },
+                { v: '18', label: t('holes.18') },
+              ]}
+            />
           </div>
         )}
 
-        {/* Total Spots — tap a number; cap depends on venue */}
+        {/* Total Spots — a stepper fits any range (course 2–4, range 2–10) */}
         <div style={sectionStyle}>
           <div style={{ ...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span>{t('host.spots')}</span>
             <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-3)', fontWeight: 700 }}>{spots} / {maxSpots}</span>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {spotOptions.map(n => {
-              const active = spots === n
-              return (
-                <Pressable
-                  key={n}
-                  aria-pressed={active}
-                  aria-label={`${n}`}
-                  onClick={() => setSpots(n)}
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 'var(--r-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 16,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--line)',
-                    background: active ? 'var(--primary)' : 'var(--surface)',
-                    color: active ? '#fff' : 'var(--ink)',
-                    transition: 'background .12s, border-color .12s, color .12s',
-                  }}
-                >
-                  {n}
-                </Pressable>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Green fee */}
-        <div style={sectionStyle}>
-          <div style={labelStyle}>{t('host.greenFee')}</div>
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', padding: '12px 16px', gap: 8 }}>
-            <span style={{ fontSize: 14, color: 'var(--ink-3)', fontWeight: 600 }}>NT$</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder={t('host.feePlaceholder')}
-              value={greenFee}
-              onChange={e => setGreenFee(e.target.value)}
-              style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'var(--sans)' }}
-            />
+          <div className="host-stepper" role="group" aria-label={t('host.spots')}>
+            <Pressable className="host-stepper-btn" aria-label={t('host.fewerSpots')} disabled={spots <= MIN_SPOTS} onClick={() => setSpots(s => Math.max(MIN_SPOTS, s - 1))}>−</Pressable>
+            <span className="host-stepper-val" aria-live="polite">{spots}</span>
+            <Pressable className="host-stepper-btn" aria-label={t('host.moreSpots')} disabled={spots >= maxSpots} onClick={() => setSpots(s => Math.min(maxSpots, s + 1))}>+</Pressable>
           </div>
         </div>
 
