@@ -6,6 +6,7 @@ import { formatMoney, timeAgo } from '@/lib/utils'
 import { ApiError } from '@/lib/api'
 import { creditsApi, Wallet, CreditPackage, CreditEntryType } from '@/lib/credits'
 import { TranslationKey } from '@/lib/translations'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { BottomSheet } from './BottomSheet'
 
 const ENTRY_ICON: Record<CreditEntryType, string> = {
@@ -100,7 +101,20 @@ export function WalletSheet() {
 
         {/* History */}
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', margin: '20px 0 8px' }}>{t('wallet.history')}</div>
-        {!wallet || wallet.entries.length === 0 ? (
+        {!wallet ? (
+          <div>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                <Skeleton w={34} h={34} r="50%" />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <Skeleton w="45%" h={13} />
+                  <Skeleton w="30%" h={10} />
+                </div>
+                <Skeleton w={56} h={14} />
+              </div>
+            ))}
+          </div>
+        ) : wallet.entries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 24, fontSize: 13, color: 'var(--ink-3)', background: 'var(--surface)', borderRadius: 'var(--r-lg)' }}>{t('wallet.empty')}</div>
         ) : (
           <div>

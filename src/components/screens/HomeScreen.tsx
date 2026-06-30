@@ -4,11 +4,10 @@ import { useUI } from '@/contexts/UIContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
-import { bookingApi, VenueCard } from '@/lib/booking'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, timeAgo, formatWeekdayShort } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, timeAgo, formatWeekdayShort, announcementImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -19,7 +18,7 @@ import { useActivated } from '@/hooks/useActivated'
 import { useNotifications } from '@/contexts/NotificationsContext'
 import type { TranslationKey } from '@/lib/translations'
 
-type HomeTab = 'rounds' | 'teetimes' | 'community'
+type HomeTab = 'rounds' | 'community'
 
 export function HomeScreen() {
   const { activeScreen, setActiveScreen, openOverlayWith, openSheetWith, dataVersion } = useUI()
@@ -204,25 +203,21 @@ export function HomeScreen() {
         </div>
           <div className="hscroll" style={{ marginBottom: 20 }}>
             {announcements.map(ann => (
-              <div key={ann.id} onClick={() => openSheetWith('newsDetail', ann)} style={{ width: 220, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ height: 110, background: `linear-gradient(135deg,${ann.color1} 0%,${ann.color2} 100%)`, position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 220 110" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-                    <path d="M0 75 Q55 55 110 68 Q165 80 224 62 L224 114 L0 114 Z" fill="rgba(255,255,255,.12)"/>
-                    <path d="M0 90 Q45 80 110 86 Q175 92 224 80 L224 114 L0 114 Z" fill="rgba(255,255,255,.08)"/>
-                  </svg>
-                  <div style={{ position: 'absolute', bottom: 8, left: 10 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white', backdropFilter: 'blur(4px)' }}>
+              <div key={ann.id} onClick={() => openSheetWith('newsDetail', ann)} style={{ width: 152, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
+                <div style={{ height: 66, backgroundColor: ann.color2 || 'var(--sky-deep)', backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.28) 0%,rgba(0,0,0,.04) 42%,rgba(0,0,0,.45) 100%),url(${announcementImage(ann, { w: 304, h: 132 })})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', bottom: 6, left: 8 }}>
+                    <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white', backdropFilter: 'blur(4px)' }}>
                       {ann.badge}
                     </span>
                   </div>
-                  <div style={{ position: 'absolute', top: 8, right: 10, fontSize: 10, color: 'rgba(255,255,255,.7)', fontWeight: 500 }}>
+                  <div style={{ position: 'absolute', top: 6, right: 8, fontSize: 9, color: 'rgba(255,255,255,.7)', fontWeight: 500 }}>
                     {new Date(ann.createdAt).toLocaleDateString(lang === 'zh' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
-                <div style={{ padding: '11px 13px 13px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 4, lineHeight: 1.3 }}>{ann.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{ann.body}</div>
-                  <div style={{ marginTop: 9, fontSize: 11, fontWeight: 700, color: 'var(--primary)' }}>{t('home.readMore')}</div>
+                <div style={{ padding: '9px 11px 11px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', marginBottom: 3, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{ann.title}</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--ink-3)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{ann.body}</div>
+                  <div style={{ marginTop: 7, fontSize: 10.5, fontWeight: 700, color: 'var(--primary)' }}>{t('home.readMore')}</div>
                 </div>
               </div>
             ))}
@@ -236,14 +231,14 @@ export function HomeScreen() {
           <Pressable className="see-all link" style={{ cursor: 'pointer' }} onClick={() => setActiveScreen(activeTab === 'community' ? 'community' : 'rounds')}>{t('home.seeAll')}</Pressable>
         </div>
         <div style={{ display: 'flex', borderBottom: '1px solid var(--line-soft)', margin: '0 20px 14px' }}>
-          {(['rounds', 'teetimes', 'community'] as HomeTab[]).map(tab => (
+          {(['rounds', 'community'] as HomeTab[]).map(tab => (
             <Pressable
               key={tab}
               className={`home-tab${activeTab === tab ? ' active' : ''}`}
               aria-pressed={activeTab === tab}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === 'rounds' ? t('home.tab.rounds') : tab === 'teetimes' ? t('home.tab.teeTimes') : t('home.tab.community')}
+              {tab === 'rounds' ? t('home.tab.rounds') : t('home.tab.community')}
             </Pressable>
           ))}
         </div>
@@ -258,9 +253,6 @@ export function HomeScreen() {
             ))}
           </div>
         )}
-
-        {/* Tee times pane — real bookable venues */}
-        {activeTab === 'teetimes' && <TeeTimesPane />}
 
         {/* Community pane */}
         {activeTab === 'community' && (
@@ -323,50 +315,6 @@ function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
         </div>
         <Pressable className="link" style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={onClick}>{t('community.view')}</Pressable>
       </div>
-    </div>
-  )
-}
-
-// Tee Times tab — browse real venues (stores / driving ranges) and open the
-// booking overlay. Empty until a venue is set to `active`.
-function TeeTimesPane() {
-  const { openOverlayWith, dataVersion } = useUI()
-  const { t } = useLang()
-  const [venues, setVenues] = useState<VenueCard[] | null>(null)
-
-  useEffect(() => {
-    let stale = false
-    bookingApi.listVenues().then(v => { if (!stale) setVenues(v) }).catch(() => { if (!stale) setVenues([]) })
-    return () => { stale = true }
-  }, [dataVersion.bookings])
-
-  const palette = [['var(--butter)', 'var(--butter-deep)'], ['var(--sage)', 'var(--sage-deep)'], ['var(--lilac)', 'var(--lilac-deep)']]
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '0 20px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>{t('home.teeTimes.title')}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={() => openOverlayWith('myBookings')}>{t('home.teeTimes.myBookings')}</span>
-      </div>
-      {venues === null ? (
-        <div style={{ textAlign: 'center', padding: 20, fontSize: 13, color: 'var(--ink-3)' }}>{t('loading')}</div>
-      ) : venues.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 24, fontSize: 13, color: 'var(--ink-3)', background: 'var(--surface)', borderRadius: 'var(--r-lg)' }}>{t('home.teeTimes.empty')}</div>
-      ) : venues.map((v, idx) => {
-        const [c1, c2] = palette[idx % 3]
-        return (
-          <div key={v.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'var(--shadow-sm)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 1 }}>{v.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500 }}>{v.type === 'driving_range' ? t('booking.range') : t('booking.course')}{v.locationText ? ` · ${v.locationText}` : ''}</div>
-            </div>
-            <div style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '7px 14px', cursor: 'pointer', flexShrink: 0 }} onClick={() => openOverlayWith('bookVenue', v)}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{t('home.teeTimes.book')}</span>
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }

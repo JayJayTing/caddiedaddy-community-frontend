@@ -53,7 +53,7 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
           </svg>
         </div>
         <div style={{ fontFamily: 'var(--serif)', fontSize: 36, fontWeight: 500, color: 'white', letterSpacing: '-.5px', textAlign: 'center', lineHeight: 1.1, marginBottom: 14 }}>
-          CaddieDaddy
+          Forely
         </div>
         <div style={{ fontSize: 15, color: 'rgba(255,255,255,.6)', textAlign: 'center', lineHeight: 1.65, maxWidth: 230, fontWeight: 400, whiteSpace: 'pre-line' }}>
           {tagline}

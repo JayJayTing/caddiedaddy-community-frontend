@@ -18,8 +18,8 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'CaddieDaddy Community',
-  description: '找到你的下一場球局，與社群一起打球。',
+  title: 'Forely',
+  description: '找到你的下一場球局，與球隊一起打球。',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

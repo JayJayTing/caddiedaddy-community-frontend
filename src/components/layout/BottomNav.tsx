@@ -4,7 +4,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { Pressable } from '@/components/ui/Pressable'
 
 export function BottomNav() {
-  const { activeScreen, setActiveScreen, openSheetWith } = useUI()
+  const { activeScreen, setActiveScreen, setHostCommunity } = useUI()
   const { t } = useLang()
 
   const navColor = (s: Screen) => (activeScreen === s ? 'var(--primary)' : 'var(--ink-3)')
@@ -40,12 +40,12 @@ export function BottomNav() {
         <span className="bnav-label">{t('nav.rounds')}</span>
       </Pressable>
 
-      {/* Play FAB — the primary "play golf" action (host a round or book a tee time) */}
+      {/* Play FAB — the primary "play golf" action (host a round) */}
       <Pressable
         className="bnav-item"
         style={{ flex: 1.2 }}
         aria-label={t('nav.play')}
-        onClick={() => openSheetWith('play')}
+        onClick={() => { setHostCommunity(null); setActiveScreen('host') }}
       >
         <div className="bnav-fab">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden

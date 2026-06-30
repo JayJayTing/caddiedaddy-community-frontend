@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { ChatThread, Message } from '@/types/chat'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
+import { Spinner } from '@/components/ui/Spinner'
 import { formatTime } from '@/lib/utils'
 import { getRealtime } from '@/lib/supabaseRealtime'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -20,6 +21,7 @@ export function ChatThreadOverlay() {
   const isOpen = openOverlay === 'chatThread' && thread != null
 
   const [messages, setMessages] = useState<Message[]>([])
+  const [loadingMsgs, setLoadingMsgs] = useState(false)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -31,12 +33,14 @@ export function ChatThreadOverlay() {
   useEffect(() => {
     if (!isOpen || !thread) return
     setMessages([]) // clear the previous thread's messages so they don't flash under this one
+    setLoadingMsgs(true)
     let stale = false
     const load = () =>
       api.get<{ data: Message[] }>(`/threads/${thread.id}/messages`)
         .then(({ data }) => { if (!stale) setMessages((data ?? []).slice().reverse()) }) // API returns newest-first
         .catch(() => {})
-    load()
+    // Only the first load drives the spinner; the poll silently refreshes.
+    load().finally(() => { if (!stale) setLoadingMsgs(false) })
     api.patch(`/threads/${thread.id}/read`).catch(() => {})
 
     const sb = getRealtime()
@@ -106,7 +110,9 @@ export function ChatThreadOverlay() {
 
       {/* Messages */}
       <div ref={scrollRef} className="scroll-body" style={{ padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {messages.length === 0 ? (
+        {loadingMsgs ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}><Spinner size={22} /></div>
+        ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--ink-3)', fontSize: 13, marginTop: 40 }}>{t('chat.threadNoMessages')}</div>
         ) : messages.map((m, i) => {
           const own = m.senderId === user?.id

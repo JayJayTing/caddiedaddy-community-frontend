@@ -21,8 +21,8 @@ export function RoundDetailOverlay() {
   const [leaving, setLeaving] = useState(false)
   const [nowMs, setNowMs] = useState(0) // drives the back-out countdown; 0 until the ticker starts
   // Fresh detail (incl. the viewer's own participant row) fetched from GET /rounds/:id.
-  // The list data in overlayData can be stale and omit the viewer's pending request,
-  // which would otherwise make the button show "Request to Join" after already requesting.
+  // The list data in overlayData can be stale and omit the viewer's own row,
+  // which would otherwise make the button show "Join" after they already joined.
   const [detail, setDetail] = useState<Round | null>(null)
 
   const seed = overlayData as Round | null
@@ -45,36 +45,36 @@ export function RoundDetailOverlay() {
   const openSpots = round ? Math.max(0, round.totalSpots - accepted) : 0
 
   const userP = user && round?.participants?.find(p => p.userId === user.id)
-  const myRole = userP?.role
-  const hasRequested = myRole === 'requested'
-  const isHost = myRole === 'host'
-  const isParticipant = myRole === 'accepted' || myRole === 'requested'
+  // Free join: a player is in the round as soon as they tap Join (role 'accepted').
+  // 'requested' is kept for any legacy rows from before approval was removed.
+  const hasJoined = userP?.role === 'accepted' || userP?.role === 'requested'
+  const isHost = userP?.role === 'host'
   const cancelled = round?.status === 'cancelled'
 
   // Back-out window: open for BACKOUT_WINDOW_MS after the viewer joined.
   const joinedMs = userP?.joinedAt ? new Date(userP.joinedAt).getTime() : 0
   const remainingMs = Math.max(0, BACKOUT_WINDOW_MS - (nowMs - joinedMs))
-  const canBackOut = isParticipant && !isHost && nowMs > 0 && joinedMs > 0 && remainingMs > 0
+  const canBackOut = hasJoined && !isHost && nowMs > 0 && joinedMs > 0 && remainingMs > 0
   const backOutSec = Math.ceil(remainingMs / 1000)
 
   // Tick once a second while the viewer holds a spot, so the countdown updates.
   useEffect(() => {
-    if (!isOpen || !isParticipant || isHost) return
+    if (!isOpen || !hasJoined || isHost) return
     setNowMs(Date.now())
     const id = setInterval(() => setNowMs(Date.now()), 1000)
     return () => clearInterval(id)
-  }, [isOpen, isParticipant, isHost])
+  }, [isOpen, hasJoined, isHost])
 
   const c1 = round?.color1 ?? '#B8CBE0'
   const c2 = round?.color2 ?? '#5C7A9A'
   const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
-    if (!round || joining || hasRequested || isHost || cancelled) return
+    if (!round || joining || hasJoined || isHost || cancelled) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
-      // Re-fetch so the players list and button reflect the new pending request.
+      // Re-fetch so the players list and button reflect the viewer now being in the round.
       const { data } = await api.get<{ data: Round }>(`/rounds/${round.id}`)
       if (data) setDetail(data)
       refreshData('rounds')
@@ -191,16 +191,16 @@ export function RoundDetailOverlay() {
                 </div>
               ))}
               {Array.from({ length: openSpots }).map((_, i) => {
-                const requestedSpot = hasRequested && i === 0 // surface the viewer's pending request
-                const canJoin = !isHost && !isParticipant && !cancelled
+                // Any non-host who isn't already in the round can tap a + to add themselves.
+                const canJoin = !isHost && !hasJoined && !cancelled
                 const circle = (
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: `2px dashed ${requestedSpot ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: requestedSpot ? 15 : 18, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)' }}>{requestedSpot ? '⏳' : '+'}</span>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                   </div>
                 )
                 const label = (
-                  <div style={{ fontSize: 10, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)', fontWeight: requestedSpot ? 700 : 400 }}>
-                    {requestedSpot ? t('rounds.requested') : t('round.openSpot')}
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 400 }}>
+                    {t('round.openSpot')}
                   </div>
                 )
                 if (canJoin) {
@@ -243,7 +243,7 @@ export function RoundDetailOverlay() {
           <div style={{ width: '100%', background: 'var(--bg-alt)', borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center' }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-3)' }}>{t('rounds.cancelled')}</span>
           </div>
-        ) : isParticipant ? (
+        ) : hasJoined ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ width: '100%', background: 'var(--primary-soft)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center' }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary-ink)' }}>✓ {t('round.youreIn')}</span>

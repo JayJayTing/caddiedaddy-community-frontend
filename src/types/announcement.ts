@@ -6,4 +6,5 @@ export interface Announcement {
   createdAt: string
   color1: string
   color2: string
+  imageUrl?: string | null
 }
