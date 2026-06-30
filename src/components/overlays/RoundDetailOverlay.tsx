@@ -9,11 +9,17 @@ import { formatDate, formatTeeTime, formatMoney, courseMapImage } from '@/lib/ut
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 
+// Players may back out of a round for up to a minute after joining. Mirrors the
+// server-enforced window so the UI and backend agree on when the option ends.
+const BACKOUT_WINDOW_MS = 60_000
+
 export function RoundDetailOverlay() {
   const { openOverlay, openOverlayWith, closeOverlay, overlayData, refreshData, showSuccess, showError } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const [joining, setJoining] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [nowMs, setNowMs] = useState(0) // drives the back-out countdown; 0 until the ticker starts
   // Fresh detail (incl. the viewer's own participant row) fetched from GET /rounds/:id.
   // The list data in overlayData can be stale and omit the viewer's pending request,
   // which would otherwise make the button show "Request to Join" after already requesting.
@@ -39,9 +45,25 @@ export function RoundDetailOverlay() {
   const openSpots = round ? Math.max(0, round.totalSpots - accepted) : 0
 
   const userP = user && round?.participants?.find(p => p.userId === user.id)
-  const hasRequested = userP?.role === 'requested'
-  const isHost = userP?.role === 'host'
+  const myRole = userP?.role
+  const hasRequested = myRole === 'requested'
+  const isHost = myRole === 'host'
+  const isParticipant = myRole === 'accepted' || myRole === 'requested'
   const cancelled = round?.status === 'cancelled'
+
+  // Back-out window: open for BACKOUT_WINDOW_MS after the viewer joined.
+  const joinedMs = userP?.joinedAt ? new Date(userP.joinedAt).getTime() : 0
+  const remainingMs = Math.max(0, BACKOUT_WINDOW_MS - (nowMs - joinedMs))
+  const canBackOut = isParticipant && !isHost && nowMs > 0 && joinedMs > 0 && remainingMs > 0
+  const backOutSec = Math.ceil(remainingMs / 1000)
+
+  // Tick once a second while the viewer holds a spot, so the countdown updates.
+  useEffect(() => {
+    if (!isOpen || !isParticipant || isHost) return
+    setNowMs(Date.now())
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [isOpen, isParticipant, isHost])
 
   const c1 = round?.color1 ?? '#B8CBE0'
   const c2 = round?.color2 ?? '#5C7A9A'
@@ -57,10 +79,25 @@ export function RoundDetailOverlay() {
       if (data) setDetail(data)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {
-      showError(t('error.join'))
+    } catch (e) {
+      showError(e instanceof Error ? e.message : t('error.join'))
     }
     setJoining(false)
+  }
+
+  const handleLeave = async () => {
+    if (!round || leaving) return
+    setLeaving(true)
+    try {
+      await api.post(`/rounds/${round.id}/leave`)
+      const { data } = await api.get<{ data: Round }>(`/rounds/${round.id}`)
+      if (data) setDetail(data)
+      refreshData('rounds')
+      showSuccess(t('success.leftRound'))
+    } catch (e) {
+      showError(e instanceof Error ? e.message : t('error.cancelJoin'))
+    }
+    setLeaving(false)
   }
 
   if (!isOpen || !round) return null
@@ -155,7 +192,7 @@ export function RoundDetailOverlay() {
               ))}
               {Array.from({ length: openSpots }).map((_, i) => {
                 const requestedSpot = hasRequested && i === 0 // surface the viewer's pending request
-                const canJoin = !isHost && !hasRequested
+                const canJoin = !isHost && !isParticipant && !cancelled
                 const circle = (
                   <div style={{ width: 44, height: 44, borderRadius: '50%', border: `2px dashed ${requestedSpot ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: requestedSpot ? 15 : 18, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)' }}>{requestedSpot ? '⏳' : '+'}</span>
@@ -202,23 +239,53 @@ export function RoundDetailOverlay() {
           >
             <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{t('manage.title')}</span>
           </Pressable>
+        ) : cancelled ? (
+          <div style={{ width: '100%', background: 'var(--bg-alt)', borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center' }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-3)' }}>{t('rounds.cancelled')}</span>
+          </div>
+        ) : isParticipant ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ width: '100%', background: 'var(--primary-soft)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary-ink)' }}>✓ {t('round.youreIn')}</span>
+            </div>
+            {canBackOut && (
+              <Pressable
+                onClick={handleLeave}
+                disabled={leaving}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'var(--surface)',
+                  border: '1.5px solid var(--line)',
+                  borderRadius: 'var(--r-lg)',
+                  padding: 14,
+                  textAlign: 'center',
+                  cursor: leaving ? 'default' : 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#C0392B' }}>
+                  {leaving ? '…' : `${t('round.backOut')} · ${backOutSec}s`}
+                </span>
+              </Pressable>
+            )}
+          </div>
         ) : (
           <Pressable
             onClick={handleJoin}
-            disabled={cancelled}
+            disabled={joining}
             style={{
               display: 'block',
               width: '100%',
-              background: hasRequested || cancelled ? 'var(--bg-alt)' : 'var(--primary)',
+              background: 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
               textAlign: 'center',
-              cursor: hasRequested || cancelled ? 'default' : 'pointer',
-              boxShadow: hasRequested || cancelled ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
+              cursor: joining ? 'default' : 'pointer',
+              boxShadow: '0 4px 20px rgba(92,122,154,.35)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested || cancelled ? 'var(--ink-3)' : 'white' }}>
-              {cancelled ? t('rounds.cancelled') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
+              {joining ? '…' : t('rounds.requestToJoin')}
             </span>
           </Pressable>
         )}

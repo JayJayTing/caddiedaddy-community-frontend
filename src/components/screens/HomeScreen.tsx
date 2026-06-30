@@ -8,11 +8,12 @@ import { bookingApi, VenueCard } from '@/lib/booking'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, timeAgo, courseMapImage, formatWeekdayShort } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, timeAgo, formatWeekdayShort } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
 import { CancelledBadge } from '@/components/ui/CancelledBadge'
+import { RoundCard } from '@/components/screens/RoundsScreen'
 import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import { useNotifications } from '@/contexts/NotificationsContext'
@@ -35,7 +36,6 @@ export function HomeScreen() {
   const [loadingUpcoming, setLoadingUpcoming] = useState(true)
   const [loadingRounds, setLoadingRounds] = useState(true)
   const [activeTab, setActiveTab] = useState<HomeTab>('rounds')
-  const [expandedRound, setExpandedRound] = useState<string | null>(null)
 
   const greeting = () => {
     const h = new Date().getHours()
@@ -254,7 +254,7 @@ export function HomeScreen() {
             {loadingRounds ? (
               <>{[0, 1, 2].map(i => <RoundCardSkeleton key={i} />)}</>
             ) : rounds.slice(0, 4).map(round => (
-              <RoundCard key={round.id} round={round} expanded={expandedRound === round.id} onToggle={() => setExpandedRound(expandedRound === round.id ? null : round.id)} onOpenDetail={() => openOverlayWith('roundDetail', round)} />
+              <RoundCard key={round.id} round={round} onOpenDetail={() => openOverlayWith('roundDetail', round)} />
             ))}
           </div>
         )}
@@ -270,109 +270,6 @@ export function HomeScreen() {
             ))}
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// Round card for home screen
-function RoundCard({ round, expanded, onToggle, onOpenDetail }: { round: Round; expanded: boolean; onToggle: () => void; onOpenDetail: () => void }) {
-  const { t } = useLang()
-  const { user } = useAuth()
-  const { refreshData, showSuccess, showError } = useUI()
-  const [joined, setJoined] = useState(false)
-  const [joining, setJoining] = useState(false)
-
-  const openSpots = Math.max(0, round.totalSpots - (round.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0))
-  const c1 = round.color1 ?? '#B8CBE0'
-  const c2 = round.color2 ?? '#5C7A9A'
-  const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
-
-  const userParticipant = user && round.participants?.find(p => p.userId === user.id)
-  const hasRequested = userParticipant?.role === 'requested' || joined
-  const isHost = userParticipant?.role === 'host'
-
-  const handleJoin = async () => {
-    if (joining || hasRequested || isHost) return
-    setJoining(true)
-    try {
-      await api.post(`/rounds/${round.id}/join`)
-      setJoined(true)
-      refreshData('rounds')
-      showSuccess(t('success.requestSent'))
-    } catch {
-      showError(t('error.join'))
-    }
-    setJoining(false)
-  }
-
-  return (
-    <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-      <div role="button" tabIndex={0} style={{ display: 'flex', cursor: 'pointer' }} onClick={onToggle} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}>
-        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
-          {!art && (
-            <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-              <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
-              <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
-            </svg>
-          )}
-        </div>
-        <div style={{ flex: 1, padding: '13px 13px 13px 11px', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-              <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
-                {openSpots > 0 ? `${openSpots} ${t('rounds.open')}` : t('common.full')}
-              </span>
-              <svg className={`round-card-chevron${expanded ? ' open' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 8 }}>
-            {formatTeeTime(round.teeTime)} · {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes}h`} · {formatMoney(round.greenFeeCents)}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex' }}>
-              {round.participants?.slice(0, 3).map((p, i) => (
-                <Avatar key={p.id} name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={24} fontSize={9} style={{ border: '2px solid var(--surface)', marginLeft: i === 0 ? 0 : -8 }} />
-              ))}
-            </div>
-            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{round.hostUser.displayName} {t('home.hosting')}</span>
-          </div>
-        </div>
-      </div>
-      <div className={`round-card-expand${expanded ? ' open' : ''}`}>
-        <div style={{ borderTop: '1px solid var(--line-soft)', padding: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-            {[
-              [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
-              round.venueType === 'driving_range'
-                ? [t('host.venue'), t('host.drivingRange')]
-                : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
-              [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
-            ].map(([label, val]) => (
-              <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{val}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Pressable
-              style={{ flex: 1, background: hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: hasRequested || isHost ? 'default' : 'pointer' }}
-              onClick={handleJoin}
-            >
-              <span style={{ fontSize: 13, fontWeight: 700, color: hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
-              </span>
-            </Pressable>
-            <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', textAlign: 'center', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('common.fullPage')}</span>
-            </Pressable>
-          </div>
-        </div>
       </div>
     </div>
   )

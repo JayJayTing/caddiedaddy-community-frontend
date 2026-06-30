@@ -277,6 +277,7 @@ const en = {
   'success.roundPosted': 'Round posted!',
   'success.communityCreated': 'Community created!',
   'success.joined': 'Joined!',
+  'success.leftRound': "You've left the round.",
   'success.posted': 'Posted!',
   // Merchant booking
   'booking.range': 'Driving range',
@@ -348,6 +349,8 @@ const en = {
   'round.hostNotes': 'Notes from Host',
   'round.playersLabel': 'Players',
   'round.yours': 'Your Round',
+  'round.youreIn': "You're in",
+  'round.backOut': 'Back out',
   // host
   'host.errorIncomplete': 'Please fill in course, date, and tee time.',
   'host.selectCommunity': 'Select a community…',
@@ -819,6 +822,7 @@ const zh: typeof en = {
   'success.roundPosted': '球局已發布！',
   'success.communityCreated': '社群已建立！',
   'success.joined': '已加入！',
+  'success.leftRound': '已退出此球局。',
   'success.posted': '已發布！',
   // Merchant booking
   'booking.range': '練習場',
@@ -890,6 +894,8 @@ const zh: typeof en = {
   'round.hostNotes': '主辦者備註',
   'round.playersLabel': '球員',
   'round.yours': '你的球局',
+  'round.youreIn': '你已加入',
+  'round.backOut': '退出',
   // host
   'host.errorIncomplete': '請填入球場、日期和開球時間。',
   'host.selectCommunity': '選擇社群…',

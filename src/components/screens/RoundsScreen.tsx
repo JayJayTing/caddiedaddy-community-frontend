@@ -108,20 +108,20 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   const c2 = round.color2 ?? '#5C7A9A'
   const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
   const userP = user && round.participants?.find(p => p.userId === user.id)
-  const hasRequested = userP?.role === 'requested' || joined
+  const isParticipant = userP?.role === 'accepted' || userP?.role === 'requested' || joined
   const isHost = userP?.role === 'host'
   const cancelled = round.status === 'cancelled'
 
   const handleJoin = async () => {
-    if (cancelled || joining || hasRequested || isHost) return
+    if (cancelled || joining || isParticipant || isHost) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
       setJoined(true)
       refreshData('rounds')
       showSuccess(t('success.requestSent'))
-    } catch {
-      showError(t('error.join'))
+    } catch (e) {
+      showError(e instanceof Error ? e.message : t('error.join'))
     }
     setJoining(false)
   }
@@ -185,12 +185,12 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Pressable
-              disabled={cancelled}
-              style={{ flex: 1, background: cancelled || hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasRequested || isHost ? 'default' : 'pointer' }}
+              disabled={cancelled || isParticipant || isHost}
+              style={{ flex: 1, background: cancelled || isParticipant || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || isParticipant || isHost ? 'default' : 'pointer' }}
               onClick={handleJoin}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || isParticipant || isHost ? 'var(--ink-3)' : 'white' }}>
+                {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : isParticipant ? t('round.youreIn') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </Pressable>
             <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>
