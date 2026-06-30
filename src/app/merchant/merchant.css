@@ -9,7 +9,7 @@
   overflow: hidden; /* app-shell: the content pane scrolls, not the page */
   background: #eef1f5;
   color: #1a2733;
-  font-family: var(--font-manrope, system-ui, sans-serif);
+  font-family: var(--sans);
   z-index: 200;
   -webkit-font-smoothing: antialiased;
 }

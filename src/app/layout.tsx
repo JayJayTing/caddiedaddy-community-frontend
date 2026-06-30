@@ -1,21 +1,9 @@
 import type { Metadata } from 'next'
-import { Fraunces, Manrope } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { UIProvider } from '@/contexts/UIContext'
 import { NotificationsProvider } from '@/contexts/NotificationsContext'
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  display: 'swap',
-})
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'Forely',
@@ -24,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-Hant" className={`${fraunces.variable} ${manrope.variable}`}>
+    <html lang="zh-Hant">
       <body>
         <LanguageProvider>
           <AuthProvider>
