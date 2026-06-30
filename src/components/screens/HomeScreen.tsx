@@ -7,7 +7,7 @@ import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, timeAgo, courseMapImage, formatWeekdayShort } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, timeAgo, courseMapImage, formatWeekdayShort, announcementImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -204,11 +204,7 @@ export function HomeScreen() {
           <div className="hscroll" style={{ marginBottom: 20 }}>
             {announcements.map(ann => (
               <div key={ann.id} onClick={() => openSheetWith('newsDetail', ann)} style={{ width: 152, flexShrink: 0, background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ height: 66, background: `linear-gradient(135deg,${ann.color1} 0%,${ann.color2} 100%)`, position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 152 66" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-                    <path d="M0 44 Q38 33 76 41 Q114 48 156 37 L156 70 L0 70 Z" fill="rgba(255,255,255,.12)"/>
-                    <path d="M0 54 Q31 48 76 51 Q121 55 156 48 L156 70 L0 70 Z" fill="rgba(255,255,255,.08)"/>
-                  </svg>
+                <div style={{ height: 66, backgroundColor: ann.color2 || 'var(--sky-deep)', backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.28) 0%,rgba(0,0,0,.04) 42%,rgba(0,0,0,.45) 100%),url(${announcementImage(ann, { w: 304, h: 132 })})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', bottom: 6, left: 8 }}>
                     <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.22)', color: 'white', backdropFilter: 'blur(4px)' }}>
                       {ann.badge}

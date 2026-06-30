@@ -123,3 +123,32 @@ export function courseMapImage(
   const { w = 640, h = 320, zoom = 15 } = opts
   return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${w}x${h}&scale=2&maptype=satellite&key=${key}`
 }
+
+// Golf-themed placeholder photos for announcements that don't carry their own
+// image. Deterministic per announcement id, so a card keeps the same photo
+// across renders. Each entry is a base Unsplash URL; sizing/crop params are
+// appended at call time.
+const ANNOUNCEMENT_PHOTOS = [
+  'https://images.unsplash.com/photo-1535131749006-b7f58c99034b',
+  'https://images.unsplash.com/photo-1535132011086-b8818f016104',
+  'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa',
+  'https://images.unsplash.com/photo-1592919505780-303950717480',
+  'https://images.unsplash.com/photo-1593111774240-d529f12cf4bb',
+  'https://images.unsplash.com/photo-1551632811-561732d1e306',
+]
+
+// Cover image for an announcement: its own imageUrl when present, otherwise a
+// stable golf placeholder picked from the pool above by hashing the id.
+export function announcementImage(
+  ann: { id: string; imageUrl?: string | null },
+  opts: { w?: number; h?: number } = {},
+): string {
+  if (ann.imageUrl) return ann.imageUrl
+  let hash = 0
+  for (let i = 0; i < ann.id.length; i++) {
+    hash = (hash * 31 + ann.id.charCodeAt(i)) | 0
+  }
+  const photo = ANNOUNCEMENT_PHOTOS[Math.abs(hash) % ANNOUNCEMENT_PHOTOS.length]
+  const { w = 480, h = 320 } = opts
+  return `${photo}?auto=format&fit=crop&q=70&w=${w}&h=${h}`
+}
