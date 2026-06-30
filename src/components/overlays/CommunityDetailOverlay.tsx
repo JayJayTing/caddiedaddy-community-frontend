@@ -39,6 +39,8 @@ export function CommunityDetailOverlay() {
   const [tab, setTab] = useState<CommTab>('feed')
   const [busy, setBusy] = useState(false)
   const [uploadingArt, setUploadingArt] = useState(false)
+  const [removingId, setRemovingId] = useState<string | null>(null) // member being removed
+  const [confirmKick, setConfirmKick] = useState<string | null>(null) // member armed for removal (two-tap confirm)
 
   // (Re)load whenever the overlay opens for a community.
   useEffect(() => {
@@ -48,6 +50,8 @@ export function CommunityDetailOverlay() {
     setRounds([])
     setTab('feed')
     setBusy(false)
+    setConfirmKick(null)
+    setRemovingId(null)
     let stale = false
     api.get<{ data: Community }>(`/communities/${seed.id}`)
       .then(({ data }) => { if (!stale && data) setDetail(data) }).catch(() => {})
@@ -68,6 +72,7 @@ export function CommunityDetailOverlay() {
   const canJoin = detail.privacy !== 'private'
   const loaded = detail.members !== undefined // detail (vs seed) has been fetched
   const isAdmin = !!user && (detail.creatorId === user.id || members.some(m => m.user.id === user.id && m.role === 'admin'))
+  const isOwner = !!user && detail.creatorId === user.id // only the owner can remove members
 
   const handleArtPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.files?.[0]
@@ -109,6 +114,31 @@ export function CommunityDetailOverlay() {
       try { const { data } = await api.get<{ data: Community }>(`/communities/${detail.id}`); if (data) setDetail(data) } catch {}
     } finally {
       setBusy(false)
+    }
+  }
+
+  // Owner removes a member. Optimistic: drop the row + decrement, reconcile with the response.
+  const removeMember = async (targetId: string) => {
+    if (!detail || !isOwner || removingId) return
+    setConfirmKick(null)
+    setRemovingId(targetId)
+    setDetail(d => {
+      if (!d) return d
+      const nextMembers = (d.members ?? []).filter(m => m.user.id !== targetId)
+      const count = Math.max(0, (d._count?.members ?? d.memberCount) - 1)
+      return { ...d, members: nextMembers, memberCount: count, _count: { members: count, rounds: d._count?.rounds ?? d.roundCount } }
+    })
+    try {
+      const { data } = await api.delete<{ data: Community }>(`/communities/${detail.id}/members/${targetId}`)
+      if (data) setDetail(data)
+      refreshData('communities')
+      showSuccess(t('community.memberRemoved'))
+    } catch {
+      // Reconcile from the server on failure.
+      try { const { data } = await api.get<{ data: Community }>(`/communities/${detail.id}`); if (data) setDetail(data) } catch {}
+      showError(t('error.generic'))
+    } finally {
+      setRemovingId(null)
     }
   }
 
@@ -242,6 +272,18 @@ export function CommunityDetailOverlay() {
                   </div>
                   {role === 'admin' && <span className="badge" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)', fontSize: 10 }}>{t('community.detail.roleAdmin')}</span>}
                   {role === 'leader' && <span className="badge" style={{ background: 'var(--butter)', color: 'var(--butter-deep)', fontSize: 10 }}>{t('community.detail.roleLeader')}</span>}
+                  {isOwner && !isCreator && (
+                    <Pressable
+                      onClick={() => { if (removingId) return; confirmKick === m.user.id ? removeMember(m.user.id) : setConfirmKick(m.user.id) }}
+                      disabled={removingId === m.user.id}
+                      aria-label={t('community.detail.removeMember')}
+                      style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 'var(--r-pill)', border: `1.5px solid ${confirmKick === m.user.id ? '#C0392B' : 'var(--line)'}`, background: confirmKick === m.user.id ? '#FDECEA' : 'var(--surface)', cursor: removingId === m.user.id ? 'default' : 'pointer' }}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#C0392B' }}>
+                        {removingId === m.user.id ? '…' : confirmKick === m.user.id ? t('community.detail.removeConfirm') : t('community.detail.removeMember')}
+                      </span>
+                    </Pressable>
+                  )}
                 </div>
               )
             })}

@@ -6,7 +6,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { ChatThread } from '@/types/chat'
-import { formatDate, formatTeeTime, formatMoney, courseMapImage } from '@/lib/utils'
+import { formatDate, formatDateFull, formatTeeTime, formatMoney, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 
@@ -146,7 +146,8 @@ export function RoundDetailOverlay() {
         </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
           <h2 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</h2>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(round.date)} · {formatTeeTime(round.teeTime)}</div>
+          {/* Glance line = where (location); the full date/time lives in the When card below. */}
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{round.course.locationText || formatDate(round.date)}</div>
         </div>
       </div>
 
@@ -166,6 +167,20 @@ export function RoundDetailOverlay() {
           </span>
         </div>
 
+        {/* When — the single, unambiguous source for date + tee-off time (the hero
+            only shows a short glance; the old grid split these into two cramped cards). */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12, padding: '14px 16px', background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>{formatDateFull(round.date)}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginTop: 2 }}>{t('round.teeOff')} · {formatTeeTime(round.teeTime)}</div>
+          </div>
+        </div>
+
         {/* Host */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '14px', background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)' }}>
           <Avatar name={round.hostUser?.displayName} url={round.hostUser?.avatarUrl} seed={round.hostUserId} size={44} fontSize={16} />
@@ -175,11 +190,10 @@ export function RoundDetailOverlay() {
           </div>
         </div>
 
-        {/* Details grid */}
+        {/* Details grid — date/time now live in the When card above, so this is just
+            the remaining facts (holes/venue + green fee). */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           {[
-            [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
-            [t('host.date'), formatDate(round.date)],
             round.venueType === 'driving_range'
               ? [t('host.venue'), t('host.drivingRange')]
               : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
