@@ -108,12 +108,12 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   const c2 = round.color2 ?? '#5C7A9A'
   const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
   const userP = user && round.participants?.find(p => p.userId === user.id)
-  const hasRequested = userP?.role === 'requested' || joined
+  const hasJoined = joined || userP?.role === 'accepted' || userP?.role === 'requested'
   const isHost = userP?.role === 'host'
   const cancelled = round.status === 'cancelled'
 
   const handleJoin = async () => {
-    if (cancelled || joining || hasRequested || isHost) return
+    if (cancelled || joining || hasJoined || isHost) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
@@ -169,16 +169,16 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
       </div>
       <div className={`round-card-expand${expanded ? ' open' : ''}`}>
         <div style={{ borderTop: '1px solid var(--line-soft)', padding: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+          <div style={{ display: 'flex', marginBottom: 12 }}>
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
               round.venueType === 'driving_range'
                 ? [t('host.venue'), t('host.drivingRange')]
                 : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
-            ].map(([label, val]) => (
-              <div key={label} style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-sm)', padding: '10px 12px' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 3 }}>{label}</div>
+            ].map(([label, val], i) => (
+              <div key={label} style={{ flex: 1, paddingLeft: i === 0 ? 0 : 12, borderLeft: i === 0 ? undefined : '1px solid var(--line-soft)' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{val}</div>
               </div>
             ))}
@@ -186,11 +186,11 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           <div style={{ display: 'flex', gap: 8 }}>
             <Pressable
               disabled={cancelled}
-              style={{ flex: 1, background: cancelled || hasRequested || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasRequested || isHost ? 'default' : 'pointer' }}
+              style={{ flex: 1, background: cancelled || hasJoined || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasJoined || isHost ? 'default' : 'pointer' }}
               onClick={handleJoin}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || hasRequested || isHost ? 'var(--ink-3)' : 'white' }}>
-                {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || hasJoined || isHost ? 'var(--ink-3)' : 'white' }}>
+                {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : hasJoined ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </Pressable>
             <Pressable style={{ background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={onOpenDetail}>

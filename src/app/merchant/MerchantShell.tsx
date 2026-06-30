@@ -47,7 +47,7 @@ export function MerchantShell({ children }: { children: ReactNode }) {
       <div className="mc-bar">
         <a href="/merchant" className="mc-brand" style={{ textDecoration: 'none', color: '#fff' }}>
           <span className="mc-dot" />
-          <h1>CaddieDaddy · Operator Console</h1>
+          <h1>Forely · Operator Console</h1>
         </a>
         <div className="mc-bar-actions">
           <span className="mc-muted" style={{ color: '#9fb3c2' }}>Pay-at-venue · v1</span>

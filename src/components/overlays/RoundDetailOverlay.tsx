@@ -15,8 +15,8 @@ export function RoundDetailOverlay() {
   const { t } = useLang()
   const [joining, setJoining] = useState(false)
   // Fresh detail (incl. the viewer's own participant row) fetched from GET /rounds/:id.
-  // The list data in overlayData can be stale and omit the viewer's pending request,
-  // which would otherwise make the button show "Request to Join" after already requesting.
+  // The list data in overlayData can be stale and omit the viewer's own row,
+  // which would otherwise make the button show "Join" after they already joined.
   const [detail, setDetail] = useState<Round | null>(null)
 
   const seed = overlayData as Round | null
@@ -39,7 +39,9 @@ export function RoundDetailOverlay() {
   const openSpots = round ? Math.max(0, round.totalSpots - accepted) : 0
 
   const userP = user && round?.participants?.find(p => p.userId === user.id)
-  const hasRequested = userP?.role === 'requested'
+  // Free join: a player is in the round as soon as they tap Join (role 'accepted').
+  // 'requested' is kept for any legacy rows from before approval was removed.
+  const hasJoined = userP?.role === 'accepted' || userP?.role === 'requested'
   const isHost = userP?.role === 'host'
   const cancelled = round?.status === 'cancelled'
 
@@ -48,11 +50,11 @@ export function RoundDetailOverlay() {
   const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
-    if (!round || joining || hasRequested || isHost || cancelled) return
+    if (!round || joining || hasJoined || isHost || cancelled) return
     setJoining(true)
     try {
       await api.post(`/rounds/${round.id}/join`)
-      // Re-fetch so the players list and button reflect the new pending request.
+      // Re-fetch so the players list and button reflect the viewer now being in the round.
       const { data } = await api.get<{ data: Round }>(`/rounds/${round.id}`)
       if (data) setDetail(data)
       refreshData('rounds')
@@ -154,16 +156,16 @@ export function RoundDetailOverlay() {
                 </div>
               ))}
               {Array.from({ length: openSpots }).map((_, i) => {
-                const requestedSpot = hasRequested && i === 0 // surface the viewer's pending request
-                const canJoin = !isHost && !hasRequested
+                // Any non-host who isn't already in the round can tap a + to add themselves.
+                const canJoin = !isHost && !hasJoined && !cancelled
                 const circle = (
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: `2px dashed ${requestedSpot ? 'var(--primary)' : 'var(--line)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: requestedSpot ? 15 : 18, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)' }}>{requestedSpot ? '⏳' : '+'}</span>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                   </div>
                 )
                 const label = (
-                  <div style={{ fontSize: 10, color: requestedSpot ? 'var(--primary)' : 'var(--ink-3)', fontWeight: requestedSpot ? 700 : 400 }}>
-                    {requestedSpot ? t('rounds.requested') : t('round.openSpot')}
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 400 }}>
+                    {t('round.openSpot')}
                   </div>
                 )
                 if (canJoin) {
@@ -209,16 +211,16 @@ export function RoundDetailOverlay() {
             style={{
               display: 'block',
               width: '100%',
-              background: hasRequested || cancelled ? 'var(--bg-alt)' : 'var(--primary)',
+              background: hasJoined || cancelled ? 'var(--bg-alt)' : 'var(--primary)',
               borderRadius: 'var(--r-lg)',
               padding: 18,
               textAlign: 'center',
-              cursor: hasRequested || cancelled ? 'default' : 'pointer',
-              boxShadow: hasRequested || cancelled ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
+              cursor: hasJoined || cancelled ? 'default' : 'pointer',
+              boxShadow: hasJoined || cancelled ? 'none' : '0 4px 20px rgba(92,122,154,.35)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: hasRequested || cancelled ? 'var(--ink-3)' : 'white' }}>
-              {cancelled ? t('rounds.cancelled') : hasRequested ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
+            <span style={{ fontSize: 16, fontWeight: 700, color: hasJoined || cancelled ? 'var(--ink-3)' : 'white' }}>
+              {cancelled ? t('rounds.cancelled') : hasJoined ? t('rounds.requested') : joining ? '…' : t('rounds.requestToJoin')}
             </span>
           </Pressable>
         )}
