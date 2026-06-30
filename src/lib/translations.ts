@@ -354,6 +354,7 @@ const en = {
   'round.yours': 'Your Round',
   'round.youreIn': "You're in",
   'round.backOut': 'Back out',
+  'round.contactHostToCancel': "Can't make it? Message the host",
   // host
   'host.errorIncomplete': 'Please fill in course, date, and tee time.',
   'host.selectCommunity': 'Select a golf team…',
@@ -407,6 +408,7 @@ const en = {
   'chat.joinCommunityPrompt': 'Join golf teams to see their channels here',
   'chat.threadNoMessages': 'No messages yet — say hi 👋',
   'chat.messagePlaceholder': 'Message…',
+  'chat.cancelDraft': "Hi! I'm sorry, but I won't be able to make our round at {course} on {date} ({time}). Could you free up my spot? Thanks!",
   // post detail
   'post.detail.title': 'Post',
   'post.detail.likesSuffix': 'Likes',
@@ -902,6 +904,7 @@ const zh: typeof en = {
   'round.yours': '你的球局',
   'round.youreIn': '你已加入',
   'round.backOut': '退出',
+  'round.contactHostToCancel': '無法出席？傳訊息給主辦人',
   // host
   'host.errorIncomplete': '請填入球場、日期和開球時間。',
   'host.selectCommunity': '選擇球隊…',
@@ -955,6 +958,7 @@ const zh: typeof en = {
   'chat.joinCommunityPrompt': '加入球隊即可在此看到他們的頻道',
   'chat.threadNoMessages': '還沒有訊息 — 打聲招呼吧 👋',
   'chat.messagePlaceholder': '訊息…',
+  'chat.cancelDraft': '您好！很抱歉，我無法參加 {date}（{time}）在 {course} 的球局，可以幫我釋出名額嗎？謝謝！',
   // post detail
   'post.detail.title': '貼文',
   'post.detail.likesSuffix': '個讚',
