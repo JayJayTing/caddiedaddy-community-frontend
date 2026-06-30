@@ -5,9 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { Post } from '@/types/post'
 import { Announcement } from '@/types/announcement'
-import { formatTeeTime, formatDate, formatMoney, timeAgo, formatWeekdayShort, announcementImage } from '@/lib/utils'
+import { formatTeeTime, formatDate, formatMoney, formatWeekdayShort, announcementImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { Skeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -16,7 +15,6 @@ import { RoundCard } from '@/components/screens/RoundsScreen'
 import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import { useNotifications } from '@/contexts/NotificationsContext'
-import type { TranslationKey } from '@/lib/translations'
 
 type HomeTab = 'rounds' | 'community'
 
@@ -31,7 +29,6 @@ export function HomeScreen() {
   const [upcoming, setUpcoming] = useState<Round | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [rounds, setRounds] = useState<Round[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
   const [loadingUpcoming, setLoadingUpcoming] = useState(true)
   const [loadingRounds, setLoadingRounds] = useState(true)
   const [activeTab, setActiveTab] = useState<HomeTab>('rounds')
@@ -62,17 +59,17 @@ export function HomeScreen() {
       .then(r => { if (alive) setRounds(r.data ?? []) })
       .catch(() => { if (alive) setRounds([]) })
       .finally(() => { if (alive) setLoadingRounds(false) })
-
-    api.get<{ data: Post[] }>('/posts?scope=discover&limit=3')
-      .then(r => { if (alive) setPosts(r.data ?? []) })
-      .catch(() => { if (alive) setPosts([]) })
     return () => { alive = false }
-  }, [user, activated, dataVersion.rounds, dataVersion.posts])
+  }, [user, activated, dataVersion.rounds])
 
   const acceptedCount = (r: Round) =>
     r.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
 
   const openSpots = (r: Round) => Math.max(0, r.totalSpots - acceptedCount(r))
+
+  // Golf Team tab shows the same round-card container as Rounds, scoped to
+  // community (team) rounds — no posts.
+  const teamRounds = rounds.filter(r => r.visibility === 'community').slice(0, 4)
 
   return (
     <div className={`screen${activeScreen === 'home' ? ' active' : ''}`}>
@@ -254,66 +251,20 @@ export function HomeScreen() {
           </div>
         )}
 
-        {/* Community pane */}
+        {/* Golf Team pane — same round-card container as Rounds, team rounds only */}
         {activeTab === 'community' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '0 20px 16px' }}>
-            {posts.map(post => (
-              <MiniPostCard key={post.id} post={post} onClick={() => setActiveScreen('community')} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '0 20px 20px' }}>
+            {loadingRounds ? (
+              <>{[0, 1, 2].map(i => <RoundCardSkeleton key={i} />)}</>
+            ) : teamRounds.length === 0 ? (
+              <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', border: '1px solid var(--line-soft)' }}>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('home.noTeamRounds')}</div>
+              </div>
+            ) : teamRounds.map(round => (
+              <RoundCard key={round.id} round={round} onOpenDetail={() => openOverlayWith('roundDetail', round)} />
             ))}
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// Mini post card for community pane
-function MiniPostCard({ post, onClick }: { post: Post; onClick: () => void }) {
-  const { t } = useLang()
-  const TYPE_COLORS: Record<string, [string, string]> = {
-    round_report: ['var(--primary-soft)', 'var(--primary-ink)'],
-    seeking: ['var(--butter)', 'var(--butter-deep)'],
-    tip: ['var(--sage)', 'var(--sage-deep)'],
-    general: ['var(--bg-alt)', 'var(--ink-2)'],
-    announcement: ['var(--sky)', 'var(--sky-deep)'],
-  }
-  const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
-    round_report: 'post.type.roundReport',
-    seeking: 'post.type.seeking',
-    tip: 'post.type.tip',
-    general: 'post.type.general',
-    announcement: 'post.type.announcement',
-  }
-  const [bg, fg] = TYPE_COLORS[post.type] ?? ['var(--bg-alt)', 'var(--ink-2)']
-
-  return (
-    <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '13px 14px', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }} onClick={onClick}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 'var(--r-pill)', background: bg, color: fg }}>
-          {t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}
-        </span>
-        {post.communities[0] && <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>{post.communities[0].community.name}</span>}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={28} fontSize={11} />
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</div>
-          <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{timeAgo(post.createdAt)}</div>
-        </div>
-      </div>
-      <div className="post-text-clamped" style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.5 }}>{post.body}</div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{post.likesCount}</span>
-          <svg style={{ marginLeft: 8 }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{post.commentsCount}</span>
-        </div>
-        <Pressable className="link" style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }} onClick={onClick}>{t('community.view')}</Pressable>
       </div>
     </div>
   )
