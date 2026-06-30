@@ -52,7 +52,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
 }
 
 export function ChatScreen() {
-  const { activeScreen, openOverlayWith, dataVersion, refreshData, showError } = useUI()
+  const { activeScreen, setActiveScreen, openOverlayWith, dataVersion, refreshData, showError } = useUI()
   const { t } = useLang()
   const { user } = useAuth()
   const activated = useActivated('chat')
@@ -164,6 +164,7 @@ export function ChatScreen() {
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </Pressable>
+          <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={34} fontSize={13} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
       </div>
 

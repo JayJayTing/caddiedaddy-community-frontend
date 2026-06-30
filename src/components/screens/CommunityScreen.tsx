@@ -220,9 +220,12 @@ export function CommunityScreen() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 0', flexShrink: 0 }}>
         <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('community.title')}</h1>
-        <Pressable style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer' }} onClick={() => openSheetWith('compose')}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('community.newPost')}</span>
-        </Pressable>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Pressable style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer' }} onClick={() => openSheetWith('compose')}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('community.newPost')}</span>
+          </Pressable>
+          <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={34} fontSize={13} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
+        </div>
       </div>
 
       {/* Toggle tabs */}

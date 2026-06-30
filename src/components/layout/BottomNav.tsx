@@ -4,7 +4,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { Pressable } from '@/components/ui/Pressable'
 
 export function BottomNav() {
-  const { activeScreen, setActiveScreen } = useUI()
+  const { activeScreen, setActiveScreen, openSheetWith } = useUI()
   const { t } = useLang()
 
   const navColor = (s: Screen) => (activeScreen === s ? 'var(--primary)' : 'var(--ink-3)')
@@ -40,21 +40,22 @@ export function BottomNav() {
         <span className="bnav-label">{t('nav.rounds')}</span>
       </Pressable>
 
-      {/* Chat FAB */}
+      {/* Play FAB — the primary "play golf" action (host a round or book a tee time) */}
       <Pressable
         className="bnav-item"
         style={{ flex: 1.2 }}
-        aria-current={activeScreen === 'chat' ? 'page' : undefined}
-        onClick={() => setActiveScreen('chat')}
+        aria-label={t('nav.play')}
+        onClick={() => openSheetWith('play')}
       >
         <div className="bnav-fab">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden
             stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <line x1="5" y1="22" x2="5" y2="3"/>
+            <path d="M5 3h11l-3 4 3 4H5"/>
           </svg>
         </div>
-        <span className="bnav-label" style={{ color: navColor('chat') }}>
-          {t('nav.chat')}
+        <span className="bnav-label" style={{ color: 'var(--ink-3)' }}>
+          {t('nav.play')}
         </span>
       </Pressable>
 
@@ -74,18 +75,17 @@ export function BottomNav() {
         <span className="bnav-label">{t('nav.community')}</span>
       </Pressable>
 
-      {/* Profile */}
+      {/* Chat */}
       <Pressable
-        className={`bnav-item${activeScreen === 'profile' ? ' active' : ''}`}
-        aria-current={activeScreen === 'profile' ? 'page' : undefined}
-        onClick={() => setActiveScreen('profile')}
+        className={`bnav-item${activeScreen === 'chat' ? ' active' : ''}`}
+        aria-current={activeScreen === 'chat' ? 'page' : undefined}
+        onClick={() => setActiveScreen('chat')}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden
-          stroke={navColor('profile')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
+          stroke={navColor('chat')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <span className="bnav-label">{t('nav.profile')}</span>
+        <span className="bnav-label">{t('nav.chat')}</span>
       </Pressable>
     </nav>
   )

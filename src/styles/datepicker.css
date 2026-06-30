@@ -11,7 +11,9 @@
 .dp-weeks::-webkit-scrollbar { display:none; }
 .dp-week-page {
   flex:0 0 100%; display:grid; grid-template-columns:repeat(7,1fr);
-  scroll-snap-align:start; padding:0 16px;
+  /* snap-align keeps weeks column-aligned; snap-stop:always stops the momentum
+     at each week so a single flick can't skip two weeks at once. */
+  scroll-snap-align:start; scroll-snap-stop:always; padding:0 16px;
 }
 .dp-dot { width:5px; height:5px; border-radius:50%; background:var(--primary); margin-top:2px; }
 .dp-arrow { width:28px; height:28px; border-radius:50%; background:var(--surface); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; -webkit-tap-highlight-color:transparent; transition:background .1s; }

@@ -1,30 +1,186 @@
-/* Explore map (Leaflet via react-leaflet) — pins + loading shell */
+/* Explore map (Leaflet via react-leaflet) — Pickle-Town-style photo markers,
+   floating controls, and full-screen submit / location-picker screens. */
 .leaflet-container { font-family: var(--sans); background: var(--bg-alt); }
-
-/* Strip Leaflet's default white box around divIcons so our pins float cleanly. */
 .leaflet-div-icon { background: transparent; border: none; }
+.map-loading { width: 100%; height: 100%; background: var(--bg-alt); }
 
+/* ── Markers ──────────────────────────────────────────────────────────────── */
 .map-pin {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2.5px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 48px; height: 48px; border-radius: 15px;
+  border: 2.5px solid #fff; box-shadow: 0 2px 9px rgba(0,0,0,.32);
+  overflow: hidden; background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
 }
 .map-pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.map-pin--empty { background: var(--primary-soft); }
 .map-pin__flag { font-size: 22px; line-height: 1; }
 
-/* Drop-a-pin marker (course submission): a teardrop glyph, no circle chrome. */
-.map-pin--pick {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  font-size: 26px;
+/* Drop / drag pin for course submission. */
+.map-pin-pick {
+  width: 26px; height: 26px; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--primary); border: 2.5px solid #fff;
+  box-shadow: 0 3px 8px rgba(0,0,0,.35);
 }
 
-.map-loading { width: 100%; height: 100%; background: var(--bg-alt); }
+/* Device-location blue dot. */
+.map-userdot {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #2f6fed; border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(47,111,237,.35), 0 1px 4px rgba(0,0,0,.3);
+}
+
+/* ── Explore (full-bleed) ─────────────────────────────────────────────────── */
+.map-explore { position: absolute; inset: 0; overflow: hidden; }
+.map-center-msg {
+  position: absolute; inset: 0; z-index: 800;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px; text-align: center; color: var(--ink-3); font-size: 14px;
+}
+
+.map-fab {
+  position: absolute; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  box-shadow: 0 2px 10px rgba(0,0,0,.16); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.map-fab--back { top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 50%; }
+.map-fab--review {
+  top: 14px; right: 14px; height: 36px; padding: 0 14px; border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 600; color: var(--ink-2);
+}
+
+.map-bottombar {
+  position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 1000;
+  display: flex; align-items: center; gap: 10px;
+}
+.map-bar-pill {
+  flex: 1; height: 50px; border-radius: var(--r-pill);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  box-shadow: 0 3px 14px rgba(0,0,0,.16);
+  font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.map-bar-round {
+  width: 50px; height: 50px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  box-shadow: 0 3px 14px rgba(0,0,0,.16); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-search-panel {
+  position: absolute; top: 14px; left: 64px; right: 14px; z-index: 1100;
+}
+.map-detail-card {
+  position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 1000;
+  background: var(--surface); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md); overflow: hidden;
+}
+
+/* ── Search results (explore + picker) ────────────────────────────────────── */
+.map-results {
+  margin-top: 6px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  max-height: 260px; overflow-y: auto;
+}
+.map-result {
+  display: flex; align-items: flex-start; gap: 8px; width: 100%; text-align: left;
+  padding: 11px 13px; font-size: 13.5px; color: var(--ink); cursor: pointer;
+  border-bottom: 1px solid var(--line-soft); background: var(--surface);
+}
+.map-result:last-child { border-bottom: none; }
+.map-result:active { background: var(--bg-alt); }
+.map-hint { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+
+/* ── Full-screen forms (submit + location picker) ─────────────────────────── */
+.map-screen {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; background: var(--bg);
+}
+.map-form-header {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  padding: 14px 16px; border-bottom: 1px solid var(--line-soft);
+}
+.map-form-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; color: var(--ink); }
+.map-iconbtn {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-alt); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.map-iconbtn--primary { background: var(--primary); }
+
+.map-form-footer {
+  flex-shrink: 0; padding: 12px 16px 20px; border-top: 1px solid var(--line-soft);
+  background: var(--bg);
+}
+.map-loc-label { font-size: 12.5px; color: var(--ink-2); margin-bottom: 10px; line-height: 1.4; }
+.map-cta {
+  display: block; width: 100%; text-align: center; padding: 14px;
+  border-radius: var(--r-lg); background: var(--primary); color: #fff;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.map-pickhint {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; padding: 7px 14px; border-radius: var(--r-pill);
+  background: rgba(26,35,50,.78); color: #fff; font-size: 12px; font-weight: 600;
+  white-space: nowrap; pointer-events: none;
+}
+
+/* ── Submit form body ─────────────────────────────────────────────────────── */
+.map-section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 6px;
+}
+.map-photo-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.map-photo {
+  width: 96px; height: 96px; border-radius: var(--r-md); overflow: hidden;
+  border: 1px solid var(--line); position: relative; flex-shrink: 0;
+}
+.map-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.map-photo-x {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.55); color: #fff; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; cursor: pointer;
+}
+.map-photo--add {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border: 1.5px dashed var(--line); background: var(--bg-alt); cursor: pointer;
+  color: var(--ink-3); font-size: 12px; font-weight: 600;
+}
+
+.map-name-input {
+  width: 100%; padding: 14px 16px; border-radius: var(--r-lg);
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); font-size: 17px; font-weight: 600; font-family: var(--sans);
+  outline: none;
+}
+.map-name-input::placeholder { color: var(--ink-3); font-weight: 500; }
+
+.map-rows {
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.map-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 14px 16px; cursor: pointer; background: var(--surface);
+  -webkit-tap-highlight-color: transparent;
+}
+.map-row--static { cursor: default; justify-content: space-between; flex-wrap: wrap; row-gap: 8px; }
+.map-row-ic {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--bg-alt);
+}
+.map-row-label { font-size: 14.5px; color: var(--ink-3); flex: 1; }
+.map-row-val { font-size: 14.5px; font-weight: 700; }
+.map-row-chev { font-size: 20px; color: var(--ink-3); line-height: 1; }
+.map-row-sub {
+  padding: 0 16px 12px; margin-top: -4px; font-size: 12.5px;
+  color: var(--ink-3); line-height: 1.4; background: var(--surface);
+}
+.map-seg { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.map-error { font-size: 13px; color: var(--danger, #C0392B); }

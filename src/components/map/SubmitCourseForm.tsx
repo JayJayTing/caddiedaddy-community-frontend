@@ -1,58 +1,24 @@
 'use client'
-import { useState, type ChangeEvent, type CSSProperties } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { useLang } from '@/contexts/LanguageContext'
 import { Pressable } from '@/components/ui/Pressable'
 import { isSupportedImage, prepareImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import { submitCourse, uploadCoursePhoto } from '@/lib/courses'
-import { MapView } from './MapView'
-import type { LatLng } from './LeafletMap'
+import { LocationPicker, type PickedLocation } from './LocationPicker'
 
-const inputStyle: CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 'var(--r-md)',
-  border: '1px solid var(--line)',
-  background: 'var(--surface)',
-  color: 'var(--ink)',
-  fontSize: 14,
-  fontFamily: 'var(--sans)',
-}
-
-const labelStyle: CSSProperties = {
-  fontSize: 12.5,
-  fontWeight: 600,
-  color: 'var(--ink-2)',
-  marginBottom: 6,
-  display: 'block',
-}
-
-function pill(active: boolean): CSSProperties {
-  return {
-    flex: 1,
-    textAlign: 'center',
-    padding: '9px 8px',
-    borderRadius: 'var(--r-pill)',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    border: `1px solid ${active ? 'var(--primary)' : 'var(--line)'}`,
-    background: active ? 'var(--primary)' : 'var(--surface)',
-    color: active ? '#fff' : 'var(--ink-2)',
-  }
-}
+const MAX_PHOTOS = 5
 
 export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
   const { t } = useLang()
   const [name, setName] = useState('')
-  const [city, setCity] = useState('')
-  const [district, setDistrict] = useState('')
-  const [holes, setHoles] = useState(18)
   const [venueType, setVenueType] = useState<'course' | 'driving_range'>('course')
-  const [picked, setPicked] = useState<LatLng | null>(null)
+  const [holes, setHoles] = useState(18)
+  const [location, setLocation] = useState<PickedLocation | null>(null)
   const [photos, setPhotos] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const pickPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.files?.[0]
@@ -71,7 +37,7 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
         return
       }
       const url = await uploadCoursePhoto(file)
-      setPhotos((p) => [...p, url])
+      setPhotos((p) => [...p, url].slice(0, MAX_PHOTOS))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('error.uploadPhotoFailed'))
     } finally {
@@ -80,11 +46,12 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
   }
 
   const handleSubmit = async () => {
+    if (submitting) return
     if (!name.trim()) {
       setError(t('map.submit.needName'))
       return
     }
-    if (!picked) {
+    if (!location) {
       setError(t('map.submit.needPin'))
       return
     }
@@ -93,12 +60,13 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
     try {
       await submitCourse({
         name: name.trim(),
-        city: city.trim() || undefined,
-        district: district.trim() || undefined,
+        locationText: location.label.slice(0, 80),
+        city: location.city,
+        district: location.district,
         holeCount: venueType === 'driving_range' ? undefined : holes,
         venueType,
-        lat: picked.lat,
-        lng: picked.lng,
+        lat: location.lat,
+        lng: location.lng,
         coverPhotoUrl: photos[0],
         photos,
       })
@@ -110,88 +78,138 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
     }
   }
 
+  if (pickerOpen) {
+    return (
+      <LocationPicker
+        initial={location}
+        onCancel={() => setPickerOpen(false)}
+        onConfirm={(loc) => {
+          setLocation(loc)
+          setPickerOpen(false)
+        }}
+      />
+    )
+  }
+
+  const seg = (active: boolean): React.CSSProperties => ({
+    padding: '7px 12px',
+    borderRadius: 'var(--r-pill)',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: `1.5px solid ${active ? 'var(--primary)' : 'var(--line)'}`,
+    background: active ? 'var(--primary)' : 'var(--surface)',
+    color: active ? '#fff' : 'var(--ink-2)',
+  })
+
   return (
-    <div className="scroll-body" style={{ padding: '12px 16px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Drop-a-pin location map */}
-      <div>
-        <label style={labelStyle}>{t('map.submit.pinHint')}</label>
-        <div style={{ height: 220, borderRadius: 'var(--r-lg)', overflow: 'hidden', border: '1px solid var(--line)', position: 'relative' }}>
-          <MapView pickMode picked={picked} onPick={setPicked} />
-        </div>
-        {picked && <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 6 }}>{t('map.submit.pinSet')}</div>}
+    <div className="map-screen">
+      {/* Header: ✕  title  ✓ */}
+      <div className="map-form-header">
+        <Pressable className="map-iconbtn" aria-label={t('map.submit.cancel')} onClick={onCancel}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </Pressable>
+        <div className="map-form-title">{t('map.submit.title')}</div>
+        <Pressable className="map-iconbtn map-iconbtn--primary" aria-label={t('map.submit.submit')} onClick={handleSubmit} style={{ opacity: submitting ? 0.6 : 1 }}>
+          {submitting ? (
+            <span style={{ fontSize: 16 }}>…</span>
+          ) : (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </Pressable>
       </div>
 
-      <div>
-        <label style={labelStyle}>{t('map.submit.nameLabel')}</label>
-        <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('map.submit.namePlaceholder')} maxLength={100} />
-      </div>
-
-      <div style={{ display: 'flex', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <label style={labelStyle}>{t('map.submit.cityLabel')}</label>
-          <input style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('map.submit.cityPlaceholder')} maxLength={40} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <label style={labelStyle}>{t('map.submit.districtLabel')}</label>
-          <input style={inputStyle} value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t('map.submit.districtPlaceholder')} maxLength={40} />
-        </div>
-      </div>
-
-      <div>
-        <label style={labelStyle}>{t('map.submit.typeLabel')}</label>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['course', 'driving_range'] as const).map((vt) => (
-            <Pressable key={vt} onClick={() => setVenueType(vt)} style={pill(venueType === vt)}>
-              {vt === 'course' ? t('map.typeCourse') : t('map.typeRange')}
-            </Pressable>
-          ))}
-        </div>
-      </div>
-
-      {venueType === 'course' && (
+      <div className="scroll-body" style={{ padding: '16px 16px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Photos */}
         <div>
-          <label style={labelStyle}>{t('map.submit.holesLabel')}</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[9, 18, 27, 36].map((h) => (
-              <Pressable key={h} onClick={() => setHoles(h)} style={pill(holes === h)}>
-                {h}
-              </Pressable>
+          <div className="map-section-label">{t('map.submit.photosLabel')}</div>
+          <div className="map-hint" style={{ margin: '0 0 8px' }}>{t('map.submit.photosHint')}</div>
+          <div className="map-photo-grid">
+            {photos.map((url, i) => (
+              <div key={url} className="map-photo">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" />
+                <Pressable
+                  className="map-photo-x"
+                  aria-label={t('a11y.close')}
+                  onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
+                >
+                  ×
+                </Pressable>
+              </div>
             ))}
+            {photos.length < MAX_PHOTOS && (
+              <label className="map-photo map-photo--add">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /><line x1="19" y1="2" x2="19" y2="8" /><line x1="22" y1="5" x2="16" y2="5" />
+                </svg>
+                <span>{uploading ? '…' : t('map.submit.uploadPhoto')}</span>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={pickPhoto} style={{ display: 'none' }} disabled={uploading} />
+              </label>
+            )}
           </div>
         </div>
-      )}
 
-      <div>
-        <label style={labelStyle}>{t('map.submit.photosLabel')}</label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {photos.map((url, i) => (
-            <div key={url} style={{ width: 72, height: 72, borderRadius: 'var(--r-md)', overflow: 'hidden', border: '1px solid var(--line)', position: 'relative' }}>
-              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <Pressable
-                onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
-                aria-label={t('a11y.close')}
-                style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, cursor: 'pointer' }}
-              >
-                ×
-              </Pressable>
-            </div>
-          ))}
-          <label style={{ width: 72, height: 72, borderRadius: 'var(--r-md)', border: '1px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-3)', fontSize: 20, background: 'var(--bg-alt)' }}>
-            {uploading ? '…' : '＋'}
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={pickPhoto} style={{ display: 'none' }} disabled={uploading} />
-          </label>
+        {/* Name */}
+        <input
+          className="map-name-input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('map.submit.nameLabel')}
+          maxLength={100}
+        />
+
+        {/* Location (searchable) */}
+        <div className="map-rows">
+          <Pressable className="map-row" onClick={() => setPickerOpen(true)}>
+            <span className="map-row-ic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+              </svg>
+            </span>
+            <span className="map-row-label">{t('map.loc.row')}</span>
+            <span className="map-row-val" style={{ color: location ? 'var(--ink)' : 'var(--ink-3)' }}>
+              {location ? t('map.loc.selected') : t('map.loc.select')}
+            </span>
+            <span className="map-row-chev">›</span>
+          </Pressable>
+          {location?.label && <div className="map-row-sub">{location.label}</div>}
         </div>
-      </div>
 
-      {error && <div style={{ fontSize: 13, color: 'var(--danger, #d33)' }}>{error}</div>}
+        {/* Options */}
+        <div>
+          <div className="map-section-label">{t('map.submit.optionsLabel')}</div>
+          <div className="map-rows" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="map-row map-row--static">
+              <span className="map-row-label" style={{ flex: 'none' }}>{t('map.submit.typeLabel')}</span>
+              <div className="map-seg">
+                {(['course', 'driving_range'] as const).map((vt) => (
+                  <Pressable key={vt} onClick={() => setVenueType(vt)} style={seg(venueType === vt)}>
+                    {vt === 'course' ? t('map.typeCourse') : t('map.typeRange')}
+                  </Pressable>
+                ))}
+              </div>
+            </div>
+            {venueType === 'course' && (
+              <div className="map-row map-row--static" style={{ borderTop: '1px solid var(--line-soft)' }}>
+                <span className="map-row-label" style={{ flex: 'none' }}>{t('map.submit.holesLabel')}</span>
+                <div className="map-seg">
+                  {[9, 18, 27, 36].map((h) => (
+                    <Pressable key={h} onClick={() => setHoles(h)} style={seg(holes === h)}>
+                      {h}
+                    </Pressable>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-        <Pressable onClick={onCancel} style={{ flex: 1, textAlign: 'center', padding: 12, borderRadius: 'var(--r-pill)', border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-2)', fontWeight: 600, cursor: 'pointer' }}>
-          {t('map.submit.cancel')}
-        </Pressable>
-        <Pressable onClick={handleSubmit} style={{ flex: 2, textAlign: 'center', padding: 12, borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--primary)', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}>
-          {submitting ? t('map.submit.submitting') : t('map.submit.submit')}
-        </Pressable>
+        {error && <div className="map-error">{error}</div>}
       </div>
     </div>
   )
