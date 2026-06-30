@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
+import { ChatThread } from '@/types/chat'
 import { formatDate, formatTeeTime, formatMoney, courseMapImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
@@ -20,6 +21,7 @@ export function RoundDetailOverlay() {
   const [joining, setJoining] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [nowMs, setNowMs] = useState(0) // drives the back-out countdown; 0 until the ticker starts
+  const [contactingHost, setContactingHost] = useState(false)
   // Fresh detail (incl. the viewer's own participant row) fetched from GET /rounds/:id.
   // The list data in overlayData can be stale and omit the viewer's own row,
   // which would otherwise make the button show "Join" after they already joined.
@@ -98,6 +100,27 @@ export function RoundDetailOverlay() {
       showError(e instanceof Error ? e.message : t('error.cancelJoin'))
     }
     setLeaving(false)
+  }
+
+  // Past the back-out window, cancelling a spot goes through the host: open (or
+  // find) a DM with them so the player can let them know. The host then removes
+  // the spot via Manage Round.
+  const contactHost = async () => {
+    if (!round || contactingHost) return
+    setContactingHost(true)
+    try {
+      const { data } = await api.post<{ data: ChatThread }>('/threads', { userId: round.hostUserId })
+      // Pre-fill the chat with a cancellation note so the host knows which round.
+      const draft = t('chat.cancelDraft')
+        .replace('{course}', round.course.name)
+        .replace('{date}', formatDate(round.date))
+        .replace('{time}', formatTeeTime(round.teeTime))
+      openOverlayWith('chatThread', { ...data, draft })
+    } catch {
+      showError(t('error.generic'))
+    } finally {
+      setContactingHost(false)
+    }
   }
 
   if (!isOpen || !round) return null
@@ -265,6 +288,27 @@ export function RoundDetailOverlay() {
               >
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#C0392B' }}>
                   {leaving ? '…' : `${t('round.backOut')} · ${backOutSec}s`}
+                </span>
+              </Pressable>
+            )}
+            {/* Past the back-out window, cancelling is arranged with the host. */}
+            {!canBackOut && (
+              <Pressable
+                onClick={contactHost}
+                disabled={contactingHost}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'var(--surface)',
+                  border: '1.5px solid var(--line)',
+                  borderRadius: 'var(--r-lg)',
+                  padding: 14,
+                  textAlign: 'center',
+                  cursor: contactingHost ? 'default' : 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-2)' }}>
+                  {contactingHost ? '…' : t('round.contactHostToCancel')}
                 </span>
               </Pressable>
             )}

@@ -17,7 +17,8 @@ export function ChatThreadOverlay() {
   const { user } = useAuth()
   const { t } = useLang()
 
-  const thread = overlayData as ChatThread | null
+  // `draft` is an optional pre-filled message (e.g. from "contact host to cancel").
+  const thread = overlayData as (ChatThread & { draft?: string }) | null
   const isOpen = openOverlay === 'chatThread' && thread != null
 
   const [messages, setMessages] = useState<Message[]>([])
@@ -34,6 +35,7 @@ export function ChatThreadOverlay() {
     if (!isOpen || !thread) return
     setMessages([]) // clear the previous thread's messages so they don't flash under this one
     setLoadingMsgs(true)
+    if (thread.draft) setInput(thread.draft) // seed a pre-filled message (e.g. cancellation note)
     let stale = false
     const load = () =>
       api.get<{ data: Message[] }>(`/threads/${thread.id}/messages`)
