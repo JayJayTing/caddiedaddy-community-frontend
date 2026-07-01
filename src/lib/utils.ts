@@ -85,15 +85,36 @@ export function formatWeekdayShort(d: Date): string {
   return d.toLocaleDateString(_locale(), { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-const AVATAR_COLORS = ['var(--peach)', 'var(--sky)', 'var(--lilac)', 'var(--sage)', 'var(--butter)', 'var(--rose)']
+// Per-user avatar identity: warm gradient pairs (Forely). Each entry is
+// [start, end] — the design's flag examples (orange / violet / blue /
+// deep-orange / green). avatarColor returns the start stop (for use as a solid
+// or as a stop inside another gradient); avatarGradient returns the full fill.
+const AVATAR_GRADIENTS: [string, string][] = [
+  ['#FFB020', '#FF6A1A'], // orange
+  ['#7A5AF0', '#4E32C7'], // violet
+  ['#2E9BE4', '#1668C7'], // blue
+  ['#FF8A3D', '#E24E00'], // deep-orange
+  ['#159A5B', '#0C6B3E'], // green
+]
 
-export function avatarColor(seed: string | null | undefined): string {
+function avatarIndex(seed: string | null | undefined): number {
   const s = seed ?? ''
   let hash = 0
   for (let i = 0; i < s.length; i++) {
     hash = (hash * 31 + s.charCodeAt(i)) | 0
   }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+  return Math.abs(hash) % AVATAR_GRADIENTS.length
+}
+
+// Solid color (the gradient's start stop) — safe to embed as a color stop.
+export function avatarColor(seed: string | null | undefined): string {
+  return AVATAR_GRADIENTS[avatarIndex(seed)][0]
+}
+
+// Full linear-gradient fill for avatar circles.
+export function avatarGradient(seed: string | null | undefined): string {
+  const [a, b] = AVATAR_GRADIENTS[avatarIndex(seed)]
+  return `linear-gradient(135deg,${a},${b})`
 }
 
 export function getInitial(name: string | null | undefined): string {

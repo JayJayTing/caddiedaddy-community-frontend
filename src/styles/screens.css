@@ -8,5 +8,5 @@
 .detail-overlay .scroll-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
 .detail-overlay .scroll-body::-webkit-scrollbar { display:none; }
 .drag-handle { width:36px; height:4px; border-radius:2px; background:var(--line); margin:10px auto 0; flex-shrink:0; }
-#backdrop { position:absolute; inset:0; z-index:55; background:rgba(26,35,50,0); pointer-events:none; transition:background .25s; }
-#backdrop.active { background:rgba(26,35,50,.48); pointer-events:all; }
+#backdrop { position:absolute; inset:0; z-index:55; background:rgba(34,25,15,0); pointer-events:none; transition:background .25s; }
+#backdrop.active { background:rgba(34,25,15,.48); pointer-events:all; }

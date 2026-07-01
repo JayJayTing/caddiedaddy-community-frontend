@@ -59,7 +59,7 @@ export function MyBookingsOverlay() {
 
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
-      <div className="detail-hero" style={{ background: 'linear-gradient(135deg,#3A6080,#5C7A9A)', flexShrink: 0, minHeight: 140 }}>
+      <div className="detail-hero" style={{ background: 'linear-gradient(135deg,#D9430A,#FF6A1A)', flexShrink: 0, minHeight: 140 }}>
         <div className="detail-back" onClick={closeOverlay}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />

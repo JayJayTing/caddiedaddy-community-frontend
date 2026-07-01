@@ -157,7 +157,7 @@ export function EmailStep({ onBack, onLogin, onSignup, onForgot, isLoading, erro
             textAlign: 'center',
             cursor: isValid && !isLoading ? 'pointer' : 'default',
             WebkitTapHighlightColor: 'transparent',
-            boxShadow: '0 4px 16px rgba(92,122,154,.3)',
+            boxShadow: 'var(--shadow-cta)',
             marginBottom: 14,
             marginTop: 4,
             opacity: isValid && !isLoading ? 1 : 0.5,

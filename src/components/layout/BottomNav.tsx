@@ -48,8 +48,8 @@ export function BottomNav() {
         onClick={() => { setHostCommunity(null); setActiveScreen('host') }}
       >
         <div className="bnav-fab">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden
-            stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden
+            stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="22" x2="5" y2="3"/>
             <path d="M5 3h11l-3 4 3 4H5"/>
           </svg>

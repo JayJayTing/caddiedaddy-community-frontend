@@ -14,7 +14,7 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
   return (
     <div style={{
       position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      background: 'linear-gradient(160deg,#1E3A52 0%,#2C5F48 52%,#1C2E40 100%)',
+      background: 'radial-gradient(circle at 78% 18%,rgba(255,255,255,.22),transparent 45%),radial-gradient(circle at 12% 82%,rgba(255,255,255,.14),transparent 40%),linear-gradient(165deg,#FFB020 0%,#FF6A1A 48%,#D9430A 100%)',
     }}>
       {/* Background SVG art */}
       <svg viewBox="0 0 390 844" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
@@ -38,24 +38,23 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
       {/* Brand */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px' }}>
         <div style={{
-          width: 80, height: 80,
-          background: 'rgba(255,255,255,.1)',
-          borderRadius: 26,
-          border: '1.5px solid rgba(255,255,255,.18)',
+          width: 96, height: 96,
+          background: 'rgba(255,255,255,.18)',
+          borderRadius: 30,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backdropFilter: 'blur(10px)',
-          marginBottom: 22,
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 20px 50px -12px rgba(120,40,0,.5)',
+          marginBottom: 26,
         }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="3"/>
-            <line x1="12" y1="2" x2="12" y2="9"/>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="22" x2="5" y2="3"/>
+            <path d="M5 3h11l-3 4 3 4H5"/>
           </svg>
         </div>
-        <div style={{ fontFamily: 'var(--serif)', fontSize: 36, fontWeight: 500, color: 'white', letterSpacing: '-.5px', textAlign: 'center', lineHeight: 1.1, marginBottom: 14 }}>
+        <div style={{ fontFamily: 'var(--disp)', fontSize: 44, fontWeight: 800, color: 'white', letterSpacing: '-.03em', textAlign: 'center', lineHeight: 1.1, marginBottom: 8 }}>
           Forely
         </div>
-        <div style={{ fontSize: 15, color: 'rgba(255,255,255,.6)', textAlign: 'center', lineHeight: 1.65, maxWidth: 230, fontWeight: 400, whiteSpace: 'pre-line' }}>
+        <div style={{ fontSize: 16, color: 'rgba(255,255,255,.9)', textAlign: 'center', lineHeight: 1.45, maxWidth: 250, fontWeight: 600, whiteSpace: 'pre-line' }}>
           {tagline}
         </div>
       </div>
@@ -65,8 +64,9 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
         <Pressable
           onClick={onNext}
           style={{
-            background: 'white', borderRadius: 'var(--r-lg)', padding: 18,
+            background: 'white', borderRadius: 16, padding: 16,
             textAlign: 'center', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            boxShadow: '0 10px 30px -8px rgba(120,40,0,.4)',
             transition: 'opacity .12s',
           }}
           onMouseDown={e => (e.currentTarget.style.opacity = '.88')}
@@ -74,7 +74,7 @@ export function WelcomeStep({ onNext, onSignIn }: Props) {
           onTouchStart={e => (e.currentTarget.style.opacity = '.88')}
           onTouchEnd={e => (e.currentTarget.style.opacity = '1')}
         >
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#1A2B3C' }}>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary-deep)' }}>
             {t('auth.welcome.cta')}
           </span>
         </Pressable>

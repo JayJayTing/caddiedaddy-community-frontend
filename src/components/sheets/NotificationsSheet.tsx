@@ -11,12 +11,12 @@ import { Pressable } from '@/components/ui/Pressable'
 
 const ICON: Record<NotificationType, { emoji: string; bg: string }> = {
   round_request:   { emoji: '🏌️', bg: 'var(--primary-soft)' },
-  round_accepted:  { emoji: '✅', bg: '#E8F5E9' },
+  round_accepted:  { emoji: '✅', bg: 'var(--green-soft)' },
   round_reminder:  { emoji: '⏰', bg: 'var(--butter)' },
-  post_comment:    { emoji: '💬', bg: 'var(--sky)' },
+  post_comment:    { emoji: '💬', bg: 'var(--blue-soft)' },
   post_like:       { emoji: '❤️', bg: 'var(--rose)' },
-  new_message:     { emoji: '✉️', bg: 'var(--lilac)' },
-  community_invite:{ emoji: '👥', bg: 'var(--sage)' },
+  new_message:     { emoji: '✉️', bg: 'var(--violet-soft)' },
+  community_invite:{ emoji: '👥', bg: 'var(--green-soft)' },
 }
 
 type Prefs = { roundsNearby: boolean; communityActivity: boolean; roundReminders: boolean; newMessages: boolean }

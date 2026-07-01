@@ -25,7 +25,7 @@ export function NewsDetailSheet() {
           <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 6 }}>
             {formatDateLong(ann.createdAt)}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginBottom: 12, lineHeight: 1.25 }}>{ann.title}</div>
+          <div className="serif" style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 12, lineHeight: 1.25 }}>{ann.title}</div>
           <div style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{ann.body}</div>
         </div>
       )}

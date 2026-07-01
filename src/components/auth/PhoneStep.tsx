@@ -96,7 +96,7 @@ export function PhoneStep({ onBack, onSendCode, onUseEmail, isLoading, error }: 
             textAlign: 'center',
             cursor: isValid && !isLoading ? 'pointer' : 'default',
             WebkitTapHighlightColor: 'transparent',
-            boxShadow: '0 4px 16px rgba(92,122,154,.3)',
+            boxShadow: 'var(--shadow-cta)',
             marginBottom: 16,
             opacity: isValid && !isLoading ? 1 : 0.5,
             transition: 'opacity .15s',

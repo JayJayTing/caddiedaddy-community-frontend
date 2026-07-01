@@ -1,5 +1,5 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background:#B0BECF; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:var(--sans); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
+body { background:#EDE7DF; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:var(--sans); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
 @media (max-width: 430px) {
   body { background: var(--bg); display: block; min-height: 100dvh; }
 }

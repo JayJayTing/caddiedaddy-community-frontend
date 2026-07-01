@@ -151,7 +151,7 @@ export function HostScreen() {
   }
 
   const sectionStyle = { marginBottom: 20 }
-  const labelStyle = { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--ink-3)', marginBottom: 8 }
+  const labelStyle = { fontSize: 11, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: 'var(--ink-3)', marginBottom: 8 }
 
   return (
     <div className={`screen${activeScreen === 'host' ? ' active' : ''}`}>
@@ -162,7 +162,7 @@ export function HostScreen() {
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </Pressable>
-        <h1 className="serif" style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('host.title')}</h1>
+        <h1 className="serif" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', color: 'var(--ink)' }}>{t('host.title')}</h1>
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
@@ -319,14 +319,14 @@ export function HostScreen() {
             padding: 18,
             textAlign: 'center',
             cursor: publishing ? 'default' : 'pointer',
-            boxShadow: '0 4px 20px rgba(92,122,154,.35)',
+            boxShadow: 'var(--shadow-cta)',
             opacity: publishing ? 0.7 : 1,
             transition: 'opacity .15s',
             display: 'block',
             width: '100%',
           }}
         >
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'white' }}>
             {publishing ? t('host.publishing') : t('host.publish')}
           </span>
         </Pressable>

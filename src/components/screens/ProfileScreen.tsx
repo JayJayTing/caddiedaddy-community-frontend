@@ -71,7 +71,7 @@ export function ProfileScreen() {
             <div
               className="avatar"
               style={{
-                width: 72, height: 72, fontSize: 28, color: 'white', border: '3px solid rgba(255,255,255,.4)',
+                width: 88, height: 88, fontSize: 34, color: 'white', border: '3px solid rgba(255,255,255,.4)',
                 ...(user?.avatarUrl
                   ? { backgroundImage: `url(${user.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
                   : { background: 'rgba(255,255,255,.25)' }),
@@ -80,7 +80,7 @@ export function ProfileScreen() {
               {user?.avatarUrl ? '' : (user ? getInitial(user.displayName) : '?')}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', marginBottom: 2 }}>{user?.displayName ?? t('loading')}</h1>
+              <h1 className="serif" style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 800, color: 'white', marginBottom: 2 }}>{user?.displayName ?? t('loading')}</h1>
               {user?.locationText && (
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>📍 {user.locationText}</div>
               )}
@@ -103,17 +103,17 @@ export function ProfileScreen() {
         {/* Stats */}
         <div style={{ display: 'flex', background: 'var(--surface)', borderBottom: '1px solid var(--line-soft)' }}>
           <div className="profile-stat">
-            <div className="profile-stat-num">{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.roundsCount : '—')}</div>
+            <div className="profile-stat-num" style={{ color: 'var(--primary)' }}>{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.roundsCount : '—')}</div>
             <div className="profile-stat-label">{t('profile.stat.rounds')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
           <div className="profile-stat">
-            <div className="profile-stat-num">{formatHandicap(user?.handicapIndex)}</div>
+            <div className="profile-stat-num" style={{ color: 'var(--primary)' }}>{formatHandicap(user?.handicapIndex)}</div>
             <div className="profile-stat-label">{t('profile.stat.hcp')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--line-soft)', margin: '12px 0' }} />
           <div className="profile-stat">
-            <div className="profile-stat-num">{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.followingCount : '—')}</div>
+            <div className="profile-stat-num" style={{ color: 'var(--primary)' }}>{statsLoading ? <Skeleton w={30} h={22} r={6} style={{ margin: '0 auto' }} /> : (stats ? stats.followingCount : '—')}</div>
             <div className="profile-stat-label">{t('profile.stat.following')}</div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export function ProfileScreen() {
         <div style={{ margin: '18px 20px 0' }}>
           <div
             onClick={() => openSheetWith('wallet')}
-            style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'linear-gradient(135deg,#3A6080,#5C7A9A)', borderRadius: 'var(--r-lg)', padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'linear-gradient(135deg,#D9430A,#FF6A1A)', borderRadius: 'var(--r-lg)', padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
           >
             <div style={{ width: 42, height: 42, borderRadius: 'var(--r-md)', background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>💳</div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -161,7 +161,7 @@ export function ProfileScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentRounds.map(r => (
                 <div key={r.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${r.color1 ?? '#B8CBE0'},${r.color2 ?? '#5C7A9A'})`, flexShrink: 0 }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${r.color1 ?? '#FF8A3D'},${r.color2 ?? '#E24E00'})`, flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{r.course.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(r.date)} · {formatTeeTime(r.teeTime)}</div>

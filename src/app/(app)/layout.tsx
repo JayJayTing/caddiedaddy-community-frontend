@@ -5,6 +5,7 @@ import { useUI } from '@/contexts/UIContext'
 import { PhoneFrame } from '@/components/layout/PhoneFrame'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AuthOverlay } from '@/components/auth/AuthOverlay'
+import { ProfileSetupOverlay } from '@/components/auth/ProfileSetupOverlay'
 import { HomeScreen } from '@/components/screens/HomeScreen'
 import { RoundsScreen } from '@/components/screens/RoundsScreen'
 import { CommunityScreen } from '@/components/screens/CommunityScreen'
@@ -95,6 +96,9 @@ export default function AppLayout({ children: _children }: { children: React.Rea
       <BottomNav />
 
       {(!isLoading && !user) && <AuthOverlay onComplete={() => {}} />}
+
+      {/* First-run "Set up your bag" — self-gates to brand-new accounts, once. */}
+      {(!isLoading && user) && <ProfileSetupOverlay />}
     </PhoneFrame>
   )
 }

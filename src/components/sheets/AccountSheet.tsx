@@ -81,7 +81,7 @@ export function AccountSheet() {
     color: 'var(--ink)', fontFamily: 'var(--sans)', outline: 'none',
   }
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase',
+    fontSize: 11, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase',
     color: 'var(--ink-3)', marginBottom: 6, display: 'block',
   }
 
@@ -123,11 +123,11 @@ export function AccountSheet() {
           onClick={handleSave}
           style={{
             background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16,
-            textAlign: 'center', cursor: saving ? 'default' : 'pointer',
+            textAlign: 'center', boxShadow: 'var(--shadow-cta)', cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1,
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'white' }}>
             {saving ? t('loading.saving') : t('sheet.account.save')}
           </span>
         </Pressable>

@@ -97,7 +97,7 @@ export function FindPlayersOverlay() {
         <Pressable onClick={closeOverlay} style={{ width: 34, height: 34, background: 'var(--bg-alt)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }} aria-label={t('a11y.back')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="15 18 9 12 15 6" /></svg>
         </Pressable>
-        <h2 style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{t('players.title')}</h2>
+        <h2 className="serif" style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{t('players.title')}</h2>
       </div>
 
       {/* Search */}
@@ -184,8 +184,8 @@ function Btn({ children, primary, onClick }: { children: ReactNode; primary?: bo
         border: primary ? 'none' : '1.5px solid var(--line)',
         background: primary ? 'var(--primary)' : 'var(--surface)',
         color: primary ? 'white' : 'var(--ink-2)',
-        borderRadius: 'var(--r-pill)', padding: '7px 16px', fontSize: 13, fontWeight: 700,
-        cursor: 'pointer', fontFamily: 'var(--sans)', flexShrink: 0,
+        borderRadius: 'var(--r-pill)', padding: '7px 16px', fontSize: 13, fontWeight: primary ? 800 : 700,
+        cursor: 'pointer', fontFamily: primary ? 'var(--serif)' : 'var(--sans)', flexShrink: 0,
       }}
     >
       {children}
@@ -213,7 +213,7 @@ function PlayerRow({
     <div className="mod-row" style={{ alignItems: 'center' }}>
       <Avatar name={p.displayName} url={p.avatarUrl} seed={p.id} size={44} fontSize={16} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{p.displayName}</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{p.displayName}</div>
         {parts.length > 0 && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{parts.join(' · ')}</div>}
       </div>
       {request ? (

@@ -84,7 +84,7 @@ export function HomeScreen() {
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 2 }}>
             {mounted ? dateLabel() : ''}
           </div>
-          <div className="serif" style={{ fontSize: 21, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.1 }}>
+          <div className="serif" style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.1, letterSpacing: '-.02em' }}>
             {mounted ? greeting() : ''}{user ? `, ${user.displayName.split(' ')[0]}` : ''}
           </div>
         </div>
@@ -139,8 +139,7 @@ export function HomeScreen() {
               <Skeleton w="100%" h={42} r="var(--r-md)" style={{ marginTop: 4 }} />
             </div>
           ) : upcoming ? (
-            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)' }}>
-              <div style={{ height: 4, background: 'linear-gradient(90deg,var(--primary) 0%,var(--sky-deep) 100%)' }} />
+            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-2xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)' }}>
               <div style={{ padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -149,7 +148,7 @@ export function HomeScreen() {
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: '#E8F5E9', color: '#2E7D32' }}>{t('home.confirmed')}</span>
                 </div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', marginBottom: 3 }}>{upcoming.course.name}</div>
+                <div className="serif" style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', marginBottom: 3, letterSpacing: '-.01em' }}>{upcoming.course.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 12 }}>
                   {formatDate(upcoming.date)} · {formatTeeTime(upcoming.teeTime)}
                   {upcoming.course.locationText ? ` · ${upcoming.course.locationText}` : ''}
@@ -167,25 +166,25 @@ export function HomeScreen() {
                     </span>
                   </div>
                 </div>
-                <div style={{ marginTop: 14 }}>
+                <div style={{ marginTop: 15 }}>
                   <Pressable
-                    style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: 'pointer', width: '100%' }}
+                    style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: 13, textAlign: 'center', cursor: 'pointer', width: '100%', boxShadow: 'var(--shadow-cta)' }}
                     onClick={() => openOverlayWith('roundDetail', upcoming)}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{t('home.viewRound')}</span>
+                    <span className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'white' }}>{t('home.viewRound')}</span>
                   </Pressable>
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)', padding: 20, textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-2xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: '1px solid var(--line-soft)', padding: 20, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>⛳️</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>{t('home.noUpcomingRound')}</div>
+              <div className="serif" style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>{t('home.noUpcomingRound')}</div>
               <Pressable
-                style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px', display: 'inline-block', cursor: 'pointer', marginTop: 8 }}
+                style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '12px 22px', display: 'inline-block', cursor: 'pointer', marginTop: 8, boxShadow: 'var(--shadow-cta)' }}
                 onClick={() => setActiveScreen('rounds')}
               >
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{t('home.findRound')}</span>
+                <span className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'white' }}>{t('home.findRound')}</span>
               </Pressable>
             </div>
           )}

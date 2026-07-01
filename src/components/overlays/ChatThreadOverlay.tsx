@@ -105,7 +105,7 @@ export function ChatThreadOverlay() {
         </Pressable>
         <Avatar name={title} url={avatarUrl} seed={avatarSeed} size={38} fontSize={14} />
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+          <div className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
           {subtitle && <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{subtitle}</div>}
         </div>
       </div>
@@ -123,13 +123,14 @@ export function ChatThreadOverlay() {
             <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: own ? 'flex-end' : 'flex-start' }}>
               {showSender && <div style={{ fontSize: 11, color: 'var(--ink-3)', margin: '2px 0 2px 10px' }}>{m.sender?.displayName}</div>}
               <div style={{
-                maxWidth: '76%', padding: '9px 13px', fontSize: 14, lineHeight: 1.4,
+                maxWidth: '78%', padding: '9px 13px', fontSize: 14, lineHeight: 1.4,
                 background: own ? 'var(--primary)' : 'var(--surface)',
                 color: own ? 'white' : 'var(--ink)',
-                borderRadius: 16,
-                borderBottomRightRadius: own ? 5 : 16,
-                borderBottomLeftRadius: own ? 16 : 5,
-                boxShadow: own ? '0 1px 6px rgba(92,122,154,.25)' : 'var(--shadow-sm)',
+                border: own ? 'none' : '1px solid var(--line-soft)',
+                borderRadius: 18,
+                borderBottomRightRadius: own ? 5 : 18,
+                borderBottomLeftRadius: own ? 18 : 5,
+                boxShadow: own ? '0 2px 8px -3px var(--primary-glow)' : 'var(--shadow-sm)',
                 wordBreak: 'break-word',
               }}>
                 {m.text}

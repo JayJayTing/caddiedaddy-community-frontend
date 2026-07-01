@@ -10,6 +10,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { RoundCardSkeleton } from '@/components/ui/Skeleton'
 import { CancelledBadge } from '@/components/ui/CancelledBadge'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { useMounted } from '@/lib/useMounted'
 import { useActivated } from '@/hooks/useActivated'
 import type { TranslationKey } from '@/lib/translations'
@@ -104,8 +105,8 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
 
   const accepted = round.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
   const openSpots = Math.max(0, round.totalSpots - accepted)
-  const c1 = round.color1 ?? '#B8CBE0'
-  const c2 = round.color2 ?? '#5C7A9A'
+  const c1 = round.color1 ?? '#FF8A3D'
+  const c2 = round.color2 ?? '#E24E00'
   const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
   const userP = user && round.participants?.find(p => p.userId === user.id)
   const hasJoined = joined || userP?.role === 'accepted' || userP?.role === 'requested'
@@ -129,7 +130,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
       <div role="button" tabIndex={0} style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded) } }}>
-        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 80, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
+        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 120, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
           {!art && (
             <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
               <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
@@ -140,7 +141,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
         </div>
         <div style={{ flex: 1, padding: '13px 13px 13px 11px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
+            <div className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
               {cancelled ? (
                 <CancelledBadge />
@@ -179,17 +180,17 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             ].map(([label, val], i) => (
               <div key={label} style={{ flex: 1, paddingLeft: i === 0 ? 0 : 12, borderLeft: i === 0 ? undefined : '1px solid var(--line-soft)' }}>
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{val}</div>
+                <div className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'var(--ink)' }}>{val}</div>
               </div>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Pressable
               disabled={cancelled || hasJoined || isHost}
-              style={{ flex: 1, background: cancelled || hasJoined || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasJoined || isHost ? 'default' : 'pointer' }}
+              style={{ flex: 1, background: cancelled || hasJoined || isHost ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-md)', padding: 11, textAlign: 'center', cursor: cancelled || hasJoined || isHost ? 'default' : 'pointer', boxShadow: cancelled || hasJoined || isHost ? 'none' : 'var(--shadow-cta)' }}
               onClick={handleJoin}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: cancelled || hasJoined || isHost ? 'var(--ink-3)' : 'white' }}>
+              <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: cancelled || hasJoined || isHost ? 'var(--ink-3)' : 'white' }}>
                 {cancelled ? t('rounds.cancelled') : isHost ? t('round.yours') : hasJoined ? t('round.youreIn') : joining ? '…' : t('rounds.requestToJoin')}
               </span>
             </Pressable>
@@ -244,13 +245,13 @@ export function RoundsScreen() {
     <div className={`screen${activeScreen === 'rounds' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', flexShrink: 0 }}>
-        <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('rounds.title')}</h1>
+        <h1 className="serif" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', color: 'var(--ink)' }}>{t('rounds.title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Pressable
-            style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 16px', cursor: 'pointer' }}
+            style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 16px', cursor: 'pointer', boxShadow: 'var(--shadow-cta)' }}
             onClick={() => setActiveScreen('host')}
           >
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('rounds.host')}</span>
+            <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>+ {t('rounds.host')}</span>
           </Pressable>
           <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={34} fontSize={13} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
@@ -302,10 +303,7 @@ export function RoundsScreen() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{[0, 1, 2, 3].map(i => <RoundCardSkeleton key={i} />)}</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>⛳️</div>
-            <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>{t('rounds.noRounds')}</div>
-          </div>
+          <EmptyState emoji="⛳" title={t('rounds.noRounds')} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filtered.map(r => (
