@@ -194,9 +194,14 @@ export function HostScreen() {
             ) : courseResults.length > 0 ? (
               <div className="fade-in" style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', overflow: 'hidden', marginTop: 4 }}>
                 {courseResults.map(c => (
-                  <Pressable key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }} style={{ display: 'block', width: '100%', textAlign: 'left' }}>
-                    <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    {c.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.locationText}</div>}
+                  <Pressable key={c.id} className="loc-suggestion" onClick={() => { setSelectedCourse(c); setCourseResults([]); setCourseSearch('') }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left' }}>
+                    {c.coverPhotoUrl && (
+                      <div aria-hidden style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 8, backgroundImage: `url(${c.coverPhotoUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    )}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600 }}>{c.name}</div>
+                      {c.locationText && <div style={{ fontSize: 12, color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.locationText}</div>}
+                    </div>
                   </Pressable>
                 ))}
               </div>

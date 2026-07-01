@@ -229,7 +229,7 @@ export function MapOverlay() {
                 <div style={{ fontFamily: 'var(--serif)', fontSize: 18, color: 'var(--ink)' }}>{selected.name}</div>
                 {selectedPlace && <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>{selectedPlace}</div>}
                 <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 4 }}>
-                  {selected.venueType === 'driving_range' ? t('map.typeRange') : `${selected.holeCount} ${t('map.holesUnit')}`}
+                  {selected.venueType === 'driving_range' ? t('map.typeRange') : selected.venueType === 'indoor_sim' ? t('map.typeSim') : `${selected.holeCount} ${t('map.holesUnit')}`}
                 </div>
               </div>
               <Pressable onClick={() => setSelected(null)} aria-label={t('a11y.close')} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>

@@ -44,7 +44,7 @@ export interface Course {
   district: string | null
   city: string | null
   holeCount: number
-  venueType?: 'course' | 'driving_range'
+  venueType?: 'course' | 'driving_range' | 'indoor_sim'
   lat?: number | string | null
   lng?: number | string | null
   coverPhotoUrl?: string | null

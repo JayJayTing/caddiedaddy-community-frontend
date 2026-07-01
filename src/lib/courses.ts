@@ -9,7 +9,7 @@ export interface CourseSubmission {
   district?: string
   city?: string
   holeCount?: number
-  venueType?: 'course' | 'driving_range'
+  venueType?: 'course' | 'driving_range' | 'indoor_sim'
   lat: number
   lng: number
   coverPhotoUrl?: string
