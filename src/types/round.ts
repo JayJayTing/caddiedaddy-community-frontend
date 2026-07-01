@@ -11,7 +11,7 @@ export interface Round {
   course: { id: string; name: string; locationText: string | null; coverPhotoUrl?: string | null; lat?: number | string | null; lng?: number | string | null }
   date: string           // YYYY-MM-DD
   teeTime: string        // ISO datetime, use time part
-  venueType: 'course' | 'driving_range'
+  venueType: 'course' | 'driving_range' | 'indoor_sim'
   format: RoundFormat
   holes: number
   totalSpots: number
@@ -49,4 +49,6 @@ export interface Course {
   lng?: number | string | null
   coverPhotoUrl?: string | null
   photos?: string[]
+  phone?: string | null
+  website?: string | null
 }

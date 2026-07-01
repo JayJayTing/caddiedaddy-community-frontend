@@ -10,11 +10,12 @@ import { MapView } from '@/components/map/MapView'
 import type { LatLng } from '@/components/map/LeafletMap'
 import { SubmitCourseForm } from '@/components/map/SubmitCourseForm'
 import { ModerationList } from '@/components/map/ModerationList'
+import { venueMapsUrl } from '@/lib/utils'
 
 type View = 'explore' | 'submit' | 'moderate'
 
 export function MapOverlay() {
-  const { openOverlay, closeOverlay, showSuccess } = useUI()
+  const { openOverlay, closeOverlay, showSuccess, setActiveScreen, setHostCourse } = useUI()
   const { user } = useAuth()
   const { t } = useLang()
   const isOpen = openOverlay === 'map'
@@ -103,10 +104,29 @@ export function MapOverlay() {
     setQuery('')
   }
 
-  const cover = selected ? selected.coverPhotoUrl ?? selected.photos?.[0] ?? null : null
+  // Host a round at this venue: pre-fill the host form with it, then leave the map.
+  const hostHere = () => {
+    if (!selected) return
+    setHostCourse(selected)
+    closeOverlay()
+    setActiveScreen('host')
+  }
+
+  // Gallery = cover + any extra photos, deduped. Seeded venues have one today;
+  // this scales as more are uploaded (all client-compressed on save).
+  const gallery = selected
+    ? Array.from(new Set([selected.coverPhotoUrl, ...(selected.photos ?? [])].filter(Boolean) as string[]))
+    : []
   const selectedPlace = selected
     ? [selected.city, selected.district].filter(Boolean).join(' · ') || selected.locationText
     : null
+  const typeLabel = selected
+    ? selected.venueType === 'driving_range'
+      ? t('map.typeRange')
+      : selected.venueType === 'indoor_sim'
+        ? t('map.typeSim')
+        : `${selected.holeCount} ${t('map.holesUnit')}`
+    : ''
 
   // ── Submit & moderate are full-screen (own headers) ────────────────────────────
   if (view === 'submit') {
@@ -220,23 +240,71 @@ export function MapOverlay() {
           </div>
         )}
 
-        {/* Selected-pin detail card */}
+        {/* Selected-pin detail card — rich enough that users rarely need Maps */}
         {selected && (
           <div className="map-detail-card">
-            {cover && <div style={{ height: 120, backgroundImage: `url(${cover})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
-            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--serif)', fontSize: 18, color: 'var(--ink)' }}>{selected.name}</div>
-                {selectedPlace && <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>{selectedPlace}</div>}
-                <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 4 }}>
-                  {selected.venueType === 'driving_range' ? t('map.typeRange') : selected.venueType === 'indoor_sim' ? t('map.typeSim') : `${selected.holeCount} ${t('map.holesUnit')}`}
-                </div>
+            {/* Photo gallery — cover + any extra photos; swipes when there's more than one */}
+            {gallery.length > 0 && (
+              <div style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+                {gallery.map((src, i) => (
+                  <div
+                    key={src}
+                    role="img"
+                    aria-label={`${selected.name} — ${t('map.photo')} ${i + 1}`}
+                    style={{ flex: '0 0 100%', height: 168, scrollSnapAlign: 'start', backgroundColor: 'var(--bg-alt)', backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                  />
+                ))}
               </div>
-              <Pressable onClick={() => setSelected(null)} aria-label={t('a11y.close')} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </Pressable>
+            )}
+            <div style={{ padding: '12px 14px' }}>
+              {/* Title + close */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="serif" style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.2 }}>{selected.name}</div>
+                  {selectedPlace && <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>{selectedPlace}</div>}
+                  <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 4 }}>{typeLabel}</div>
+                </div>
+                <Pressable onClick={() => setSelected(null)} aria-label={t('a11y.close')} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </Pressable>
+              </div>
+
+              {/* Detail rows — address / phone / website, so the info lives here */}
+              {(selected.locationText || selected.phone || selected.website) && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line-soft)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {selected.locationText && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--ink-2)' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }} aria-hidden><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                      <span>{selected.locationText}</span>
+                    </div>
+                  )}
+                  {selected.phone && (
+                    <a href={`tel:${selected.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                      <span>{selected.phone}</span>
+                    </a>
+                  )}
+                  {selected.website && (
+                    <a href={selected.website} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--primary)', textDecoration: 'none', fontWeight: 600, minWidth: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('map.website')}</span>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Actions — hosting is primary; Maps is the secondary escape hatch */}
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <Pressable onClick={hostHere} style={{ flex: 1, background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '11px 12px', textAlign: 'center', cursor: 'pointer', boxShadow: 'var(--shadow-cta)' }}>
+                  <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>{t('map.hostHere')}</span>
+                </Pressable>
+                <a href={venueMapsUrl(selected)} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--bg-alt)', borderRadius: 'var(--r-md)', padding: '11px 14px', textDecoration: 'none', flexShrink: 0 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{t('map.openInMaps')}</span>
+                </a>
+              </div>
             </div>
           </div>
         )}

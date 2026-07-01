@@ -50,7 +50,7 @@ export function ModerationList() {
               <div style={{ fontFamily: 'var(--serif)', fontSize: 17, color: 'var(--ink)', marginBottom: 2 }}>{c.name}</div>
               {place && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{place}</div>}
               <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 4 }}>
-                {c.venueType === 'driving_range' ? t('map.typeRange') : `${c.holeCount} ${t('map.holesUnit')}`}
+                {c.venueType === 'course' ? `${c.holeCount} ${t('map.holesUnit')}` : c.venueType === 'indoor_sim' ? t('map.typeSim') : t('map.typeRange')}
               </div>
               {c.submittedBy && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>

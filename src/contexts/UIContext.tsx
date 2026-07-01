@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react'
+import type { Course } from '@/types/round'
 
 export type Screen = 'home' | 'rounds' | 'community' | 'chat' | 'profile' | 'host'
 export type Overlay = 'roundDetail' | 'manageRound' | 'postDetail' | 'createCommunity' | 'communityDetail' | 'chatThread' | 'findPlayers' | 'map' | 'bookVenue' | 'myBookings' | 'teeTimes' | null
@@ -15,6 +16,9 @@ interface UIContextType {
   // When hosting from inside a community, the round is pre-targeted to it.
   hostCommunity: { id: string; name: string } | null
   setHostCommunity: (c: { id: string; name: string } | null) => void
+  // When hosting from a venue (e.g. the map), the round is pre-filled with it.
+  hostCourse: Course | null
+  setHostCourse: (c: Course | null) => void
   openOverlay: Overlay
   openOverlayWith: (o: Overlay, data?: unknown) => void
   closeOverlay: () => void
@@ -45,6 +49,7 @@ const UIContext = createContext<UIContextType | undefined>(undefined)
 export function UIProvider({ children }: { children: ReactNode }) {
   const [activeScreen, setActiveScreenState] = useState<Screen>('home')
   const [hostCommunity, setHostCommunity] = useState<{ id: string; name: string } | null>(null)
+  const [hostCourse, setHostCourse] = useState<Course | null>(null)
   const [openOverlay, setOpenOverlay] = useState<Overlay>(null)
 
   // Restore the last screen after a reload (e.g. mobile pull-to-refresh) so the
@@ -102,7 +107,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const hideToast = useCallback(() => setToast(null), [])
 
   return (
-    <UIContext.Provider value={{ activeScreen, setActiveScreen, hostCommunity, setHostCommunity, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess, toast, showToast, showError, hideToast }}>
+    <UIContext.Provider value={{ activeScreen, setActiveScreen, hostCommunity, setHostCommunity, hostCourse, setHostCourse, openOverlay, openOverlayWith, closeOverlay, openSheet, openSheetWith, closeSheet, overlayData, sheetData, backdropActive, dataVersion, refreshData, success, showSuccess, hideSuccess, toast, showToast, showError, hideToast }}>
       {children}
     </UIContext.Provider>
   )

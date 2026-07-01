@@ -77,7 +77,10 @@
 .map-detail-card {
   position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 1000;
   background: var(--surface); border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md); overflow: hidden;
+  box-shadow: var(--shadow-md);
+  /* Cap height so a rich card (gallery + info + actions) scrolls instead of
+     running off the top of the map on small screens. */
+  max-height: calc(100dvh - 96px); overflow: hidden auto;
 }
 
 /* ── Search results (explore + picker) ────────────────────────────────────── */

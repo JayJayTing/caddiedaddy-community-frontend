@@ -147,7 +147,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
             </div>
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500, marginBottom: 8 }}>
-            {formatTeeTime(round.teeTime)} · {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes}h`} · {formatMoney(round.greenFeeCents)}
+            {formatTeeTime(round.teeTime)} · {round.venueType === 'course' ? `${round.holes}h` : round.venueType === 'indoor_sim' ? t('host.indoorSim') : t('host.drivingRange')} · {formatMoney(round.greenFeeCents)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex' }}>
@@ -164,9 +164,9 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
           <div style={{ display: 'flex', marginBottom: 12 }}>
             {[
               [t('rounds.teeTime'), formatTeeTime(round.teeTime)],
-              round.venueType === 'driving_range'
-                ? [t('host.venue'), t('host.drivingRange')]
-                : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
+              round.venueType === 'course'
+                ? [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`]
+                : [t('host.venue'), round.venueType === 'indoor_sim' ? t('host.indoorSim') : t('host.drivingRange')],
               [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
             ].map(([label, val], i) => (
               <div key={label} style={{ flex: 1, paddingLeft: i === 0 ? 0 : 12, borderLeft: i === 0 ? undefined : '1px solid var(--line-soft)' }}>
