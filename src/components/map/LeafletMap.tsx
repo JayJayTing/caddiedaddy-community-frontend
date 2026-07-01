@@ -115,8 +115,13 @@ export default function LeafletMap({
       zoomControl={false}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        // Muted, low-color basemap (CARTO Positron). The default OSM style is too
+        // busy in hilly areas (terrain shading, peak triangles, colored roads) and
+        // fights the course pins — Positron stays calm so the pins stand out.
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        subdomains="abcd"
+        detectRetina
       />
       {!pickMode &&
         pins.map(({ c, lat, lng }) => (
