@@ -1,0 +1,13 @@
+{
+  "projectId": "5fee7420-6ae3-455d-8357-6c9946a02b20",
+  "pkg": "caddiedaddy-community-frontend",
+  "globalName": "ForelyDS",
+  "shape": "package",
+  "srcDir": "src/components/ui",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": ".design-sync/forely.css",
+  "extraEntries": ["./src/contexts/LanguageContext.tsx"],
+  "provider": { "component": "LanguageProvider" },
+  "runtimeFontPrefixes": ["SF Pro", "PingFang", "-apple-system", "BlinkMacSystemFont", "Helvetica Neue", "Helvetica", "Arial"],
+  "readmeHeader": ".design-sync/conventions.md"
+}
