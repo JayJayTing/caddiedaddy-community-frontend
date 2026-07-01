@@ -127,18 +127,19 @@ export function HostScreen() {
     setError(null)
     setPublishing(true)
     try {
-      const teeTimeFull = new Date(`${date}T${teeTime}:00`).toISOString()
+      // Backend stores tee time as a date-agnostic "HH:mm" — send the raw slot
+      // value (the schema's regex rejects a full ISO string). Optional fields
+      // must be omitted, not null: the schema accepts undefined, not null.
       await api.post('/rounds', {
         courseId: selectedCourse.id,
         date,
-        teeTime: teeTimeFull,
+        teeTime,
         venueType,
         holes: venueType === 'course' ? holes : undefined,
         totalSpots: spots,
-        greenFeeCents: null,
-        notes: notes || null,
+        notes: notes || undefined,
         visibility: postTo,
-        communityId: postTo === 'community' ? selectedCommunity || null : null,
+        communityId: postTo === 'community' ? selectedCommunity || undefined : undefined,
       })
       refreshData('rounds')
       showSuccess(t('success.roundPosted'))
