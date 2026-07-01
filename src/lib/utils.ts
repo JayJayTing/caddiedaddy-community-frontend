@@ -184,10 +184,9 @@ export function announcementImage(
 }
 
 // Thumbnail for a round card/hero. Prefers the course's own cover photo, then a
-// Google Maps satellite view (when a maps key + coords exist), and finally a
-// stable golf photo keyed off the course id. Always returns an image URL — this
-// replaces the old off-theme colour gradient so round imagery is consistent and
-// on-brand everywhere a round is shown.
+// stable golf photo keyed off the course id. We deliberately do NOT fall back to
+// a Google Maps satellite tile — map imagery looks out of place as a card cover.
+// Always returns an image URL so round imagery is consistent and on-brand.
 export function roundThumbImage(
   round:
     | {
@@ -205,8 +204,6 @@ export function roundThumbImage(
 ): string {
   const course = round?.course
   if (course?.coverPhotoUrl) return course.coverPhotoUrl
-  const map = courseMapImage(course, opts)
-  if (map) return map
   const seed = course?.id ?? round?.id ?? ''
   let hash = 0
   for (let i = 0; i < seed.length; i++) {
@@ -215,4 +212,29 @@ export function roundThumbImage(
   const photo = ANNOUNCEMENT_PHOTOS[Math.abs(hash) % ANNOUNCEMENT_PHOTOS.length]
   const { w = 480, h = 320 } = opts
   return `${photo}?auto=format&fit=crop&q=70&w=${w}&h=${h}`
+}
+
+// Google Maps deep link to a venue. This universal https link opens the Google
+// Maps app on mobile (and the web app otherwise). We have no place_id, so we
+// search by name + address, which resolves to the business listing; if neither
+// is available we fall back to raw coordinates for a guaranteed pin.
+export function venueMapsUrl(
+  course:
+    | {
+        name?: string | null
+        locationText?: string | null
+        city?: string | null
+        district?: string | null
+        lat?: number | string | null
+        lng?: number | string | null
+      }
+    | null
+    | undefined,
+): string {
+  const name = course?.name ?? ''
+  const addr = course?.locationText ?? [course?.city, course?.district].filter(Boolean).join(' ')
+  const query =
+    [name, addr].filter(Boolean).join(' ').trim() ||
+    (course?.lat != null && course?.lng != null ? `${course.lat},${course.lng}` : '')
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
