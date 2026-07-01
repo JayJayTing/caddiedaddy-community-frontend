@@ -50,7 +50,7 @@ export function ManageRoundOverlay() {
       const d = new Date(r.teeTime)
       setTeeTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)
       setHoles(r.holes)
-      setSpots(Math.min(r.totalSpots, r.venueType === 'driving_range' ? 10 : 4))
+      setSpots(Math.min(r.totalSpots, r.venueType === 'course' ? 4 : r.venueType === 'indoor_sim' ? 6 : 10))
       setGreenFee(r.greenFeeCents != null ? String(Math.round(r.greenFeeCents / 100)) : '')
       setNotes(r.notes ?? '')
     }
@@ -148,7 +148,7 @@ export function ManageRoundOverlay() {
   const inviteList = (inviteQuery.trim() ? inviteResults : friends).filter(p => !existingIds.has(p.id))
 
   // Player cap depends on venue: a flight is max 4 on a course, a range up to 10.
-  const maxSpots = round.venueType === 'driving_range' ? 10 : 4
+  const maxSpots = round.venueType === 'course' ? 4 : round.venueType === 'indoor_sim' ? 6 : 10
   const spotOptions = Array.from({ length: maxSpots - 1 }, (_, i) => i + 2) // 2..max
 
   const sectionStyle = { marginBottom: 22 }

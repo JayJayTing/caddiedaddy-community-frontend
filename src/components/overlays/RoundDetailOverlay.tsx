@@ -153,7 +153,7 @@ export function RoundDetailOverlay() {
             {openSpots > 0 ? `${openSpots} ${t('home.spotsOpen')}` : t('common.full')}
           </span>
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--primary-soft)', color: 'var(--primary-deep)' }}>
-            {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes} ${t('common.holesSuffix')}`}
+            {round.venueType === 'course' ? `${round.holes} ${t('common.holesSuffix')}` : round.venueType === 'indoor_sim' ? t('host.indoorSim') : t('host.drivingRange')}
           </span>
         </div>
 
@@ -184,9 +184,9 @@ export function RoundDetailOverlay() {
             the remaining facts (holes/venue + green fee). */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           {[
-            round.venueType === 'driving_range'
-              ? [t('host.venue'), t('host.drivingRange')]
-              : [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`],
+            round.venueType === 'course'
+              ? [t('rounds.holes'), `${round.holes} ${t('common.holesSuffix')}`]
+              : [t('host.venue'), round.venueType === 'indoor_sim' ? t('host.indoorSim') : t('host.drivingRange')],
             [t('rounds.greenFee'), formatMoney(round.greenFeeCents)],
           ].map(([label, val]) => (
             <div key={label} style={{ background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }}>

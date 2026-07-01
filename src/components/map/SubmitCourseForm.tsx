@@ -11,7 +11,7 @@ const MAX_PHOTOS = 5
 export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
   const { t } = useLang()
   const [name, setName] = useState('')
-  const [venueType, setVenueType] = useState<'course' | 'driving_range'>('course')
+  const [venueType, setVenueType] = useState<'course' | 'driving_range' | 'indoor_sim'>('course')
   const [holes, setHoles] = useState(18)
   const [location, setLocation] = useState<PickedLocation | null>(null)
   const [photos, setPhotos] = useState<string[]>([])
@@ -63,7 +63,7 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
         locationText: location.label.slice(0, 80),
         city: location.city,
         district: location.district,
-        holeCount: venueType === 'driving_range' ? undefined : holes,
+        holeCount: venueType === 'course' ? holes : undefined,
         venueType,
         lat: location.lat,
         lng: location.lng,
@@ -187,9 +187,9 @@ export function SubmitCourseForm({ onDone, onCancel }: { onDone: () => void; onC
             <div className="map-row map-row--static">
               <span className="map-row-label" style={{ flex: 'none' }}>{t('map.submit.typeLabel')}</span>
               <div className="map-seg">
-                {(['course', 'driving_range'] as const).map((vt) => (
+                {(['course', 'driving_range', 'indoor_sim'] as const).map((vt) => (
                   <Pressable key={vt} onClick={() => setVenueType(vt)} style={seg(venueType === vt)}>
-                    {vt === 'course' ? t('map.typeCourse') : t('map.typeRange')}
+                    {vt === 'course' ? t('map.typeCourse') : vt === 'indoor_sim' ? t('map.typeSim') : t('map.typeRange')}
                   </Pressable>
                 ))}
               </div>

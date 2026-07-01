@@ -23,10 +23,11 @@ const TEE_TIMES: { v: string; label: string }[] = (() => {
   return out
 })()
 
-// Player caps differ by venue: a flight is max 4 on a course, but a driving-range
-// session can take a bigger group.
-const MAX_SPOTS = { course: 4, driving_range: 10 } as const
+// Player caps differ by venue: a flight is max 4 on a course, a driving-range
+// session can take a bigger group, and an indoor-sim bay sits in between.
+const MAX_SPOTS = { course: 4, driving_range: 10, indoor_sim: 6 } as const
 const MIN_SPOTS = 2
+type VenueKind = keyof typeof MAX_SPOTS
 
 // Vertical single-select: each option is a full-width row with a radio dot, so
 // the chosen one is obvious. Replaces the cramped left/right segmented toggles.
@@ -57,11 +58,11 @@ function VSelect({ options, value, onChange }: {
 }
 
 export function HostScreen() {
-  const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion, hostCommunity, setHostCommunity } = useUI()
+  const { activeScreen, setActiveScreen, refreshData, showSuccess, dataVersion, hostCommunity, setHostCommunity, hostCourse, setHostCourse } = useUI()
   const { t } = useLang()
 
   const [postTo, setPostTo] = useState<'public' | 'community'>('public')
-  const [venueType, setVenueType] = useState<'course' | 'driving_range'>('course')
+  const [venueType, setVenueType] = useState<VenueKind>('course')
   const [courseSearch, setCourseSearch] = useState('')
   const [courseResults, setCourseResults] = useState<Course[]>([])
   const [searchingCourses, setSearchingCourses] = useState(false)
@@ -98,8 +99,24 @@ export function HostScreen() {
     setHostCommunity(null)
   }, [activeScreen, hostCommunity]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Switching venue re-caps the player count (course max 4, range max 10).
-  const changeVenue = (v: 'course' | 'driving_range') => {
+  // Arriving via "Host a round here" from a venue (e.g. the map): pre-fill the
+  // course and match the round's venue type to it, capping spots to that type.
+  useEffect(() => {
+    if (activeScreen !== 'host' || !hostCourse) return
+    const vt: VenueKind =
+      hostCourse.venueType === 'driving_range' || hostCourse.venueType === 'indoor_sim'
+        ? hostCourse.venueType
+        : 'course'
+    setSelectedCourse(hostCourse)
+    setCourseSearch('')
+    setCourseResults([])
+    setVenueType(vt)
+    setSpots(s => Math.min(s, MAX_SPOTS[vt]))
+    setHostCourse(null)
+  }, [activeScreen, hostCourse]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Switching venue re-caps the player count (course max 4, sim 6, range 10).
+  const changeVenue = (v: VenueKind) => {
     setVenueType(v)
     setSpots(s => Math.min(s, MAX_SPOTS[v]))
   }
@@ -241,10 +258,11 @@ export function HostScreen() {
           <div style={labelStyle}>{t('host.venue')}</div>
           <VSelect
             value={venueType}
-            onChange={v => changeVenue(v as 'course' | 'driving_range')}
+            onChange={v => changeVenue(v as VenueKind)}
             options={[
               { v: 'course', label: t('host.golfCourse') },
               { v: 'driving_range', label: t('host.drivingRange') },
+              { v: 'indoor_sim', label: t('host.indoorSim') },
             ]}
           />
         </div>
