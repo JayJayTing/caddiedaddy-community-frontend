@@ -70,7 +70,7 @@ export function WalletSheet() {
     <BottomSheet isOpen={isOpen} onClose={closeSheet} title={t('wallet.title')}>
       <div style={{ padding: '4px 20px 28px' }}>
         {/* Balance */}
-        <div style={{ background: 'linear-gradient(135deg,#3A6080,#5C7A9A)', borderRadius: 'var(--r-lg)', padding: '18px 20px', color: 'white', marginBottom: 18 }}>
+        <div style={{ background: 'linear-gradient(135deg,#D9430A,#FF6A1A)', borderRadius: 'var(--r-lg)', padding: '18px 20px', color: 'white', marginBottom: 18 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', opacity: 0.8 }}>{t('wallet.balance')}</div>
           <div style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{wallet ? formatMoney(wallet.balanceCents) : '—'}</div>
         </div>

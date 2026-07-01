@@ -67,8 +67,8 @@ export function RoundDetailOverlay() {
     return () => clearInterval(id)
   }, [isOpen, hasJoined, isHost])
 
-  const c1 = round?.color1 ?? '#B8CBE0'
-  const c2 = round?.color2 ?? '#5C7A9A'
+  const c1 = round?.color1 ?? '#FF8A3D'
+  const c2 = round?.color2 ?? '#E24E00'
   const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
@@ -145,7 +145,7 @@ export function RoundDetailOverlay() {
           </svg>
         </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
-          <h2 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2 }}>{round.course.name}</h2>
+          <h2 className="serif" style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{round.course.name}</h2>
           {/* Glance line = where (location); the full date/time lives in the When card below. */}
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{round.course.locationText || formatDate(round.date)}</div>
         </div>
@@ -162,7 +162,7 @@ export function RoundDetailOverlay() {
           <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: openSpots > 0 ? '#E8F5E9' : 'var(--bg-alt)', color: openSpots > 0 ? '#2E7D32' : 'var(--ink-3)' }}>
             {openSpots > 0 ? `${openSpots} ${t('home.spotsOpen')}` : t('common.full')}
           </span>
-          <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--primary-soft)', color: 'var(--primary-ink)' }}>
+          <span style={{ padding: '4px 12px', borderRadius: 'var(--r-pill)', fontSize: 12, fontWeight: 600, background: 'var(--primary-soft)', color: 'var(--primary-deep)' }}>
             {round.venueType === 'driving_range' ? t('host.drivingRange') : `${round.holes} ${t('common.holesSuffix')}`}
           </span>
         </div>
@@ -176,8 +176,8 @@ export function RoundDetailOverlay() {
             </svg>
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>{formatDateFull(round.date)}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', marginTop: 2 }}>{t('round.teeOff')} · {formatTeeTime(round.teeTime)}</div>
+            <div className="serif" style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.25 }}>{formatDateFull(round.date)}</div>
+            <div className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)', marginTop: 2 }}>{t('round.teeOff')} · {formatTeeTime(round.teeTime)}</div>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ export function RoundDetailOverlay() {
           ].map(([label, val]) => (
             <div key={label} style={{ background: 'var(--surface)', borderRadius: 'var(--r-md)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>{label}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{val}</div>
+              <div className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{val}</div>
             </div>
           ))}
         </div>
@@ -217,21 +217,21 @@ export function RoundDetailOverlay() {
         {/* Participants */}
         {round.participants?.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>{t('round.playersLabel')} ({accepted}/{round.totalSpots})</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 12 }}>{t('round.playersLabel')} ({accepted}/{round.totalSpots})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {round.participants
                 .filter(p => p.role === 'host' || p.role === 'accepted')
                 .map(p => (
                 <div key={p.userId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <Avatar name={p.user?.displayName} url={p.user?.avatarUrl} seed={p.userId} size={44} fontSize={16} />
-                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 600 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', fontWeight: 700 }}>{p.role === 'host' ? t('common.host') : (p.user?.displayName?.split(' ')[0] ?? t('common.player'))}</div>
                 </div>
               ))}
               {Array.from({ length: openSpots }).map((_, i) => {
                 // Any non-host who isn't already in the round can tap a + to add themselves.
                 const canJoin = !isHost && !hasJoined && !cancelled
                 const circle = (
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', border: '2px dashed var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 18, color: 'var(--ink-3)' }}>+</span>
                   </div>
                 )
@@ -271,10 +271,10 @@ export function RoundDetailOverlay() {
               padding: 18,
               textAlign: 'center',
               cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(92,122,154,.35)',
+              boxShadow: 'var(--shadow-cta)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{t('manage.title')}</span>
+            <span className="serif" style={{ fontSize: 16, fontWeight: 800, color: 'white' }}>{t('manage.title')}</span>
           </Pressable>
         ) : cancelled ? (
           <div style={{ width: '100%', background: 'var(--bg-alt)', borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center' }}>
@@ -283,7 +283,7 @@ export function RoundDetailOverlay() {
         ) : hasJoined ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ width: '100%', background: 'var(--primary-soft)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center' }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary-ink)' }}>✓ {t('round.youreIn')}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary-deep)' }}>✓ {t('round.youreIn')}</span>
             </div>
             {canBackOut && (
               <Pressable
@@ -339,10 +339,10 @@ export function RoundDetailOverlay() {
               padding: 18,
               textAlign: 'center',
               cursor: joining ? 'default' : 'pointer',
-              boxShadow: '0 4px 20px rgba(92,122,154,.35)',
+              boxShadow: 'var(--shadow-cta)',
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
+            <span className="serif" style={{ fontSize: 16, fontWeight: 800, color: 'white' }}>
               {joining ? '…' : t('rounds.requestToJoin')}
             </span>
           </Pressable>

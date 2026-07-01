@@ -11,9 +11,11 @@ import { Pressable } from '@/components/ui/Pressable'
 import { prepareImage, isSupportedImage, MAX_UPLOAD_BYTES } from '@/lib/image'
 import type { TranslationKey } from '@/lib/translations'
 
+// "Looking for players" is no longer a post type — hosting a round (golf or a
+// driving-range get-together) is now how you find players. See the Rounds feed's
+// Looking-for-Players filter.
 const POST_TYPES: Array<{ key: PostType; labelKey: TranslationKey; emoji: string }> = [
   { key: 'round_report', labelKey: 'post.type.roundReport', emoji: '⛳' },
-  { key: 'seeking', labelKey: 'post.type.seeking', emoji: '👋' },
   { key: 'tip', labelKey: 'post.type.tip', emoji: '💡' },
   { key: 'general', labelKey: 'post.type.general', emoji: '💬' },
 ]
@@ -35,14 +37,10 @@ export function ComposeSheet() {
   const [error, setError] = useState<string | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  // Looking-for-Players fields — only sent when the post type is 'seeking'.
-  const [lfpLocation, setLfpLocation] = useState('')
-  const [lfpPlayers, setLfpPlayers] = useState(1)
-  const isLfp = postType === 'seeking'
 
   // When opened from inside a community ("+ New Post"), pre-select that community.
   useEffect(() => {
-    if (!isOpen) { setPhotoUrl(null); setLfpLocation(''); setLfpPlayers(1); return }
+    if (!isOpen) { setPhotoUrl(null); return }
     const target = sheetData as { communityId?: string; communityName?: string } | null
     setCommunityId(target?.communityId ?? '')
     api.get<{ data: Community[] }>('/communities/mine')
@@ -87,11 +85,8 @@ export function ComposeSheet() {
         photoUrl: photoUrl || undefined,
         communityIds: communityId ? [communityId] : undefined,
         visibility: communityId ? 'community' : 'public',
-        isLfp,
-        locationText: isLfp && lfpLocation.trim() ? lfpLocation.trim() : undefined,
-        lfpPlayersNeeded: isLfp ? lfpPlayers : undefined,
       })
-      setBody(''); setCommunityId(''); setPostType('general'); setPhotoUrl(null); setLfpLocation(''); setLfpPlayers(1)
+      setBody(''); setCommunityId(''); setPostType('general'); setPhotoUrl(null)
       refreshData('posts')
       closeSheet()
       showSuccess(t('success.posted'))
@@ -132,30 +127,6 @@ export function ComposeSheet() {
             </Pressable>
           ))}
         </div>
-
-        {/* Looking-for-Players fields — shown only for the "seeking" type */}
-        {isLfp && (
-          <div style={{ marginBottom: 16, padding: 14, background: 'var(--primary-soft)', borderRadius: 'var(--r-md)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--primary-ink)', marginBottom: 6 }}>📍 {t('compose.lfpLocationLabel')}</div>
-              <input
-                type="text"
-                value={lfpLocation}
-                onChange={e => setLfpLocation(e.target.value)}
-                placeholder={t('compose.lfpLocationPlaceholder')}
-                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--line)', borderRadius: 'var(--r-md)', fontSize: 14, background: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--sans)', outline: 'none' }}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--primary-ink)' }}>{t('compose.lfpPlayersLabel')}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <Pressable aria-label="−" onClick={() => setLfpPlayers(n => Math.max(1, n - 1))} style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--ink)' }}>−</Pressable>
-                <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', minWidth: 20, textAlign: 'center' }}>{lfpPlayers}</span>
-                <Pressable aria-label="+" onClick={() => setLfpPlayers(n => Math.min(7, n + 1))} style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--ink)' }}>+</Pressable>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Community selector */}
         {communities.length > 0 && (
@@ -214,11 +185,12 @@ export function ComposeSheet() {
             display: 'block',
             background: body.trim() ? 'var(--primary)' : 'var(--bg-alt)',
             borderRadius: 'var(--r-lg)', padding: '14px', textAlign: 'center',
+            boxShadow: body.trim() ? 'var(--shadow-cta)' : 'none',
             cursor: body.trim() && !submitting ? 'pointer' : 'default',
             opacity: submitting ? 0.7 : 1,
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 700, color: body.trim() ? 'white' : 'var(--ink-3)' }}>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: body.trim() ? 'white' : 'var(--ink-3)' }}>
             {submitting ? t('loading.posting') : t('sheet.compose.post')}
           </span>
         </Pressable>

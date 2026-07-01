@@ -29,7 +29,7 @@ function ThreadRow({ thread, currentUserId, onOpen }: { thread: ChatThread; curr
       <Avatar name={name} url={avatarUrl} seed={avatarSeed} size={44} fontSize={16} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{name}</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{name}</span>
           <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
             {thread.lastMessageAt ? timeAgo(thread.lastMessageAt) : ''}
           </span>
@@ -150,7 +150,7 @@ export function ChatScreen() {
     <div className={`screen${activeScreen === 'chat' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 0', flexShrink: 0 }}>
-        <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('chat.title')}</h1>
+        <h1 className="serif" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', color: 'var(--ink)' }}>{t('chat.title')}</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <Pressable
             aria-label={t('a11y.search')}
@@ -164,9 +164,9 @@ export function ChatScreen() {
           <Pressable
             aria-label={t('chat.newMessage')}
             onClick={() => setNewMsgOpen(true)}
-            style={{ width: 36, height: 36, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ width: 36, height: 36, background: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: '50%', boxShadow: 'var(--shadow-cta)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </Pressable>
@@ -220,7 +220,7 @@ export function ChatScreen() {
                 <svg aria-hidden width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h3"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{t('chat.findPlayers')}</div>
+                <div className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{t('chat.findPlayers')}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t('chat.findBuddiesSubtitle')}</div>
               </div>
               {requestCount > 0 && (

@@ -83,7 +83,7 @@ export function CreateCommunityOverlay() {
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </Pressable>
-        <h2 style={{ marginLeft: 12, fontSize: 18, fontWeight: 600, fontFamily: 'var(--serif)', color: 'var(--ink)' }}>{t('community.create.title')}</h2>
+        <h2 className="serif" style={{ marginLeft: 12, fontSize: 18, fontWeight: 800, color: 'var(--ink)' }}>{t('community.create.title')}</h2>
       </div>
 
       <div className="scroll-body" style={{ padding: '20px 20px 100px' }}>
@@ -183,11 +183,11 @@ export function CreateCommunityOverlay() {
             background: name.trim() ? 'var(--primary)' : 'var(--bg-alt)',
             borderRadius: 'var(--r-lg)', padding: 18, textAlign: 'center',
             cursor: name.trim() && !submitting ? 'pointer' : 'default',
-            boxShadow: name.trim() ? '0 4px 20px rgba(92,122,154,.35)' : 'none',
+            boxShadow: name.trim() ? 'var(--shadow-cta)' : 'none',
             transition: 'background .15s',
           }}
         >
-          <span style={{ fontSize: 16, fontWeight: 700, color: name.trim() ? 'white' : 'var(--ink-3)' }}>
+          <span className="serif" style={{ fontSize: 16, fontWeight: 800, color: name.trim() ? 'white' : 'var(--ink-3)' }}>
             {submitting ? t('community.create.submitting') : t('community.create.submit')}
           </span>
         </Pressable>

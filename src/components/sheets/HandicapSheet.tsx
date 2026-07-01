@@ -49,7 +49,7 @@ export function HandicapSheet() {
     <BottomSheet isOpen={isOpen} onClose={closeSheet} title={t('sheet.hcp.title')}>
       <div style={{ padding: '16px 20px 28px' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontFamily: 'var(--serif)', fontSize: 48, fontWeight: 500, color: 'var(--ink)', lineHeight: 1 }}>
+          <div className="serif" style={{ fontFamily: 'var(--serif)', fontSize: 48, fontWeight: 800, color: 'var(--primary)', lineHeight: 1 }}>
             {handicap || '—'}
           </div>
           <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 4 }}>{t('sheet.hcp.current')}</div>
@@ -73,9 +73,9 @@ export function HandicapSheet() {
 
         <Pressable
           onClick={handleSave}
-          style={{ display: 'block', background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}
+          style={{ display: 'block', background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', boxShadow: 'var(--shadow-cta)', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}
         >
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{saving ? t('loading.saving') : t('sheet.hcp.save')}</span>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'white' }}>{saving ? t('loading.saving') : t('sheet.hcp.save')}</span>
         </Pressable>
       </div>
     </BottomSheet>

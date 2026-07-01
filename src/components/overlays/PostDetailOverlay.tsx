@@ -68,7 +68,7 @@ export function PostDetailOverlay() {
   if (!isOpen || !post) return null
 
   const [bg, fg] = ({
-    round_report: ['var(--primary-soft)', 'var(--primary-ink)'],
+    round_report: ['var(--primary-soft)', 'var(--primary-deep)'],
     seeking: ['var(--butter)', 'var(--butter-deep)'],
     tip: ['var(--sage)', 'var(--sage-deep)'],
     general: ['var(--bg-alt)', 'var(--ink-2)'],
@@ -89,22 +89,10 @@ export function PostDetailOverlay() {
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </Pressable>
-        <h2 style={{ marginLeft: 12, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>{t('post.detail.title')}</h2>
+        <h2 className="serif" style={{ marginLeft: 12, fontSize: 16, fontWeight: 800, color: 'var(--ink)' }}>{t('post.detail.title')}</h2>
       </div>
 
       <div className="scroll-body" style={{ padding: '16px 20px 80px' }}>
-        {/* Looking-for-Players banner */}
-        {(post.isLfp || post.type === 'seeking') && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16, padding: '10px 14px', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)' }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-ink)' }}>🏌️ {t('lfp.lookingForPlayers')}</span>
-            {post.lfpPlayersNeeded ? (
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '3px 10px', borderRadius: 'var(--r-pill)' }}>{post.lfpPlayersNeeded} {t('lfp.playersNeededSuffix')}</span>
-            ) : null}
-            {post.locationText ? (
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-ink)', marginLeft: 'auto' }}>📍 {post.locationText}</span>
-            ) : null}
-          </div>
-        )}
         {/* Post */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>

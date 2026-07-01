@@ -1,6 +1,6 @@
 'use client'
 import { CSSProperties } from 'react'
-import { avatarColor, getInitial } from '@/lib/utils'
+import { avatarGradient, getInitial } from '@/lib/utils'
 import { useLang } from '@/contexts/LanguageContext'
 
 // Renders a user's photo when `url` is set, otherwise the colored initial circle.
@@ -46,7 +46,7 @@ export function Avatar({
   return (
     <div
       className={`avatar${className ? ' ' + className : ''}`}
-      style={{ ...base, fontSize: fontSize ?? Math.round(size * 0.4), background: avatarColor(seed ?? name) }}
+      style={{ ...base, fontSize: fontSize ?? Math.round(size * 0.4), background: avatarGradient(seed ?? name) }}
       onClick={onClick}
       title={title}
       role="img"

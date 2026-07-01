@@ -1,22 +1,61 @@
 :root {
-  --bg:#F4F6F8; --bg-alt:#E8ECF0; --surface:#FAFBFC;
-  --ink:#1A2332; --ink-2:#4A5568; --ink-3:#8B99AA;
-  --line:#D5DCE4; --line-soft:#E8ECF0;
-  /* Soft, distinct accent hues — pale tints (avatar/chip/gradient backgrounds)
-     paired with darker companions (label text + gradient ends). Kept calm to
-     match the brand blue while restoring real hue variety across the UI. */
-  --sage:#CDE5D6; --sage-deep:#3F6B4E;
-  --peach:#F5DCC8; --peach-deep:#A85F2E;
-  --rose:#F2D3D6; --rose-deep:#9C4654;
-  --butter:#F3E4BE; --butter-deep:#7E6320;
-  --sky:#C7DCEF; --sky-deep:#36577A;
-  --lilac:#DCD5EE; --lilac-deep:#524678;
-  --primary:#5C7A9A; --primary-ink:#1A2B3C; --primary-soft:#DCE8F2;
-  /* Apple system fonts (San Francisco). -apple-system/BlinkMacSystemFont resolve
-     to SF on Apple devices; PingFang TC/SC carry the Traditional-Chinese default. */
-  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','PingFang TC','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
-  --serif:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang TC','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
-  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-pill:9999px;
-  --shadow-sm:0 1px 2px rgba(26,35,50,.05),0 2px 8px rgba(26,35,50,.05);
-  --shadow-md:0 4px 16px rgba(26,35,50,.08),0 1px 3px rgba(26,35,50,.05);
+  /* ============================================================
+     Forely — direction 1a "Fairway": warm cream canvas, vibrant
+     orange as accent energy. Every screen hangs off these tokens
+     (used in both the .css class files and inline component styles),
+     so this file is the single source of truth for the brand.
+     ============================================================ */
+
+  /* Brand — vibrant orange */
+  --primary:#FF6A1A;        /* primary actions, active states, links, accents */
+  --primary-deep:#D9430A;   /* pressed states, text-on-tint, gradient ends */
+  --primary-ink:#D9430A;    /* legacy alias of --primary-deep (badge text) */
+  --primary-soft:#FFE7D6;   /* tinted backgrounds: LFP banner, chips, avatar bg */
+  --primary-glow:rgba(255,106,26,.5); /* CTA drop-shadow color */
+
+  /* Warm neutral canvas (replaces the old cool slate) */
+  --bg:#FFF8F2;             /* app canvas (warm cream) */
+  --bg-alt:#F0E6DA;         /* toggle track, subtle fills, disabled */
+  --surface:#FFFFFF;        /* cards, sheets, rows */
+
+  /* Ink — warm, not blue-grey */
+  --ink:#22190F;            /* primary text */
+  --ink-2:#6E6154;          /* secondary text */
+  --ink-3:#A99B8B;          /* tertiary / meta / placeholder */
+
+  --line:#EEE4D8;           /* borders */
+  --line-soft:#F4EDE4;      /* hairline dividers */
+
+  /* Category accents (post types / notifications) — the design's set */
+  --green:#159A5B;  --green-soft:#DBF3E6;   /* Tip */
+  --violet:#7A5AF0; --violet-soft:#ECE6FF;  /* Round report */
+  --blue:#2E9BE4;   --blue-soft:#DDEBFF;    /* secondary */
+  /* "Seeking / Looking for players" uses --primary + --primary-soft */
+
+  /* Legacy pastel-hue aliases (still referenced inline ~30x) remapped to
+     the warm / on-brand equivalents so untouched usage stays coherent.
+     Each pastel = the "soft" tint, each -deep = the saturated companion. */
+  --sage:#DBF3E6;   --sage-deep:#159A5B;    /* -> green */
+  --peach:#FFE7D6;  --peach-deep:#D9430A;   /* -> primary family (default avatar) */
+  --rose:#FFE0D9;   --rose-deep:#C0492E;    /* -> warm coral */
+  --butter:#FFEFC9; --butter-deep:#B7791F;  /* -> warm gold */
+  --sky:#DDEBFF;    --sky-deep:#2E9BE4;     /* -> blue */
+  --lilac:#ECE6FF;  --lilac-deep:#7A5AF0;   /* -> violet */
+
+  /* Type — geometric-sans pairing (loaded via <link> in app/layout.tsx).
+     --disp / --serif (alias): Sora for display, headings, numbers, buttons.
+     --sans: Plus Jakarta Sans for body. CJK glyphs (absent in both Latin
+     faces) fall back per-glyph to PingFang, so the Traditional-Chinese
+     default still renders. */
+  --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'PingFang TC','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --disp:'Sora',-apple-system,BlinkMacSystemFont,'PingFang TC','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --serif:var(--disp);      /* legacy alias — existing .serif usage becomes Sora */
+
+  /* Radii — playful, rounded up from the old scale */
+  --r-sm:12px; --r-md:14px; --r-lg:18px; --r-xl:22px; --r-2xl:26px; --r-pill:9999px;
+
+  /* Shadow — warm-tinted, soft */
+  --shadow-sm:0 2px 4px rgba(80,50,20,.04),0 8px 22px -6px rgba(120,70,30,.14);
+  --shadow-md:0 8px 20px -6px rgba(120,70,30,.18);
+  --shadow-cta:0 8px 20px -6px var(--primary-glow);
 }

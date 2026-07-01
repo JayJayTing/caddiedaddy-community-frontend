@@ -125,7 +125,7 @@ export function OtpStep({ onBack, onVerify, onResend, destination, channel = 'ph
             textAlign: 'center',
             cursor: otp.length === 6 && !isLoading ? 'pointer' : 'default',
             WebkitTapHighlightColor: 'transparent',
-            boxShadow: '0 4px 16px rgba(92,122,154,.3)',
+            boxShadow: 'var(--shadow-cta)',
             opacity: otp.length === 6 && !isLoading ? 1 : 0.5,
             transition: 'opacity .15s',
           }}

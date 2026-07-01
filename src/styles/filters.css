@@ -1,7 +1,9 @@
-.filter-pill { display:inline-flex; align-items:center; padding:6px 14px; border-radius:var(--r-pill); font-size:12px; font-weight:600; background:var(--surface); color:var(--ink-2); border:1px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .12s; -webkit-tap-highlight-color:transparent; }
-.filter-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-.toggle-tabs { display:flex; background:var(--bg-alt); border-radius:var(--r-pill); padding:3px; width:100%; }
-.toggle-tab { flex:1; text-align:center; padding:7px 0; border-radius:var(--r-pill); font-size:13px; font-weight:600; color:var(--ink-3); cursor:pointer; transition:all .15s; }
-.toggle-tab.active { background:var(--surface); color:var(--ink); box-shadow:var(--shadow-sm); }
-.fchip { flex-shrink:0; padding:7px 14px; border-radius:var(--r-pill); border:1.5px solid var(--line); background:var(--surface); font-size:12px; font-weight:600; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background .15s, color .15s, border-color .15s; -webkit-tap-highlight-color:transparent; user-select:none; }
-.fchip.active { background:var(--primary); border-color:var(--primary); color:white; }
+.filter-pill { display:inline-flex; align-items:center; padding:8px 15px; border-radius:var(--r-pill); font-size:12.5px; font-weight:700; background:var(--surface); color:var(--ink-2); border:1.5px solid var(--line); cursor:pointer; white-space:nowrap; transition:all .12s; -webkit-tap-highlight-color:transparent; }
+.filter-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); font-family:var(--disp); font-weight:800; }
+/* Segmented toggle (Discover/Following/Mine · Friends/Communities): pill track,
+   raised surface thumb, primary-deep Sora label when active. */
+.toggle-tabs { display:flex; background:var(--bg-alt); border-radius:var(--r-pill); padding:4px; width:100%; }
+.toggle-tab { flex:1; text-align:center; padding:9px 0; border-radius:var(--r-pill); font-family:var(--disp); font-size:13px; font-weight:700; color:var(--ink-3); cursor:pointer; transition:all .15s; }
+.toggle-tab.active { background:var(--surface); color:var(--primary-deep); font-weight:800; box-shadow:0 2px 6px rgba(80,50,20,.12); }
+.fchip { flex-shrink:0; padding:8px 15px; border-radius:var(--r-pill); border:1.5px solid var(--line); background:var(--surface); font-size:12.5px; font-weight:700; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background .15s, color .15s, border-color .15s; -webkit-tap-highlight-color:transparent; user-select:none; }
+.fchip.active { background:var(--primary); border-color:var(--primary); color:white; font-weight:800; }

@@ -30,7 +30,13 @@ function sessionExpired() {
 
 async function parseError(res: Response): Promise<string> {
   const body = await res.text()
-  try { return JSON.parse(body).error ?? body } catch { return body }
+  try {
+    // Our routes return { error: "<message>" }. A validation failure, though,
+    // yields a non-string error object — never hand that to `new Error()`, which
+    // would stringify it to the useless "[object Object]".
+    const err = JSON.parse(body).error
+    return typeof err === 'string' ? err : body
+  } catch { return body }
 }
 
 // A single in-flight refresh shared by all concurrent 401s, so a burst of requests

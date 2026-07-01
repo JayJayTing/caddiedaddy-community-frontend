@@ -1,6 +1,10 @@
-.bnav { height:74px; background:var(--surface); border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-around; padding-bottom:8px; flex-shrink:0; position:relative; z-index:10; }
-.bnav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; flex:1; -webkit-tap-highlight-color:transparent; }
-.bnav-label { font-size:10px; font-weight:600; letter-spacing:.04em; color:var(--ink-3); transition:color .15s; }
-.bnav-item.active .bnav-label { color:var(--primary); }
-.bnav-fab { width:48px; height:48px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(92,122,154,.4); cursor:pointer; flex-shrink:0; margin-bottom:4px; -webkit-tap-highlight-color:transparent; transition:transform .12s; }
+/* Forely 1a "Fairway" bottom nav — light bar, raised orange-gradient Play FAB.
+   5 items; the center FAB pokes above the bar with a canvas-color ring. */
+.bnav { height:82px; background:var(--surface); border-top:1px solid var(--line-soft); display:flex; align-items:center; justify-content:space-around; padding:0 12px 18px; flex-shrink:0; position:relative; z-index:10; box-shadow:0 -4px 20px -8px rgba(80,50,20,.12); }
+.bnav-item { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; flex:1; -webkit-tap-highlight-color:transparent; }
+.bnav-label { font-family:var(--disp); font-size:10px; font-weight:700; letter-spacing:.01em; color:var(--ink-3); transition:color .15s; }
+.bnav-item.active .bnav-label { color:var(--primary); font-weight:800; }
+
+/* Raised Play FAB: 56×56 rounded-square, orange gradient, glow + canvas ring. */
+.bnav-fab { width:56px; height:56px; background:linear-gradient(135deg,#FF8A3D,var(--primary)); border-radius:20px; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px -6px var(--primary-glow),0 0 0 5px var(--bg); cursor:pointer; flex-shrink:0; margin-top:-22px; -webkit-tap-highlight-color:transparent; transition:transform .12s; }
 .bnav-fab:active { transform:scale(.94); }

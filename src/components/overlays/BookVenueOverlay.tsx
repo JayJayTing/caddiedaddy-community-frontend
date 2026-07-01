@@ -120,7 +120,7 @@ export function BookVenueOverlay() {
       {/* Hero */}
       <div
         className="detail-hero"
-        style={{ background: 'linear-gradient(135deg,#3A6080,#5C7A9A)', flexShrink: 0 }}
+        style={{ background: 'linear-gradient(135deg,#D9430A,#FF6A1A)', flexShrink: 0 }}
       >
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 45%, rgba(0,0,0,.5))' }} />
         <div className="detail-back" onClick={closeOverlay}>
@@ -267,7 +267,7 @@ export function BookVenueOverlay() {
               </div>
             </div>
           )}
-          <div onClick={handleBook} style={{ background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: booking ? 'default' : 'pointer', boxShadow: '0 4px 20px rgba(92,122,154,.35)' }}>
+          <div onClick={handleBook} style={{ background: 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 16, textAlign: 'center', cursor: booking ? 'default' : 'pointer', boxShadow: 'var(--shadow-cta)' }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
               {booking
                 ? t('booking.booking')

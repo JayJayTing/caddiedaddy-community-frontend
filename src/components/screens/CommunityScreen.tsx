@@ -5,16 +5,18 @@ import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { Post } from '@/types/post'
+import { Round } from '@/types/round'
 import { Community } from '@/types/community'
 import { timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
-import { PostCardSkeleton } from '@/components/ui/Skeleton'
+import { PostCardSkeleton, RoundCardSkeleton } from '@/components/ui/Skeleton'
+import { RoundCard } from '@/components/screens/RoundsScreen'
 import { useActivated } from '@/hooks/useActivated'
 import type { TranslationKey } from '@/lib/translations'
 
 type CommunityTab = 'discover' | 'following' | 'mine'
-type PostFilter = 'all' | 'round_report' | 'seeking' | 'tip'
+type PostFilter = 'all' | 'round_report' | 'tip'
 
 const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
   round_report: 'post.type.roundReport',
@@ -24,18 +26,14 @@ const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
   announcement: 'post.type.announcement',
 }
 
+// Post-type badges (Forely category set): Seeking → orange, Tip → green,
+// Round report → violet, General → neutral, Announcement → blue.
 const TYPE_COLORS: Record<string, [string, string]> = {
-  round_report: ['var(--primary-soft)', 'var(--primary-ink)'],
-  seeking: ['var(--butter)', 'var(--butter-deep)'],
-  tip: ['var(--sage)', 'var(--sage-deep)'],
+  round_report: ['var(--violet-soft)', 'var(--violet)'],
+  seeking: ['var(--primary-soft)', 'var(--primary-deep)'],
+  tip: ['var(--green-soft)', 'var(--green)'],
   general: ['var(--bg-alt)', 'var(--ink-2)'],
-  announcement: ['var(--sky)', 'var(--sky-deep)'],
-}
-
-// A post counts as "looking for players" if explicitly flagged, or it's the
-// seeking type (covers posts created before the isLfp flag was wired up).
-export function isLfpPost(p: Post) {
-  return p.isLfp || p.type === 'seeking'
+  announcement: ['var(--blue-soft)', 'var(--blue)'],
 }
 
 export function PostCard({ post }: { post: Post }) {
@@ -71,24 +69,12 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <div className="post-card">
-      {/* Looking-for-Players banner — players needed + location, up top where it's scannable */}
-      {isLfpPost(post) && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', background: 'var(--primary-soft)', borderRadius: 'var(--r-md)' }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary-ink)' }}>🏌️ {t('lfp.lookingForPlayers')}</span>
-          {post.lfpPlayersNeeded ? (
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '2px 9px', borderRadius: 'var(--r-pill)' }}>{post.lfpPlayersNeeded} {t('lfp.playersNeededSuffix')}</span>
-          ) : null}
-          {post.locationText ? (
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary-ink)', marginLeft: 'auto' }}>📍 {post.locationText}</span>
-          ) : null}
-        </div>
-      )}
       {/* Author row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <Avatar name={post.author.displayName} url={post.author.avatarUrl} seed={post.authorId} size={36} fontSize={13} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{post.author.displayName}</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--ink)' }}>{post.author.displayName}</span>
             <span className="badge" style={{ background: bg, color: fg, fontSize: 10 }}>{t(TYPE_LABEL_KEYS[post.type] ?? 'post.type.general')}</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>
@@ -133,8 +119,8 @@ export function PostCard({ post }: { post: Post }) {
 
 function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void }) {
   const { t } = useLang()
-  const c1 = comm.color1 ?? '#B8CBE0'
-  const c2 = comm.color2 ?? '#5C7A9A'
+  const c1 = comm.color1 ?? '#FF8A3D'
+  const c2 = comm.color2 ?? '#E24E00'
   return (
     <Pressable className="comm-thumb" onClick={onOpen} style={{ cursor: 'pointer' }}>
       <div
@@ -150,7 +136,7 @@ function CommunityThumb({ comm, onOpen }: { comm: Community; onOpen: () => void 
         </div>
       </div>
       <div className="comm-thumb-body">
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, marginBottom: 2 }}>{comm.name}</div>
+        <div className="serif" style={{ fontSize: 12, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.2, marginBottom: 2 }}>{comm.name}</div>
         <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{comm.roundCount ?? 0} {t('community.roundsSuffix')}</div>
       </div>
     </Pressable>
@@ -171,9 +157,13 @@ export function CommunityScreen() {
   const [discoverPosts, setDiscoverPosts] = useState<Post[]>([])
   const [followingPosts, setFollowingPosts] = useState<Post[]>([])
   const [myCommunities, setMyCommunities] = useState<Community[]>([])
+  // "Looking for Players" is now sourced from open rounds (golf + driving-range
+  // get-togethers that still need players), not from composed posts.
+  const [openRounds, setOpenRounds] = useState<Round[]>([])
 
   const [loadingDiscover, setLoadingDiscover] = useState(true)
   const [loadingFollowing, setLoadingFollowing] = useState(false)
+  const [loadingRounds, setLoadingRounds] = useState(true)
 
   useEffect(() => {
     if (!user || !activated) return
@@ -182,6 +172,15 @@ export function CommunityScreen() {
       api.get<{ data: Post[] }>('/posts?scope=discover').then(r => setDiscoverPosts(r.data ?? [])).catch(() => {}),
     ]).finally(() => setLoadingDiscover(false))
   }, [user, activated, dataVersion.communities, dataVersion.posts])
+
+  // Open rounds power the Looking-for-Players filter; refetch when a round is hosted/joined.
+  useEffect(() => {
+    if (!user || !activated) return
+    api.get<{ data: Round[] }>('/rounds')
+      .then(r => setOpenRounds(r.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingRounds(false))
+  }, [user, activated, dataVersion.rounds])
 
   // Re-fetch the active tab's data whenever it's opened OR a relevant mutation bumps
   // dataVersion (e.g. creating/joining a community must show up in "Mine" immediately).
@@ -206,12 +205,9 @@ export function CommunityScreen() {
     return p.type === postFilter
   })
 
-  const discoverShown = discoverLfp ? discoverPosts.filter(isLfpPost) : discoverPosts
-
   const POST_FILTER_OPTS: Array<{ key: PostFilter; label: string }> = [
     { key: 'all', label: t('community.filter.all') },
     { key: 'round_report', label: t('community.filter.roundReports') },
-    { key: 'seeking', label: t('community.filter.seeking') },
     { key: 'tip', label: t('community.filter.tips') },
   ]
 
@@ -219,10 +215,10 @@ export function CommunityScreen() {
     <div className={`screen${activeScreen === 'community' ? ' active' : ''}`}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 0', flexShrink: 0 }}>
-        <h1 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{t('community.title')}</h1>
+        <h1 className="serif" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', color: 'var(--ink)' }}>{t('community.title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Pressable style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer' }} onClick={() => openSheetWith('compose')}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('community.newPost')}</span>
+          <Pressable style={{ background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-cta)' }} onClick={() => openSheetWith('compose')}>
+            <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>+ {t('community.newPost')}</span>
           </Pressable>
           <Avatar name={user?.displayName} url={user?.avatarUrl} seed={user?.id} size={34} fontSize={13} onClick={() => setActiveScreen('profile')} title={t('common.profile')} />
         </div>
@@ -264,7 +260,8 @@ export function CommunityScreen() {
             <div className="section-row">
               <span className="label-xs">{discoverLfp ? t('community.lfp') : t('community.recentPosts')}</span>
             </div>
-            {/* Looking-for-Players filter — finding players is the priority surface */}
+            {/* Looking-for-Players filter — surfaces open rounds (golf + driving-range
+                get-togethers) that still need players; hosting a round is how you find a game now. */}
             <div className="hscroll" style={{ padding: '0 16px 10px', gap: 8 }}>
               <Pressable aria-pressed={!discoverLfp} className={`fchip${!discoverLfp ? ' active' : ''}`} onClick={() => setDiscoverLfp(false)}>
                 {t('community.allPosts')}
@@ -274,18 +271,31 @@ export function CommunityScreen() {
               </Pressable>
             </div>
             <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {loadingDiscover ? (
+              {discoverLfp ? (
+                loadingRounds ? (
+                  <>{[0, 1, 2].map(i => <RoundCardSkeleton key={i} />)}</>
+                ) : openRounds.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '28px 16px' }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>⛳️</div>
+                    <div style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 14 }}>{t('lfp.none')}</div>
+                    {/* Bridge to a booking: hosting a round creates an open game others can join */}
+                    <Pressable onClick={() => setActiveScreen('host')} style={{ display: 'inline-block', background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px', boxShadow: 'var(--shadow-cta)' }}>
+                      <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>+ {t('rounds.host')}</span>
+                    </Pressable>
+                  </div>
+                ) : openRounds.map(r => <RoundCard key={r.id} round={r} onOpenDetail={() => openOverlayWith('roundDetail', r)} />)
+              ) : loadingDiscover ? (
                 <>{[0, 1, 2].map(i => <PostCardSkeleton key={i} />)}</>
-              ) : discoverShown.length === 0 ? (
+              ) : discoverPosts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '28px 16px' }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}>⛳️</div>
-                  <div style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 14 }}>{discoverLfp ? t('lfp.none') : t('community.followPrompt')}</div>
+                  <div style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 14 }}>{t('community.followPrompt')}</div>
                   {/* Bridge to a booking: hosting a round creates an open game others can join */}
-                  <Pressable onClick={() => setActiveScreen('host')} style={{ display: 'inline-block', background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>+ {t('rounds.host')}</span>
+                  <Pressable onClick={() => setActiveScreen('host')} style={{ display: 'inline-block', background: 'var(--primary)', borderRadius: 'var(--r-md)', padding: '10px 20px', boxShadow: 'var(--shadow-cta)' }}>
+                    <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>+ {t('rounds.host')}</span>
                   </Pressable>
                 </div>
-              ) : discoverShown.map(p => <PostCard key={p.id} post={p} />)}
+              ) : discoverPosts.map(p => <PostCard key={p.id} post={p} />)}
             </div>
           </>
         )}
@@ -322,17 +332,17 @@ export function CommunityScreen() {
               onClick={() => openOverlayWith('createCommunity')}
             >
               <div style={{ fontSize: 28, marginBottom: 8 }}>🏌️</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>{t('community.createCommunity')}</div>
+              <div className="serif" style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)', marginBottom: 4 }}>{t('community.createCommunity')}</div>
               <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{t('community.createSubtitle')}</div>
             </Pressable>
 
             {myCommunities.length > 0 && (
               <>
-                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', margin: '8px 4px 4px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-3)', margin: '8px 4px 4px' }}>
                   {t('community.yourCommunities')}
                 </div>
                 {myCommunities.map(c => {
-                  const c1 = c.color1 ?? '#B8CBE0', c2 = c.color2 ?? '#5C7A9A'
+                  const c1 = c.color1 ?? '#FF8A3D', c2 = c.color2 ?? '#E24E00'
                   return (
                     <Pressable key={c.id} className="comm-full-card" onClick={() => openOverlayWith('communityDetail', c)} style={{ cursor: 'pointer' }}>
                       <div style={{ height: 70, position: 'relative', ...(c.logoUrl ? { backgroundImage: `url("${c.logoUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>

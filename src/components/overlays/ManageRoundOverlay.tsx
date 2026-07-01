@@ -89,8 +89,8 @@ export function ManageRoundOverlay() {
   const openSpots = Math.max(0, spots - players.length)
   const cancelled = status === 'cancelled'
 
-  const c1 = round.color1 ?? '#B8CBE0'
-  const c2 = round.color2 ?? '#5C7A9A'
+  const c1 = round.color1 ?? '#FF8A3D'
+  const c2 = round.color2 ?? '#E24E00'
 
   // Optimistic local update + real backend call; revert role on failure.
   const setRole = (userId: string, role: RoundParticipant['role']) =>
@@ -167,7 +167,7 @@ export function ManageRoundOverlay() {
         </Pressable>
         <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
           <h2 style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t('manage.title')}</h2>
-          <div style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.2, marginTop: 2 }}>{round.course.name}</div>
+          <div className="serif" style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2, marginTop: 2 }}>{round.course.name}</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(date)}</div>
         </div>
       </div>
@@ -200,7 +200,7 @@ export function ManageRoundOverlay() {
                       <button onClick={() => declineRequest(p.userId)} style={{ border: '1.5px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-2)', borderRadius: 'var(--r-pill)', padding: '7px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)' }}>
                         {t('manage.decline')}
                       </button>
-                      <button onClick={() => acceptRequest(p.userId)} style={{ border: 'none', background: 'var(--primary)', color: 'white', borderRadius: 'var(--r-pill)', padding: '7px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--sans)' }}>
+                      <button onClick={() => acceptRequest(p.userId)} className="serif" style={{ border: 'none', background: 'var(--primary)', color: 'white', borderRadius: 'var(--r-pill)', padding: '7px 16px', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                         {t('manage.accept')}
                       </button>
                     </div>
@@ -310,8 +310,8 @@ export function ManageRoundOverlay() {
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder={t('host.notesPlaceholder')} style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} />
           </div>
 
-          <Pressable onClick={saveChanges} style={{ display: 'block', width: '100%', background: saved ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 15, textAlign: 'center', cursor: 'pointer', boxShadow: saved ? 'none' : '0 4px 16px rgba(92,122,154,.3)' }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: saved ? 'var(--primary-ink)' : 'white' }}>{saved ? t('manage.saved') : t('manage.save')}</span>
+          <Pressable onClick={saveChanges} style={{ display: 'block', width: '100%', background: saved ? 'var(--bg-alt)' : 'var(--primary)', borderRadius: 'var(--r-lg)', padding: 15, textAlign: 'center', cursor: 'pointer', boxShadow: saved ? 'none' : 'var(--shadow-cta)' }}>
+            <span className="serif" style={{ fontSize: 15, fontWeight: 800, color: saved ? 'var(--primary-ink)' : 'white' }}>{saved ? t('manage.saved') : t('manage.save')}</span>
           </Pressable>
         </div>
 

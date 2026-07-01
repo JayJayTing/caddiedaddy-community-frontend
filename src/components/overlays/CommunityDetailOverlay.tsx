@@ -64,8 +64,8 @@ export function CommunityDetailOverlay() {
 
   if (!isOpen || !detail) return null
 
-  const c1 = detail.color1 ?? '#B8CBE0'
-  const c2 = detail.color2 ?? '#5C7A9A'
+  const c1 = detail.color1 ?? '#FF8A3D'
+  const c2 = detail.color2 ?? '#E24E00'
   const members = detail.members ?? []
   const memberCount = detail._count?.members ?? detail.memberCount
   const isMember = !!user && members.some(m => m.user.id === user.id)
@@ -183,15 +183,15 @@ export function CommunityDetailOverlay() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,.7)', marginBottom: 4 }}>{TYPE_LABEL_KEYS[detail.type] ? t(TYPE_LABEL_KEYS[detail.type]) : detail.type}</div>
-              <h2 className="serif" style={{ fontSize: 22, fontWeight: 500, color: 'white', lineHeight: 1.15 }}>{detail.name}</h2>
+              <h2 className="serif" style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>{detail.name}</h2>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', marginTop: 3 }}>
                 {memberCount} {t('community.members')}{detail.homeCourse?.name ? ` · ${detail.homeCourse.name}` : ''}
               </div>
             </div>
             {loaded && (
               canJoin ? (
-                <Pressable onClick={toggleJoin} style={{ background: isMember ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.22)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.4)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{isMember ? t('community.detail.joined') : t('common.join')}</span>
+                <Pressable onClick={toggleJoin} style={{ background: isMember ? 'var(--primary-soft)' : 'var(--primary)', backdropFilter: 'blur(8px)', border: `1.5px solid ${isMember ? 'var(--primary-soft)' : 'var(--primary)'}`, borderRadius: 'var(--r-pill)', padding: '9px 20px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, opacity: busy ? 0.7 : 1, boxShadow: isMember ? 'none' : 'var(--shadow-cta)' }}>
+                  <span className="serif" style={{ fontSize: 13, fontWeight: 800, color: isMember ? 'var(--primary-deep)' : '#fff' }}>{isMember ? t('community.detail.joined') : t('common.join')}</span>
                 </Pressable>
               ) : (
                 <div style={{ background: 'rgba(255,255,255,.14)', border: '1.5px solid rgba(255,255,255,.22)', borderRadius: 'var(--r-pill)', padding: '9px 18px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -209,9 +209,10 @@ export function CommunityDetailOverlay() {
         {TABS.map(tb => (
           <Pressable
             key={tb.key}
+            className="serif"
             onClick={() => setTab(tb.key)}
             aria-pressed={tab === tb.key}
-            style={{ flex: 1, textAlign: 'center', padding: '14px 0', fontSize: 13, fontWeight: tab === tb.key ? 700 : 600, color: tab === tb.key ? 'var(--primary)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === tb.key ? 'var(--primary)' : 'transparent'}`, cursor: 'pointer' }}
+            style={{ flex: 1, textAlign: 'center', padding: '14px 0', fontSize: 13, fontWeight: tab === tb.key ? 800 : 600, color: tab === tb.key ? 'var(--primary)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === tb.key ? 'var(--primary)' : 'transparent'}`, cursor: 'pointer' }}
           >
             {t(tb.label)}
           </Pressable>
@@ -267,10 +268,10 @@ export function CommunityDetailOverlay() {
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line-soft)' }}>
                   <Avatar name={m.user.displayName} url={m.user.avatarUrl} seed={m.user.id} size={40} fontSize={15} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>{m.user.displayName}{m.user.id === user?.id ? ` (${t('common.you')})` : ''}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{m.user.displayName}{m.user.id === user?.id ? ` (${t('common.you')})` : ''}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>HCP {formatHandicap(m.user.handicapIndex)}</div>
                   </div>
-                  {role === 'admin' && <span className="badge" style={{ background: 'var(--primary-soft)', color: 'var(--primary-ink)', fontSize: 10 }}>{t('community.detail.roleAdmin')}</span>}
+                  {role === 'admin' && <span className="badge" style={{ background: 'var(--primary-soft)', color: 'var(--primary-deep)', fontSize: 10 }}>{t('community.detail.roleAdmin')}</span>}
                   {role === 'leader' && <span className="badge" style={{ background: 'var(--butter)', color: 'var(--butter-deep)', fontSize: 10 }}>{t('community.detail.roleLeader')}</span>}
                   {isOwner && !isCreator && (
                     <Pressable
