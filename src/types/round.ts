@@ -8,7 +8,7 @@ export interface Round {
   hostUserId: string
   hostUser: { id: string; displayName: string; avatarInitial: string | null; avatarUrl?: string | null }
   courseId: string
-  course: { id: string; name: string; locationText: string | null; lat?: number | string | null; lng?: number | string | null }
+  course: { id: string; name: string; locationText: string | null; coverPhotoUrl?: string | null; lat?: number | string | null; lng?: number | string | null }
   date: string           // YYYY-MM-DD
   teeTime: string        // ISO datetime, use time part
   venueType: 'course' | 'driving_range'

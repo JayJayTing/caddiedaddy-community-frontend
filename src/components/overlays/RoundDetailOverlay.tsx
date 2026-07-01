@@ -6,7 +6,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
 import { ChatThread } from '@/types/chat'
-import { formatDate, formatDateFull, formatTeeTime, formatMoney, courseMapImage } from '@/lib/utils'
+import { formatDate, formatDateFull, formatTeeTime, formatMoney, roundThumbImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 
@@ -67,9 +67,7 @@ export function RoundDetailOverlay() {
     return () => clearInterval(id)
   }, [isOpen, hasJoined, isHost])
 
-  const c1 = round?.color1 ?? '#FF8A3D'
-  const c2 = round?.color2 ?? '#E24E00'
-  const heroImg = courseMapImage(round?.course, { w: 780, h: 400, zoom: 15 })
+  const heroImg = roundThumbImage(round, { w: 780, h: 400, zoom: 15 })
 
   const handleJoin = async () => {
     if (!round || joining || hasJoined || isHost || cancelled) return
@@ -128,16 +126,8 @@ export function RoundDetailOverlay() {
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Hero */}
-      <div className="detail-hero" style={heroImg ? { backgroundImage: `url(${heroImg})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 } : { background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }}>
-        {!heroImg && (
-          <svg viewBox="0 0 390 200" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-            <path d="M-10 130 Q100 100 200 120 Q300 140 410 110 L410 210 L-10 210 Z" fill="rgba(255,255,255,.12)"/>
-            <path d="M-10 160 Q80 145 200 155 Q320 165 410 148 L410 210 L-10 210 Z" fill="rgba(255,255,255,.08)"/>
-            <line x1="290" y1="100" x2="290" y2="40" stroke="rgba(255,255,255,.7)" strokeWidth="2.5" strokeLinecap="round"/>
-            <path d="M290 40 L318 52 L290 64 Z" fill="rgba(255,255,255,.85)"/>
-          </svg>
-        )}
-        {/* Scrim so the title stays legible over satellite imagery */}
+      <div className="detail-hero" style={{ background: 'var(--bg-alt)', backgroundImage: `url(${heroImg})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }}>
+        {/* Scrim so the title stays legible over satellite/photo imagery */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 45%, rgba(0,0,0,.5))' }} />
         <Pressable className="detail-back" onClick={closeOverlay} aria-label={t('a11y.back')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

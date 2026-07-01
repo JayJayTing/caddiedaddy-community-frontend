@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, formatMoney, formatMonthYear } from '@/lib/utils'
+import { avatarColor, getInitial, formatDate, formatTeeTime, formatHandicap, formatMoney, formatMonthYear, roundThumbImage } from '@/lib/utils'
 import { creditsApi } from '@/lib/credits'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Pressable } from '@/components/ui/Pressable'
@@ -161,7 +161,7 @@ export function ProfileScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentRounds.map(r => (
                 <div key={r.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', padding: '12px 14px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: `linear-gradient(135deg,${r.color1 ?? '#FF8A3D'},${r.color2 ?? '#E24E00'})`, flexShrink: 0 }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: 'var(--bg-alt)', backgroundImage: `url(${roundThumbImage(r, { w: 80, h: 80 })})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{r.course.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(r.date)} · {formatTeeTime(r.teeTime)}</div>
