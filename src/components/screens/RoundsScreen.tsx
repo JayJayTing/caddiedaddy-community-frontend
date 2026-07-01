@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round } from '@/types/round'
-import { formatTeeTime, formatMoney, courseMapImage, formatMonthYear } from '@/lib/utils'
+import { formatTeeTime, formatMoney, roundThumbImage, formatMonthYear } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { RoundCardSkeleton } from '@/components/ui/Skeleton'
@@ -105,9 +105,7 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
 
   const accepted = round.participants?.filter(p => p.role === 'accepted' || p.role === 'host').length ?? 0
   const openSpots = Math.max(0, round.totalSpots - accepted)
-  const c1 = round.color1 ?? '#FF8A3D'
-  const c2 = round.color2 ?? '#E24E00'
-  const art = courseMapImage(round.course, { w: 240, h: 240, zoom: 15 })
+  const art = roundThumbImage(round, { w: 240, h: 240, zoom: 15 })
   const userP = user && round.participants?.find(p => p.userId === user.id)
   const hasJoined = joined || userP?.role === 'accepted' || userP?.role === 'requested'
   const isHost = userP?.role === 'host'
@@ -130,15 +128,8 @@ export function RoundCard({ round, onOpenDetail }: { round: Round; onOpenDetail:
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
       <div role="button" tabIndex={0} style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(!expanded) } }}>
-        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 120, ...(art ? { backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: `linear-gradient(135deg,${c1},${c2})` }) }}>
-          {!art && (
-            <svg viewBox="0 0 80 100" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-              <path d="M-2 66 Q20 50 40 58 Q60 66 82 54 L82 104 L-2 104 Z" fill="rgba(255,255,255,.2)"/>
-              <line x1="56" y1="52" x2="56" y2="28" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M56 28 L68 34 L56 40 Z" fill="rgba(255,255,255,.85)"/>
-            </svg>
-          )}
-        </div>
+        <div style={{ width: 80, flexShrink: 0, position: 'relative', overflow: 'hidden', minHeight: 120, background: 'var(--bg-alt)', backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+
         <div style={{ flex: 1, padding: '13px 13px 13px 11px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
             <div className="serif" style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.2 }}>{round.course.name}</div>

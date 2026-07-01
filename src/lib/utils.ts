@@ -182,3 +182,37 @@ export function announcementImage(
   const { w = 480, h = 320 } = opts
   return `${photo}?auto=format&fit=crop&q=70&w=${w}&h=${h}`
 }
+
+// Thumbnail for a round card/hero. Prefers the course's own cover photo, then a
+// Google Maps satellite view (when a maps key + coords exist), and finally a
+// stable golf photo keyed off the course id. Always returns an image URL — this
+// replaces the old off-theme colour gradient so round imagery is consistent and
+// on-brand everywhere a round is shown.
+export function roundThumbImage(
+  round:
+    | {
+        id?: string
+        course?: {
+          id?: string
+          coverPhotoUrl?: string | null
+          lat?: number | string | null
+          lng?: number | string | null
+        } | null
+      }
+    | null
+    | undefined,
+  opts: { w?: number; h?: number; zoom?: number } = {},
+): string {
+  const course = round?.course
+  if (course?.coverPhotoUrl) return course.coverPhotoUrl
+  const map = courseMapImage(course, opts)
+  if (map) return map
+  const seed = course?.id ?? round?.id ?? ''
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0
+  }
+  const photo = ANNOUNCEMENT_PHOTOS[Math.abs(hash) % ANNOUNCEMENT_PHOTOS.length]
+  const { w = 480, h = 320 } = opts
+  return `${photo}?auto=format&fit=crop&q=70&w=${w}&h=${h}`
+}

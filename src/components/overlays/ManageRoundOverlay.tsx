@@ -5,7 +5,7 @@ import { useLang } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import { Round, RoundParticipant, RoundStatus } from '@/types/round'
 import { Player } from '@/types/player'
-import { formatDate, formatHandicap } from '@/lib/utils'
+import { formatDate, formatHandicap, roundThumbImage } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { Pressable } from '@/components/ui/Pressable'
 import { DateField } from '@/components/ui/DateField'
@@ -89,8 +89,7 @@ export function ManageRoundOverlay() {
   const openSpots = Math.max(0, spots - players.length)
   const cancelled = status === 'cancelled'
 
-  const c1 = round.color1 ?? '#FF8A3D'
-  const c2 = round.color2 ?? '#E24E00'
+  const heroImg = roundThumbImage(round, { w: 780, h: 400, zoom: 15 })
 
   // Optimistic local update + real backend call; revert role on failure.
   const setRole = (userId: string, role: RoundParticipant['role']) =>
@@ -159,13 +158,15 @@ export function ManageRoundOverlay() {
   return (
     <div className={`detail-overlay${isOpen ? ' open' : ''}`}>
       {/* Hero */}
-      <div className="detail-hero" style={{ background: `linear-gradient(135deg,${c1},${c2})`, flexShrink: 0 }}>
+      <div className="detail-hero" style={{ background: 'var(--bg-alt)', backgroundImage: `url(${heroImg})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }}>
+        {/* Scrim so the white title stays legible over photo/satellite imagery */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 40%, rgba(0,0,0,.55))' }} />
         <Pressable className="detail-back" onClick={() => openOverlayWith('roundDetail', round)} aria-label={t('a11y.back')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </Pressable>
-        <div style={{ position: 'absolute', bottom: 20, left: 20 }}>
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1 }}>
           <h2 style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t('manage.title')}</h2>
           <div className="serif" style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2, marginTop: 2 }}>{round.course.name}</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 4 }}>{formatDate(date)}</div>
